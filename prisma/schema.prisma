@@ -1,0 +1,1028 @@
+// Dental Arena: schema Prisma (sursa de adevăr: docs/architecture.md §3).
+// Dev: SQLite (driver adapter better-sqlite3). Prod: PostgreSQL (driver adapter pg).
+// Portabil: fără tipuri native (@db.*), fără funcții SQL specifice, bani în Int (bani = 1/100 lei),
+// ore de program în minute de la miezul nopții (ora României), momente în DateTime (UTC).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite" // în producție: "postgresql" (URL-ul vine din prisma.config.ts)
+}
+
+// ───────────────────────────── Enum-uri ─────────────────────────────
+
+enum Role {
+  ADMIN
+  MEDIC
+  RECEPTIE
+}
+
+enum ThemePreference {
+  SISTEM
+  LUMINOS
+  INTUNECAT
+}
+
+enum Density {
+  COMPACT
+  CONFORTABIL
+}
+
+enum AppointmentStatus {
+  PROGRAMAT
+  CONFIRMAT
+  SOSIT
+  IN_TRATAMENT
+  FINALIZAT
+  ANULAT
+  NEPREZENTAT
+}
+
+enum AppointmentSource {
+  ONLINE
+  TELEFON
+  RECEPTIE
+  RECHEMARE
+}
+
+enum ConfirmationChannel {
+  TELEFON
+  SMS
+  EMAIL
+  LINK
+  RECEPTIE
+}
+
+enum CancelledBy {
+  PACIENT
+  CLINICA
+}
+
+enum Comfort {
+  FARA_EMOTII
+  EMOTII
+  FRICA
+}
+
+enum Sex {
+  F
+  M
+}
+
+enum LeadSource {
+  FORMULAR_CONTACT
+  PROGRAMARE_ONLINE
+  APEL_INVERS
+  TELEFON
+  RECOMANDARE
+  SOCIAL
+  ALT
+}
+
+enum LeadStatus {
+  NOU
+  CONTACTAT
+  PROGRAMAT
+  PIERDUT
+}
+
+enum LeadActivityType {
+  NOTA
+  APEL
+  SMS
+  EMAIL
+  STATUS
+  ATRIBUIRE
+  CONVERSIE
+}
+
+enum ConsentType {
+  GDPR_DATE_SANATATE
+  TRATAMENT
+  INHALOSEDARE
+  SMS
+  EMAIL
+  MARKETING
+  FOTO
+}
+
+enum ConsentMethod {
+  FORMULAR_ONLINE
+  SEMNAT_HARTIE
+  SEMNAT_TABLETA
+  VERBAL
+}
+
+enum ToothConditionType {
+  CARIE
+  OBTURATIE
+  ENDODONTIE
+  COROANA
+  PUNTE
+  IMPLANT
+  EXTRAS
+  LIPSA
+  FRACTURA
+  RADACINA_RESTANTA
+  FATETA
+  SIGILARE
+  MOBILITATE
+  PARODONTOPATIE
+  PROTEZA
+  INCLUS
+  ALTA
+}
+
+enum PlanStatus {
+  CIORNA
+  PREZENTAT
+  ACCEPTAT
+  IN_CURS
+  FINALIZAT
+  RESPINS
+  ANULAT
+}
+
+enum PlanItemStatus {
+  PROPUS
+  ACCEPTAT
+  PROGRAMAT
+  EFECTUAT
+  ANULAT
+}
+
+enum DocumentKind {
+  RADIOGRAFIE_PANORAMICA
+  RADIOGRAFIE_RETROALVEOLARA
+  CBCT
+  FOTOGRAFIE
+  CONSIMTAMANT
+  DEVIZ
+  SCRISOARE_MEDICALA
+  ALT
+}
+
+enum InvoiceStatus {
+  EMISA
+  ANULATA
+}
+
+enum EInvoiceStatus {
+  NETRANSMISA
+  IN_ASTEPTARE
+  TRANSMISA
+  RESPINSA
+}
+
+enum PaymentMethod {
+  NUMERAR
+  CARD
+  TRANSFER
+}
+
+enum PriceUnit {
+  ACT
+  DINTE
+  ARCADA
+  ORA
+  SEDINTA
+}
+
+enum TimeOffKind {
+  CONCEDIU
+  FORMARE
+  BLOCAJ
+  SARBATOARE
+}
+
+enum RecallStatus {
+  DE_FACUT
+  CONTACTAT
+  PROGRAMAT
+  REFUZAT
+  ANULAT
+}
+
+enum MessageChannel {
+  EMAIL
+  SMS
+}
+
+enum MessageKind {
+  CONFIRMARE_PROGRAMARE
+  REMINDER
+  ANULARE
+  MODIFICARE
+  NOTIFICARE_CLINICA
+  RECHEMARE
+  MANUAL
+}
+
+enum MessageStatus {
+  TRIMIS
+  SIMULAT
+  EROARE
+}
+
+enum DataRequestType {
+  ACCES
+  EXPORT
+  RECTIFICARE
+  STERGERE
+  OPOZITIE
+}
+
+enum DataRequestStatus {
+  PRIMITA
+  IN_LUCRU
+  FINALIZATA
+  RESPINSA
+}
+
+// ───────────────────────────── Clinici ─────────────────────────────
+
+model Location {
+  id            String   @id @default(cuid())
+  slug          String   @unique // "cristesti" | "ludus"
+  name          String // "Dental Arena Cristești"
+  shortName     String // "Cristești"
+  street        String // "str. Principală 536J/1"
+  city          String
+  county        String   @default("Mureș")
+  postalCode    String?
+  phone         String // "0265 326 316" (afișare); tel: se derivă
+  email         String?
+  mapsUrl       String?
+  latitude      Float?
+  longitude     Float?
+  publishHours  Boolean  @default(false) // programul apare pe site doar după confirmarea clinicii
+  sedationUnits Int      @default(1) // aparate de inhalosedare disponibile simultan
+  sortOrder     Int      @default(0)
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  hours        LocationHours[]
+  cabinets     Cabinet[]
+  shifts       WorkShift[]
+  timeOff      TimeOff[]
+  appointments Appointment[]
+  leads        Lead[]
+  patients     Patient[]       @relation("PreferredLocation")
+  invoices     Invoice[]
+  payments     Payment[]
+  staff        User[]          @relation("HomeLocation")
+  recalls      Recall[]
+}
+
+model LocationHours {
+  id          String   @id @default(cuid())
+  locationId  String
+  weekday     Int // 1 = luni … 7 = duminică (ISO)
+  openMinute  Int // 540 = 09:00, ora României
+  closeMinute Int
+  location    Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@unique([locationId, weekday, openMinute])
+}
+
+model Cabinet {
+  id         String   @id @default(cuid())
+  locationId String
+  name       String // "Cabinet 1"
+  sortOrder  Int      @default(0)
+  active     Boolean  @default(true)
+  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  shifts       WorkShift[]
+  appointments Appointment[]
+
+  @@unique([locationId, name])
+}
+
+// ───────────────────────────── Personal ─────────────────────────────
+
+model User {
+  id                 String          @id @default(cuid())
+  email              String          @unique // stocat lowercase
+  passwordHash       String
+  role               Role
+  firstName          String
+  lastName           String
+  phone              String?
+  active             Boolean         @default(true)
+  mustChangePassword Boolean         @default(false)
+  failedLogins       Int             @default(0)
+  lockedUntil        DateTime?
+  lastLoginAt        DateTime?
+  sessionVersion     Int             @default(1) // incrementat = toate sesiunile revocate
+  theme              ThemePreference @default(SISTEM)
+  density            Density         @default(COMPACT)
+  homeLocationId     String?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  homeLocation   Location?      @relation("HomeLocation", fields: [homeLocationId], references: [id], onDelete: SetNull)
+  doctor         Doctor?
+  assignedLeads  Lead[]         @relation("LeadAssignee")
+  leadActivities LeadActivity[]
+  patientNotes   PatientNote[]
+}
+
+model Doctor {
+  id                   String   @id @default(cuid())
+  userId               String?  @unique
+  slug                 String   @unique // "andrei-marcoci"
+  honorific            String   @default("Dr.")
+  firstName            String
+  lastName             String
+  publicName           String // "Dr. Andrei Marcoci"
+  roleLine             String // "Medic dentist, stomatologie generală"
+  bio                  String?
+  photoPath            String? // "/images/echipa/andrei-marcoci.jpg"; null = placă cu monogramă
+  monogram             String? // "VP"
+  publicVisible        Boolean  @default(true)
+  acceptsOnlineBooking Boolean  @default(true)
+  sortOrder            Int      @default(0)
+  active               Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  user               User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
+  categories         DoctorCategory[]
+  shifts             WorkShift[]
+  timeOff            TimeOff[]
+  appointments       Appointment[]
+  preferredByLeads   Lead[]
+  primaryForPatients Patient[]           @relation("PrimaryDoctor")
+  treatmentPlans     TreatmentPlan[]
+  performedItems     TreatmentPlanItem[] @relation("PerformedBy")
+  invoiceItems       InvoiceItem[]
+  recalls            Recall[]
+}
+
+model DoctorCategory {
+  doctorId   String
+  categoryId String
+  showOnSite Boolean         @default(false) // apare în „Cine vă tratează” pe pagina serviciului
+  doctor     Doctor          @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  category   ServiceCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([doctorId, categoryId])
+}
+
+model WorkShift {
+  id            String    @id @default(cuid())
+  doctorId      String
+  locationId    String
+  cabinetId     String?
+  weekday       Int // 1 = luni … 7 = duminică
+  startMinute   Int // ora României
+  endMinute     Int
+  onlineBooking Boolean   @default(true) // intervalul e oferit online
+  validFrom     DateTime? // inclusiv (miezul nopții, ora României, salvat UTC)
+  validUntil    DateTime? // exclusiv
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  doctor   Doctor       @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  location Location     @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  cabinet  Cabinet?     @relation(fields: [cabinetId], references: [id], onDelete: SetNull)
+  breaks   ShiftBreak[]
+
+  @@index([doctorId, weekday])
+  @@index([locationId, weekday])
+}
+
+model ShiftBreak {
+  id          String    @id @default(cuid())
+  shiftId     String
+  startMinute Int
+  endMinute   Int
+  label       String? // "Pauză de masă"
+  shift       WorkShift @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+}
+
+// doctorId null + locationId setat = clinica închisă (sărbătoare); ambele setate = medicul absent doar acolo.
+model TimeOff {
+  id          String      @id @default(cuid())
+  doctorId    String?
+  locationId  String?
+  kind        TimeOffKind @default(CONCEDIU)
+  startsAt    DateTime
+  endsAt      DateTime
+  reason      String?
+  createdById String?
+  createdAt   DateTime    @default(now())
+
+  doctor   Doctor?   @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  location Location? @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@index([doctorId, startsAt])
+  @@index([locationId, startsAt])
+}
+
+// ───────────────────────────── Servicii și prețuri ─────────────────────────────
+
+model ServiceCategory {
+  id            String   @id @default(cuid())
+  slug          String   @unique // identic cu URL-ul paginii publice: "implantologie"
+  name          String // "Implantologie"
+  summary       String? // o propoziție pentru indexul „Ce tratăm”
+  sortOrder     Int      @default(0)
+  publicVisible Boolean  @default(true)
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  services Service[]
+  doctors  DoctorCategory[]
+}
+
+model Service {
+  id               String    @id @default(cuid())
+  categoryId       String
+  code             String?   @unique // "IMP-NEODENT"
+  name             String // „Implant Neodent”
+  priceMin         Int? // bani; null = „preț stabilit la consultație”
+  priceMax         Int? // bani; setat doar pentru intervale „900/1.100 lei”
+  priceFrom        Boolean   @default(false) // „de la 200 lei”
+  unit             PriceUnit @default(ACT)
+  durationMinutes  Int       @default(30)
+  bookableOnline   Boolean   @default(false)
+  onlineLabel      String? // eticheta din pasul 1 al programării: „Igienizare (detartraj)”
+  onlineHint       String?
+  urgent           Boolean   @default(false) // „Am o durere acum”: afișează telefoanele
+  isRepresentative Boolean   @default(false) // prețul afișat în indexul de pe Acasă (unul per categorie)
+  toothSpecific    Boolean   @default(false) // cere dinte în planul de tratament
+  recallMonths     Int? // după FINALIZAT se creează automat o rechemare (ex. 6 la igienizare)
+  publicVisible    Boolean   @default(true) // apare în listele de prețuri
+  active           Boolean   @default(true)
+  sortOrder        Int       @default(0)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  category     ServiceCategory     @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  appointments Appointment[]
+  leads        Lead[]
+  planItems    TreatmentPlanItem[]
+  invoiceItems InvoiceItem[]
+
+  @@index([categoryId, sortOrder])
+}
+
+// ───────────────────────────── Pacienți ─────────────────────────────
+
+model Patient {
+  id                  String      @id @default(cuid())
+  fileNumber          Int         @unique // nr. fișă, din NumberSequence "PACIENT"
+  firstName           String
+  lastName            String
+  searchText          String // nume + telefon + email, lowercase, fără diacritice (căutare portabilă)
+  cnpEncrypted        String? // AES-256-GCM (PII_ENCRYPTION_KEY)
+  cnpHash             String?     @unique // HMAC-SHA256 pentru deduplicare
+  birthDate           DateTime?
+  sex                 Sex?
+  phone               String? // E.164: "+40744123456"
+  email               String?
+  street              String?
+  city                String?
+  county              String?
+  guardianId          String? // părinte/tutore pentru minori
+  preferredLocationId String?
+  primaryDoctorId     String?
+  comfortDefault      Comfort?
+  prefersSedation     Boolean     @default(false)
+  smsOptIn            Boolean     @default(false)
+  emailOptIn          Boolean     @default(false)
+  acquisitionSource   LeadSource?
+  notes               String? // observații administrative (nu clinice)
+  active              Boolean     @default(true)
+  anonymizedAt        DateTime? // GDPR: date personale șterse, fișa clinică păstrată
+  createdById         String?
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  guardian          Patient?          @relation("Guardian", fields: [guardianId], references: [id], onDelete: SetNull)
+  dependents        Patient[]         @relation("Guardian")
+  preferredLocation Location?         @relation("PreferredLocation", fields: [preferredLocationId], references: [id], onDelete: SetNull)
+  primaryDoctor     Doctor?           @relation("PrimaryDoctor", fields: [primaryDoctorId], references: [id], onDelete: SetNull)
+  medicalHistory    MedicalHistory?
+  consents          Consent[]
+  toothConditions   ToothCondition[]
+  treatmentPlans    TreatmentPlan[]
+  appointments      Appointment[]
+  documents         PatientDocument[]
+  tags              PatientTag[]
+  patientNotes      PatientNote[]
+  invoices          Invoice[]
+  payments          Payment[]
+  leads             Lead[]
+  recalls           Recall[]
+  dataRequests      DataRequest[]
+
+  @@index([lastName, firstName])
+  @@index([phone])
+  @@index([searchText])
+}
+
+model MedicalHistory {
+  id                   String    @id @default(cuid())
+  patientId            String    @unique
+  allergies            String? // text liber; nevid = alertă „Alergie: …”
+  medications          String?
+  anticoagulants       Boolean   @default(false)
+  cardiacDisease       Boolean   @default(false)
+  hypertension         Boolean   @default(false)
+  diabetes             Boolean   @default(false)
+  asthma               Boolean   @default(false)
+  epilepsy             Boolean   @default(false)
+  hepatitis            Boolean   @default(false)
+  hiv                  Boolean   @default(false)
+  bleedingDisorder     Boolean   @default(false)
+  bisphosphonates      Boolean   @default(false)
+  pregnancy            Boolean   @default(false)
+  smoker               Boolean   @default(false)
+  otherConditions      String?
+  lastReviewedAt       DateTime?
+  lastReviewedByUserId String?
+  updatedAt            DateTime  @updatedAt
+  patient              Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model Consent {
+  id              String        @id @default(cuid())
+  patientId       String
+  type            ConsentType
+  granted         Boolean // false = refuz explicit înregistrat
+  method          ConsentMethod
+  textVersion     String // „gdpr-2026-10”, „tratament-implant-v1”
+  grantedAt       DateTime      @default(now())
+  revokedAt       DateTime?
+  treatmentPlanId String?
+  documentId      String? // scanul formularului semnat
+  ipHash          String? // doar pentru FORMULAR_ONLINE
+  recordedById    String?
+  notes           String?
+
+  patient       Patient          @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  treatmentPlan TreatmentPlan?   @relation(fields: [treatmentPlanId], references: [id], onDelete: SetNull)
+  document      PatientDocument? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+
+  @@index([patientId, type])
+}
+
+model ToothCondition {
+  id           String             @id @default(cuid())
+  patientId    String
+  tooth        Int // FDI: 11–48 permanenți, 51–85 temporari
+  surfaces     String? // combinație din M O D V L/P, ex. "MOD"
+  condition    ToothConditionType
+  notes        String?
+  recordedAt   DateTime           @default(now())
+  recordedById String?
+  resolvedAt   DateTime? // ex. caria devine obturație: rândul vechi primește resolvedAt
+  patient      Patient            @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId, tooth])
+}
+
+model TreatmentPlan {
+  id          String     @id @default(cuid())
+  patientId   String
+  doctorId    String?
+  title       String // „Plan implant 36”
+  status      PlanStatus @default(CIORNA)
+  notes       String?
+  discount    Int        @default(0) // bani, reducere la nivel de plan
+  presentedAt DateTime?
+  acceptedAt  DateTime?
+  createdById String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  patient  Patient             @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctor   Doctor?             @relation(fields: [doctorId], references: [id], onDelete: SetNull)
+  items    TreatmentPlanItem[]
+  consents Consent[]
+
+  @@index([patientId, status])
+}
+
+model TreatmentPlanItem {
+  id                  String         @id @default(cuid())
+  planId              String
+  serviceId           String?
+  tooth               Int?
+  surfaces            String?
+  description         String // copie a numelui serviciului la momentul adăugării
+  phase               Int            @default(1)
+  quantity            Int            @default(1)
+  unitPrice           Int // bani, copie a prețului la momentul adăugării
+  discount            Int            @default(0) // bani, pe linie
+  status              PlanItemStatus @default(PROPUS)
+  appointmentId       String?
+  performedAt         DateTime?
+  performedByDoctorId String?
+  sortOrder           Int            @default(0)
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  plan         TreatmentPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  service      Service?      @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  appointment  Appointment?  @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  performedBy  Doctor?       @relation("PerformedBy", fields: [performedByDoctorId], references: [id], onDelete: SetNull)
+  invoiceItems InvoiceItem[]
+
+  @@index([planId, phase])
+}
+
+model PatientDocument {
+  id           String       @id @default(cuid())
+  patientId    String
+  kind         DocumentKind
+  title        String
+  fileName     String // numele original
+  mimeType     String
+  sizeBytes    Int
+  storageKey   String       @unique // "patients/<patientId>/<cuid>.<ext>" sub STORAGE_DIR
+  sha256       String
+  tooth        Int?
+  takenAt      DateTime?
+  uploadedById String?
+  createdAt    DateTime     @default(now())
+  deletedAt    DateTime?
+
+  patient  Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  consents Consent[]
+
+  @@index([patientId, kind])
+}
+
+model Tag {
+  id       String       @id @default(cuid())
+  name     String       @unique // „VIP”, „Ortodonție în curs”
+  color    String? // numele unui token: "menta" | "discret" | …
+  patients PatientTag[]
+}
+
+model PatientTag {
+  patientId String
+  tagId     String
+  patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([patientId, tagId])
+}
+
+model PatientNote {
+  id            String   @id @default(cuid())
+  patientId     String
+  appointmentId String?
+  authorId      String?
+  body          String
+  clinical      Boolean  @default(false) // vizibilă doar ADMIN și MEDIC
+  pinned        Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  patient     Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  appointment Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  author      User?        @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([patientId, createdAt])
+}
+
+// ───────────────────────────── Programări ─────────────────────────────
+
+model Appointment {
+  id             String               @id @default(cuid())
+  locationId     String
+  doctorId       String
+  cabinetId      String?
+  patientId      String? // null până la conversia cererii online
+  leadId         String?
+  serviceId      String?
+  reason         String? // „Consultație sau control” sau text liber
+  startsAt       DateTime
+  endsAt         DateTime
+  status         AppointmentStatus    @default(PROGRAMAT)
+  source         AppointmentSource
+  comfort        Comfort?
+  comfortNote    String? // cuvintele pacientului
+  wantsSedation  Boolean              @default(false) // rezervă aparatul de inhalosedare
+  notes          String? // observații de recepție
+  confirmedAt    DateTime?
+  confirmedVia   ConfirmationChannel?
+  arrivedAt      DateTime?
+  startedAt      DateTime?
+  completedAt    DateTime?
+  cancelledAt    DateTime?
+  cancelledBy    CancelledBy?
+  cancelReason   String?
+  noShowAt       DateTime?
+  reminderSentAt DateTime?
+  tokenVersion   Int                  @default(0) // incrementat la mutare/anulare: link-urile vechi expiră
+  createdById    String?
+  updatedById    String?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  location  Location            @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  doctor    Doctor              @relation(fields: [doctorId], references: [id], onDelete: Restrict)
+  cabinet   Cabinet?            @relation(fields: [cabinetId], references: [id], onDelete: SetNull)
+  patient   Patient?            @relation(fields: [patientId], references: [id], onDelete: SetNull)
+  lead      Lead?               @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  service   Service?            @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  planItems TreatmentPlanItem[]
+  notesList PatientNote[]
+
+  @@index([locationId, startsAt])
+  @@index([doctorId, startsAt])
+  @@index([cabinetId, startsAt])
+  @@index([patientId, startsAt])
+  @@index([status, startsAt])
+  @@index([leadId])
+}
+
+// ───────────────────────────── Cereri (lead-uri) ─────────────────────────────
+
+model Lead {
+  id                 String     @id @default(cuid())
+  source             LeadSource
+  status             LeadStatus @default(NOU)
+  name               String
+  phone              String? // E.164
+  email              String?
+  message            String?
+  locationId         String?
+  serviceId          String?
+  preferredDoctorId  String?
+  preferredTime      String? // pentru „Prefer să mă sunați”: „după ora 16”
+  comfort            Comfort?
+  comfortNote        String?
+  wantsSedation      Boolean    @default(false)
+  forChild           Boolean    @default(false)
+  childFirstName     String?
+  childAge           Int?
+  consentGdprAt      DateTime?
+  consentTextVersion String?
+  consentSms         Boolean    @default(false)
+  sourcePath         String? // pagina de pe care a venit
+  ipHash             String?
+  idempotencyKey     String?    @unique // generat în formular; un dublu-click nu creează două cereri
+  assignedToId       String?
+  patientId          String?
+  lostReason         String?
+  contactedAt        DateTime?
+  convertedAt        DateTime?
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+
+  location        Location?      @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  service         Service?       @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  preferredDoctor Doctor?        @relation(fields: [preferredDoctorId], references: [id], onDelete: SetNull)
+  assignedTo      User?          @relation("LeadAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  patient         Patient?       @relation(fields: [patientId], references: [id], onDelete: SetNull)
+  appointments    Appointment[]
+  activities      LeadActivity[]
+
+  @@index([status, createdAt])
+  @@index([phone])
+}
+
+model LeadActivity {
+  id        String           @id @default(cuid())
+  leadId    String
+  type      LeadActivityType
+  body      String?
+  authorId  String?
+  createdAt DateTime         @default(now())
+
+  lead   Lead  @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  author User? @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([leadId, createdAt])
+}
+
+model Recall {
+  id                  String       @id @default(cuid())
+  patientId           String
+  locationId          String?
+  doctorId            String?
+  reason              String // „Control la 6 luni după igienizare”
+  dueDate             DateTime
+  status              RecallStatus @default(DE_FACUT)
+  attempts            Int          @default(0)
+  lastAttemptAt       DateTime?
+  outcomeNote         String?
+  sourceAppointmentId String?
+  bookedAppointmentId String?
+  createdById         String?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  patient  Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  location Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  doctor   Doctor?   @relation(fields: [doctorId], references: [id], onDelete: SetNull)
+
+  @@index([status, dueDate])
+}
+
+// ───────────────────────────── Facturare și încasări ─────────────────────────────
+
+model Invoice {
+  id             String         @id @default(cuid())
+  series         String // „DA”
+  number         Int // secvențial per serie, fără goluri (NumberSequence "FACTURA:<serie>")
+  patientId      String
+  locationId     String
+  status         InvoiceStatus  @default(EMISA)
+  issuedAt       DateTime       @default(now())
+  dueAt          DateTime?
+  currency       String         @default("RON")
+  subtotal       Int // bani
+  discountTotal  Int            @default(0)
+  vatTotal       Int            @default(0) // servicii medicale scutite de TVA (implicit 0)
+  total          Int
+  amountPaid     Int            @default(0) // denormalizat; recalculat în aceeași tranzacție cu plata
+  buyerName      String
+  buyerAddress   String?
+  buyerEmail     String?
+  buyerCompany   String? // persoană juridică (opțional)
+  buyerCui       String?
+  buyerRegCom    String?
+  notes          String?
+  eInvoiceStatus EInvoiceStatus @default(NETRANSMISA)
+  eInvoiceRef    String?
+  eInvoiceError  String?
+  createdById    String?
+  cancelledAt    DateTime?
+  cancelledById  String?
+  cancelReason   String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  patient  Patient       @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  location Location      @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  items    InvoiceItem[]
+  payments Payment[]
+
+  @@unique([series, number])
+  @@index([patientId, issuedAt])
+  @@index([locationId, issuedAt])
+}
+
+model InvoiceItem {
+  id                  String  @id @default(cuid())
+  invoiceId           String
+  serviceId           String?
+  treatmentPlanItemId String?
+  doctorId            String? // pentru raportul „venit pe medic”
+  description         String
+  tooth               Int?
+  quantity            Int     @default(1)
+  unitPrice           Int // bani
+  discount            Int     @default(0) // bani, pe linie
+  vatRate             Int     @default(0) // procent întreg
+  total               Int // quantity*unitPrice - discount (+ TVA)
+  sortOrder           Int     @default(0)
+
+  invoice           Invoice            @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  service           Service?           @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  treatmentPlanItem TreatmentPlanItem? @relation(fields: [treatmentPlanItemId], references: [id], onDelete: SetNull)
+  doctor            Doctor?            @relation(fields: [doctorId], references: [id], onDelete: SetNull)
+
+  @@index([invoiceId])
+  @@index([treatmentPlanItemId])
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  patientId     String
+  invoiceId     String? // null = avans / plată în cont
+  locationId    String
+  amount        Int // bani, > 0
+  method        PaymentMethod
+  paidAt        DateTime      @default(now())
+  receiptSeries String? // chitanță (doar NUMERAR)
+  receiptNumber Int?
+  reference     String? // nr. tranzacție POS / OP
+  notes         String?
+  receivedById  String?
+  cancelledAt   DateTime?
+  cancelledById String?
+  cancelReason  String?
+  createdAt     DateTime      @default(now())
+
+  patient  Patient  @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  invoice  Invoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  location Location @relation(fields: [locationId], references: [id], onDelete: Restrict)
+
+  @@unique([receiptSeries, receiptNumber])
+  @@index([patientId, paidAt])
+  @@index([locationId, paidAt])
+}
+
+// ───────────────────────────── Mesaje ─────────────────────────────
+
+model MessageTemplate {
+  id          String         @id @default(cuid())
+  key         String         @unique // „reminder.sms”, „reminder.email”, „booking.received.email” …
+  channel     MessageChannel
+  kind        MessageKind
+  name        String // eticheta din Setări
+  subject     String? // doar EMAIL
+  body        String // cu {{variabile}}
+  active      Boolean        @default(true)
+  updatedById String?
+  updatedAt   DateTime       @updatedAt
+}
+
+model MessageLog {
+  id                String         @id @default(cuid())
+  channel           MessageChannel
+  kind              MessageKind
+  status            MessageStatus
+  to                String
+  subject           String?
+  body              String
+  provider          String? // "smtp" | "console" | numele furnizorului SMS
+  providerMessageId String?
+  error             String?
+  patientId         String?
+  appointmentId     String?
+  leadId            String?
+  sentById          String? // null = trimis automat
+  createdAt         DateTime       @default(now())
+
+  @@index([appointmentId])
+  @@index([patientId, createdAt])
+  @@index([createdAt])
+}
+
+// ───────────────────────────── GDPR și audit ─────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  at         DateTime @default(now())
+  actorId    String? // null = sistem / pacient prin link semnat
+  actorName  String? // copie, rămâne lizibilă după dezactivarea contului
+  actorRole  Role?
+  action     String // „patient.view”, „patient.cnp.reveal”, „document.download” …
+  entityType String // „Patient”, „Appointment”, „Invoice” …
+  entityId   String?
+  patientId  String? // pentru raportul GDPR „cine a accesat datele mele”
+  ipHash     String?
+  metadata   String? // JSON: câmpuri modificate (nume, nu valori PII)
+
+  @@index([patientId, at])
+  @@index([actorId, at])
+  @@index([entityType, entityId])
+  @@index([at])
+}
+
+model DataRequest {
+  id            String            @id @default(cuid())
+  patientId     String?
+  type          DataRequestType
+  status        DataRequestStatus @default(PRIMITA)
+  requesterName String
+  contact       String?
+  details       String?
+  receivedAt    DateTime          @default(now())
+  dueAt         DateTime // receivedAt + 30 de zile (art. 12 GDPR)
+  completedAt   DateTime?
+  handledById   String?
+  outcome       String?
+
+  patient Patient? @relation(fields: [patientId], references: [id], onDelete: SetNull)
+
+  @@index([status, dueAt])
+}
+
+// ───────────────────────────── Sistem ─────────────────────────────
+
+model Setting {
+  key         String   @id // „clinic”, „booking”, „reminders”, „invoicing” (valoare JSON validată cu zod)
+  value       String
+  updatedById String?
+  updatedAt   DateTime @updatedAt
+}
+
+model NumberSequence {
+  key       String   @id // „PACIENT”, „FACTURA:DA”, „CHITANTA:DAC”
+  value     Int      @default(0) // ultimul număr emis
+  updatedAt DateTime @updatedAt
+}
+
+model RateLimitBucket {
+  key     String   @id // „booking:<ipHash>”, „login:<email>”
+  count   Int
+  resetAt DateTime
+
+  @@index([resetAt])
+}
