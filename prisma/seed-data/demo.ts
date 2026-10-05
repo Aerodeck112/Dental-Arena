@@ -883,20 +883,31 @@ async function buildDemo(tx: Tx, ctx: DemoContext): Promise<DemoSummary> {
   }
   for (const loc of ["cristesti", "ludus"] as const) {
     const list = todayDrafts.filter((d) => d.loc === loc).sort((a, b) => a.start - b.start);
+    if (list.length === 0) continue;
+    // Keep about half of the day ahead of the demo "now", even when the seed runs in the evening,
+    // so the agenda always shows arrived, confirmed, booked and cancelled visits.
+    const locNow = Math.min(demoNow, list[Math.max(1, Math.floor(list.length * 0.45))].start);
     let inTreatment = false;
     for (const d of list) {
-      if (d.end <= demoNow) d.status = "FINALIZAT";
-      else if (d.start <= demoNow) {
+      if (d.end <= locNow) d.status = "FINALIZAT";
+      else if (d.start <= locNow) {
         d.status = inTreatment ? "SOSIT" : "IN_TRATAMENT";
         inTreatment = true;
-      } else d.status = random.chance(0.6) ? "CONFIRMAT" : "PROGRAMAT";
+      }
     }
     const past = list.filter((d) => d.status === "FINALIZAT");
     if (past.length >= 2) past[random.int(0, past.length - 1)].status = "NEPREZENTAT";
-    const future = list.filter((d) => d.start > demoNow);
-    if (!list.some((d) => d.status === "SOSIT") && future.length > 0) future[0].status = "SOSIT"; // arrived early
-    const cancellable = list.filter((d) => d.start > demoNow && d.status !== "SOSIT");
-    if (cancellable.length >= 2) cancellable[cancellable.length - 1].status = "ANULAT";
+    const upcoming = list.filter((d) => d.start > locNow);
+    let first = 0;
+    if (!list.some((d) => d.status === "SOSIT") && upcoming.length > 0) {
+      upcoming[0].status = "SOSIT"; // arrived early
+      first = 1;
+    }
+    const rest = upcoming.slice(first);
+    rest.forEach((d, i) => {
+      d.status = i === 0 ? "CONFIRMAT" : i === 1 ? "PROGRAMAT" : random.chance(0.6) ? "CONFIRMAT" : "PROGRAMAT";
+    });
+    if (rest.length >= 3) rest[rest.length - 1].status = "ANULAT";
     else if (past.length >= 3) past.find((d) => d.status === "FINALIZAT" && d !== past[0])!.status = "ANULAT";
   }
 

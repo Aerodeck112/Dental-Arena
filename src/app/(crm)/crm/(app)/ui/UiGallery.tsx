@@ -304,7 +304,7 @@ function ColorsSection({ theme }: { theme: Theme }) {
               header: "Mostră",
               render: (r) => (
                 <span
-                  className="inline-flex h-6 items-center rounded-bloc px-2 font-semibold"
+                  className="inline-flex h-6 items-center rounded-bloc px-2 font-semibold whitespace-nowrap"
                   style={{ color: `var(--da-${r.fg})`, background: `var(--da-${r.bg})` }}
                 >
                   Aa ș ț

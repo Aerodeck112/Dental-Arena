@@ -76,7 +76,9 @@ function loadEnv(): Env {
     );
     if (weak.length > 0) {
       console.warn(
-        `[env] ATENȚIE: ${weak.join(", ")} folosesc valorile demonstrative din .env.example. Înlocuiți-le înainte de lansare.`,
+        weak.length === 1
+          ? `[env] ATENȚIE: ${weak[0]} folosește valoarea demonstrativă din .env.example. Înlocuiți-o înainte de lansare.`
+          : `[env] ATENȚIE: ${weak.join(", ")} folosesc valorile demonstrative din .env.example. Înlocuiți-le înainte de lansare.`,
       );
     }
   }

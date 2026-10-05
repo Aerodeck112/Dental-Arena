@@ -28,5 +28,5 @@ npm run db:seed               # date de bază + date demonstrative
 
 - Seed-ul de bază poate fi rulat de câte ori doriți: nu creează duplicate și nu suprascrie ce s-a modificat din CRM.
 - Datele demonstrative (46 de pacienți, programări pe ultimele 60 de zile, azi și următoarele 14 zile, cereri, facturi, rechemări) se creează doar dacă tabelul de pacienți este gol și `SEED_DEMO` nu este `0`.
-- `npm run db:reset` (`prisma migrate reset --force`) golește baza și rulează din nou seed-ul.
+- `npm run db:reset` (`prisma migrate reset --force && prisma db seed`) golește baza, aplică migrările și rulează din nou seed-ul. Prisma 7 nu mai rulează seed-ul automat după `migrate reset`, de aceea scriptul îl apelează explicit.
 - Toate datele clinice sunt fictive; telefoanele folosesc intervalul nealocat `+40700000xxx`, iar e-mailurile domeniul `example.com`.

@@ -9,7 +9,7 @@ import { utcToLocal } from "./time";
  * number, so neither ever wraps.
  */
 
-export const NBSP = " ";
+export const NBSP = "\u00A0";
 
 const leiInteger = new Intl.NumberFormat("ro-RO", { useGrouping: "always", maximumFractionDigits: 0 });
 const leiDecimal = new Intl.NumberFormat("ro-RO", {

@@ -29,7 +29,7 @@ export function Tabs({ items, label = "Secțiuni", className }: { items: TabItem
   const active = activeTabHref(pathname, items);
   return (
     <nav aria-label={label} className={cn("border-b border-linie", className)}>
-      <ul className="-mb-px flex gap-1 overflow-x-auto">
+      <ul className="relative -mb-px flex gap-1 overflow-x-auto">
         {items.map((item) => {
           const h = item.href.split("?")[0].replace(/\/$/, "") || "/";
           const current = h === active;

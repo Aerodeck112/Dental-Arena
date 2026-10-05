@@ -255,7 +255,13 @@
     line-height: var(--text-corp--line-height);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility;
+    /* Kerning and ligatures, without the hinted (whole-pixel) glyph advances that Chromium on
+       Linux applies otherwise: Red Hat Text 500 at 13–14px showed gaps such as „Telef on”. */
+    text-rendering: geometricPrecision;
+  }
+  /* Browsers reset form controls to text-rendering: auto; keep the body's setting. */
+  button, input, select, textarea {
+    text-rendering: inherit;
   }
   h1, h2, h3, h4 {
     text-wrap: balance;

@@ -28,7 +28,9 @@ function subscribe(listener: () => void) {
   return () => listeners.delete(listener);
 }
 const getSnapshot = () => items;
-const getServerSnapshot = (): ToastItem[] => [];
+/** Must be the same array on every call, or React warns about an infinite loop. */
+const SERVER_ITEMS: ToastItem[] = [];
+const getServerSnapshot = () => SERVER_ITEMS;
 const getOwner = () => owners[0] ?? null;
 const getServerOwner = () => null;
 

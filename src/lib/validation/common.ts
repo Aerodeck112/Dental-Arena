@@ -141,7 +141,7 @@ export function parseLei(input: string | number): number | null {
   if (typeof input === "number") {
     return Number.isFinite(input) && input >= 0 ? Math.round(input * 100) : null;
   }
-  let s = input.replace(/\s| /g, "").replace(/lei$/i, "");
+  let s = input.replace(/\s/g, "").replace(/lei$/i, "");
   if (s === "") return null;
   if (s.includes(",")) {
     // Romanian format: dots group thousands, the comma is the decimal separator.

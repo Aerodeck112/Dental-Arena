@@ -25,13 +25,22 @@ export type WeekStripProps = {
  * have slots, Home and End jump, days without slots are skipped and announced as unavailable.
  */
 export function WeekStrip({ days, value, onChange, label = "Alegeți ziua", className }: WeekStripProps) {
+  const stripRef = useRef<HTMLDivElement>(null);
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   const enabled = days.map((d, i) => (d.disabled ? -1 : i)).filter((i) => i >= 0);
   const selectedIndex = days.findIndex((d) => d.dateISO === value && !d.disabled);
   const tabbable = selectedIndex >= 0 ? selectedIndex : (enabled[0] ?? -1);
 
+  // Bring the selected day into view by scrolling the strip only. scrollIntoView() would also
+  // scroll the page, so a strip below the fold made the whole page jump on load.
   useEffect(() => {
-    if (selectedIndex >= 0) refs.current[selectedIndex]?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    const strip = stripRef.current;
+    const day = selectedIndex >= 0 ? refs.current[selectedIndex] : null;
+    if (!strip || !day) return;
+    const start = day.offsetLeft;
+    const end = start + day.offsetWidth;
+    if (start < strip.scrollLeft) strip.scrollLeft = start;
+    else if (end > strip.scrollLeft + strip.clientWidth) strip.scrollLeft = end - strip.clientWidth;
   }, [selectedIndex]);
 
   const move = (from: number, key: string) => {
@@ -53,9 +62,10 @@ export function WeekStrip({ days, value, onChange, label = "Alegeți ziua", clas
 
   return (
     <div
+      ref={stripRef}
       role="radiogroup"
       aria-label={label}
-      className={cn("-mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto px-1 py-1 [scrollbar-width:thin]", className)}
+      className={cn("relative -mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto px-1 py-1 [scrollbar-width:thin]", className)}
     >
       {days.map((d, i) => {
         const selected = i === selectedIndex;

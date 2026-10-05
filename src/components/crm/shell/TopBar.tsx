@@ -79,7 +79,7 @@ export function TopBar({ user, scope }: { user: ShellUser; scope: ClinicScope })
             autoComplete="off"
             placeholder="Căutați pacient: nume, telefon"
             aria-keyshortcuts="/ Control+K"
-            className="h-10 w-full rounded-control border border-linie-control bg-suprafata pl-9 pr-10 text-control text-cerneala placeholder:text-discret"
+            className="h-10 w-full text-ellipsis rounded-control border border-linie-control bg-suprafata pl-9 pr-3 text-control text-cerneala placeholder:text-discret sm:pr-10"
           />
           <kbd
             aria-hidden="true"
