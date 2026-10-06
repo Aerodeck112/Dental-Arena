@@ -6,16 +6,18 @@ import { ROLE_LABEL } from "@/lib/labels";
 export const metadata: Metadata = { title: "Acces interzis" };
 
 /** 403 page: every `requirePermission()` failure lands here (docs/architecture.md §0.1). */
-export default async function AccessDeniedPage() {
+export default async function AccessDeniedPage({ searchParams }: PageProps<"/crm/acces-interzis">) {
   const user = await requireUser();
+  const otherClinic = (await searchParams).motiv === "clinica";
   return (
     <section aria-labelledby="interzis-titlu" className="max-w-xl py-8">
       <h1 id="interzis-titlu" className="font-display text-h1">
         Nu aveți acces la această pagină
       </h1>
       <p className="mt-3 text-corp text-discret">
-        Contul dumneavoastră ({ROLE_LABEL[user.role]}) nu include această secțiune. Dacă aveți nevoie de
-        ea, cereți-i administratorului clinicii drepturile necesare.
+        {otherClinic
+          ? "Înregistrarea aparține altei clinici decât cea la care lucrați. Dacă aveți nevoie de ea, cereți-i administratorului să vă bifeze și această clinică în Echipă."
+          : `Contul dumneavoastră (${ROLE_LABEL[user.role]}) nu include această secțiune. Dacă aveți nevoie de ea, cereți-i administratorului clinicii drepturile necesare.`}
       </p>
       <div className="mt-5">
         <Link

@@ -30,6 +30,8 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  /** cPanel (Setup Node.js App): a self-contained server in .next/standalone, see docs/cpanel.md. */
+  output: "standalone",
   experimental: {
     serverActions: {
       bodySizeLimit: "2mb",

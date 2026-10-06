@@ -74,7 +74,7 @@ export async function canAccessLocation(locationId: string | null | undefined): 
 
 /** Redirects to „acces interzis” when the record belongs to a clinic the user does not work in. */
 export async function requireLocationAccess(locationId: string | null | undefined): Promise<void> {
-  if (!(await canAccessLocation(locationId))) redirect("/crm/acces-interzis");
+  if (!(await canAccessLocation(locationId))) redirect("/crm/acces-interzis?motiv=clinica");
 }
 
 const NO_CLINIC_ACCESS = "Această înregistrare aparține altei clinici. Nu aveți acces la ea.";

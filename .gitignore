@@ -50,3 +50,6 @@ next-env.d.ts
 /storage/
 /prisma/*.db-wal
 /prisma/*.db-shm
+
+# cPanel package (scripts/build-cpanel.sh)
+/deploy/
