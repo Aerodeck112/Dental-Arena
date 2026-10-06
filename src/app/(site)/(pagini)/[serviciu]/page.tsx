@@ -6,6 +6,7 @@ import { BookingBand } from "@/components/site/BookingBand";
 import { PriceTable } from "@/components/site/PriceTable";
 import { RelatedServices } from "@/components/site/RelatedServices";
 import { Container } from "@/components/site/Section";
+import { SERVICE_ART } from "@/components/site/DentalArt";
 import { ServiceHero } from "@/components/site/ServiceHero";
 import { ServiceSteps } from "@/components/site/ServiceSteps";
 import { WhoTreats } from "@/components/site/WhoTreats";
@@ -66,6 +67,7 @@ export default async function ServicePage({ params }: PageProps<"/[serviciu]">) 
         bookingHref={book}
         image={photo.src === content.image?.src ? { ...photo, focus: content.image.focus } : photo}
         priceHint={representative ? { name: representative.name, price: representative.price } : null}
+        art={SERVICE_ART[content.slug]}
       />
 
       <Container className="grid grid-cols-1 gap-x-gutter gap-y-16 py-sectiune lg:grid-cols-12">

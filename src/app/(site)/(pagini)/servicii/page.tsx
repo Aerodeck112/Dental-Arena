@@ -22,7 +22,7 @@ export default async function ServicesPage() {
   return (
     <>
       <JsonLd data={breadcrumbJsonLd([{ name: "Servicii", path: "/servicii" }])} />
-      <ServiceHero breadcrumbs={[{ href: "/", label: "Acasă" }, { label: "Servicii" }]} title="Servicii" lead="De la controlul periodic la implanturi, pentru adulți și copii. Lângă fiecare serviciu vedeți un preț din clinică; prețul exact îl aflați după consultație." bookingHref="/programare" secondary={null} />
+      <ServiceHero breadcrumbs={[{ href: "/", label: "Acasă" }, { label: "Servicii" }]} title="Servicii" lead="De la controlul periodic la implanturi, pentru adulți și copii. Lângă fiecare serviciu vedeți un preț din clinică; prețul exact îl aflați după consultație." bookingHref="/programare" secondary={null} art="pereche" />
       <Container className="py-sectiune">
         <ServiceIndex rows={rows} headingLevel="h2" />
       </Container>

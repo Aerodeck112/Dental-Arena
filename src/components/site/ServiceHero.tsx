@@ -3,12 +3,14 @@ import type { ReactNode } from "react";
 import { type BreadcrumbItem } from "@/components/ui/Breadcrumbs";
 import { cn } from "@/lib/cn";
 import type { SiteImageDefault } from "@/content/site-images";
+import { DentalArt, type DentalArtName } from "./DentalArt";
 import { SitePhoto } from "./SitePhoto";
 
 /**
  * The top of a service page, in the same forest-green panel as the home page: breadcrumb, the
  * title set large, the lead, an example price, the booking button and „Sunați”, and the service's
- * photo (changeable from the CRM, Fotografii site).
+ * photo (changeable from the CRM, Fotografii site). The line drawing sits in the corner beside a
+ * photo, or fills the empty right half of a page without one.
  */
 export function ServiceHero({
   breadcrumbs,
@@ -19,6 +21,7 @@ export function ServiceHero({
   image,
   priceHint,
   secondary = { href: "#preturi", label: "Vedeți prețurile" },
+  art,
   children,
 }: {
   breadcrumbs: BreadcrumbItem[];
@@ -31,12 +34,18 @@ export function ServiceHero({
   priceHint?: { name: string; price: string } | null;
   /** The second, quieter link beside the booking button. */
   secondary?: { href: string; label: string } | null;
+  /** Line drawing of the subject (teeth, implant, instruments). */
+  art?: DentalArtName;
   children?: ReactNode;
 }) {
   return (
     <section className="px-3 pt-1 sm:px-4">
-      <div className={cn("grid overflow-hidden rounded-mare bg-padure text-white", image && "lg:grid-cols-12")}>
-        <div className={cn("flex flex-col px-6 pt-8 pb-12 sm:px-10 lg:px-16 lg:pt-12 lg:pb-20", image ? "lg:col-span-7" : "")}>
+      <div className={cn("relative grid overflow-hidden rounded-mare bg-padure text-white", image && "lg:grid-cols-12")}>
+        {art && !image && (
+          <DentalArt name={art} className="pointer-events-none absolute inset-y-0 right-[6%] my-auto hidden h-[68%] w-auto text-menta lg:block" />
+        )}
+        <div className={cn("relative flex flex-col px-6 pt-8 pb-12 sm:px-10 lg:px-16 lg:pt-12 lg:pb-20", image ? "lg:col-span-7" : "")}>
+          {art && image && <DentalArt name={art} className="pointer-events-none absolute top-10 right-10 hidden w-24 text-menta lg:block xl:w-28" />}
           <nav aria-label="Pesmet">
             <ol className="flex flex-wrap items-center gap-x-2 text-mic text-padure-text">
               {breadcrumbs.map((b, i) => (

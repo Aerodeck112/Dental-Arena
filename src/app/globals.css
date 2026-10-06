@@ -380,6 +380,11 @@
   to { transform: rotate(360deg); }
 }
 
+/* Line drawings (DentalArt): the hairline keeps its weight at every size. */
+.desen * {
+  vector-effect: non-scaling-stroke;
+}
+
 /* The crown draws onto the filled screw (booking confirmation). Paths carry pathLength="1". */
 @utility da-crown-draw {
   stroke-dasharray: 1;

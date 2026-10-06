@@ -926,10 +926,10 @@ Nothing else in the product is choreographed.
 
 ### 9.2 Treatment rules
 
-- Only real photos of Dental Arena. No stock faces, no illustrations, no icon trios, no 3D teeth, no cartoon teeth.
+- Only real photos of Dental Arena. No stock faces, no 3D teeth, no cartoon teeth. The one kind of illustration is the line drawing of §9.6.
 - Grade neutral to slightly cool, and keep the clinic's real colours (the mustard stays mustard). No duotones, overlays, gradients or blur.
 - Photos use `radius-foto` (2px). Captions in `text-mic` `discret` say what and where. Alt text is in Romanian.
-- No surgical close-ups and no instruments in the first screen of any page.
+- No surgical close-ups and no photographed instruments in the first screen of any page (the line drawings of §9.6 are allowed).
 - Use `next/image` with explicit `sizes`. Hero `priority`; everything else lazy.
 
 ### 9.3 Portraits
@@ -962,7 +962,23 @@ Nothing else in the product is choreographed.
 
 ### 9.5 Icons
 
-Use one outline set with a 1.5px stroke and round caps (for example Lucide), and **only where an icon speeds recognition**: phone, map pin, calendar, clock, check, close, alert, door-enter, user-x, circle-slash, search. There are also custom glyphs for inhalosedare and copil in the CRM. Never put icons on service lists or feature lists.
+Use one outline set with a 1.5px stroke and round caps (for example Lucide), and **only where an icon speeds recognition**: phone, map pin, calendar, clock, check, close, alert, door-enter, user-x, circle-slash, search. There are also custom glyphs for inhalosedare and copil in the CRM. Never put these icons on service lists or feature lists; there the service's line drawing is used (§9.6).
+
+### 9.6 Line drawings (`DentalArt`)
+
+Asked for by the clinic: drawings of teeth, implants and instruments, in the manner of a dental chart.
+
+- One even hairline (1.5px on screen at every size, `vector-effect: non-scaling-stroke`), round caps, no fills except the filling in „plombă” at 22%. Drawn in `currentColor`: Mentă on `padure`, `actiune` on light surfaces.
+- Upright on a 120 × 120 grid; compositions („pereche”, „tavă”) are built from the same parts. Never a face, a sparkle or a gradient.
+- Decorative only: `aria-hidden`, never the sole carrier of information, and still (§8: nothing autoplays).
+
+| Where | Drawing |
+|---|---|
+| Home hero, above the headline | „pereche”: a natural molar beside an implant on one bone line (it answers the moss-wall logo in the photo) |
+| Service tiles on the home page | the service's drawing, `SERVICE_ART` |
+| Service pages, top-right of the green panel (desktop) | the service's drawing |
+| Servicii, Echipa, Contact, Prețuri (green panel without a photo) | a large drawing in the empty right half: pereche, consult, molar, culori |
+| Booking band | „tavă”: mirror, probe and tweezers on a tray, above the phones |
 
 ---
 

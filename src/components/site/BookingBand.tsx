@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { formatPhone, telHref } from "@/lib/format";
 import { CLINIC_ORDER, CLINICS } from "@/content/site";
+import { DentalArt } from "./DentalArt";
 import { Container } from "./Section";
 
 /**
  * The closing band of the marketing pages: forest green, one large sentence, the online booking
- * and both clinics' phones. The only dark surface of the site.
+ * and both clinics' phones, under the instrument tray. The only dark surface of the site.
  */
 export function BookingBand({
   title = "Programați o consultație",
@@ -32,24 +33,27 @@ export function BookingBand({
               Programați-vă online
             </Link>
           </div>
-          <ul className="flex flex-col gap-6 lg:col-span-4 lg:col-start-9">
-            {CLINIC_ORDER.map((slug) => {
-              const c = CLINICS[slug];
-              const n = formatPhone(c.phone);
-              return (
-                <li key={slug} className="border-t border-white/25 pt-5">
-                  <p className="text-mic text-padure-text">{c.shortName}</p>
-                  <a
-                    href={telHref(c.phone)}
-                    aria-label={`Sunați la ${c.shortName}, ${n}`}
-                    className="telefon mt-1 inline-flex min-h-control items-center text-[1.75rem] font-semibold underline decoration-transparent underline-offset-[0.2em] hover:decoration-current focus-visible:outline-white"
-                  >
-                    {n}
-                  </a>
-                </li>
-              );
-            })}
-          </ul>
+          <div className="flex flex-col gap-10 lg:col-span-4 lg:col-start-9">
+            <DentalArt name="tava" className="w-full max-w-[300px] text-menta" />
+            <ul className="flex flex-col gap-6">
+              {CLINIC_ORDER.map((slug) => {
+                const c = CLINICS[slug];
+                const n = formatPhone(c.phone);
+                return (
+                  <li key={slug} className="border-t border-white/25 pt-5">
+                    <p className="text-mic text-padure-text">{c.shortName}</p>
+                    <a
+                      href={telHref(c.phone)}
+                      aria-label={`Sunați la ${c.shortName}, ${n}`}
+                      className="telefon mt-1 inline-flex min-h-control items-center text-[1.75rem] font-semibold underline decoration-transparent underline-offset-[0.2em] hover:decoration-current focus-visible:outline-white"
+                    >
+                      {n}
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         </Container>
       </div>
     </section>

@@ -26,7 +26,7 @@ export default async function ContactPage() {
     <>
       <JsonLd data={breadcrumbJsonLd([{ name: "Contact", path: "/contact" }])} />
       <JsonLd data={locations.map(dentistJsonLd)} />
-      <ServiceHero breadcrumbs={[{ href: "/", label: "Acasă" }, { label: "Contact" }]} title="Contact" lead="Sunați direct la clinica la care veniți, programați-vă online sau scrieți-ne. Vă răspundem în cel mult o zi lucrătoare." bookingHref="/programare" secondary={null} />
+      <ServiceHero breadcrumbs={[{ href: "/", label: "Acasă" }, { label: "Contact" }]} title="Contact" lead="Sunați direct la clinica la care veniți, programați-vă online sau scrieți-ne. Vă răspundem în cel mult o zi lucrătoare." bookingHref="/programare" secondary={null} art="molar" />
 
       <section id="clinici" aria-labelledby="clinici-titlu" className="scroll-mt-24 py-sectiune">
         <Container>

@@ -23,7 +23,7 @@ export default async function PricesPage() {
   return (
     <>
       <JsonLd data={breadcrumbJsonLd([{ name: "Prețuri", path: "/preturi" }])} />
-      <ServiceHero breadcrumbs={[{ href: "/", label: "Acasă" }, { label: "Prețuri" }]} title="Prețuri" lead="Prețurile sunt orientative și includ manopera. Costul exact îl aflați după consultație și, unde este nevoie, după radiografii." bookingHref="/programare" secondary={null} />
+      <ServiceHero breadcrumbs={[{ href: "/", label: "Acasă" }, { label: "Prețuri" }]} title="Prețuri" lead="Prețurile sunt orientative și includ manopera. Costul exact îl aflați după consultație și, unde este nevoie, după radiografii." bookingHref="/programare" secondary={null} art="culori" />
       <Container className="py-sectiune">
         <PriceSearch categories={visible} />
       </Container>

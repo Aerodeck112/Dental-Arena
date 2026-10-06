@@ -3,6 +3,7 @@ import { AvailabilityPanel } from "@/components/site/AvailabilityPanel";
 import { BookingBand } from "@/components/site/BookingBand";
 import { ClinicCards } from "@/components/site/ClinicCards";
 import { ComfortQuestion } from "@/components/site/ComfortQuestion";
+import { DentalArt } from "@/components/site/DentalArt";
 import { DoctorFigure } from "@/components/site/DoctorFigure";
 import { JsonLd } from "@/components/site/JsonLd";
 import { PriceTable } from "@/components/site/PriceTable";
@@ -64,6 +65,8 @@ export default async function HomePage() {
             <SitePhoto image={img["acasa.principala"]} priority sizes="(min-width: 1024px) 42vw, 100vw" position="50% 42%" />
           </div>
           <div className="order-2 flex flex-col justify-end px-6 pt-10 pb-28 sm:px-10 lg:order-1 lg:col-span-7 lg:px-16 lg:pt-28 lg:pb-36">
+            {/* A natural molar beside an implant: what the clinic does, drawn in one line. */}
+            <DentalArt name="pereche" className="mb-8 w-48 text-menta sm:w-60 lg:mb-12 lg:w-72" />
             <h1 id="titlu-acasa" className="font-display text-mega">
               {hero.lines.map((line) => (
                 <span key={line} className="block">

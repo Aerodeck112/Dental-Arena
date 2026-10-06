@@ -22,7 +22,7 @@ export default async function TeamPage() {
   return (
     <>
       <JsonLd data={breadcrumbJsonLd([{ name: "Echipa", path: "/echipa" }])} />
-      <ServiceHero breadcrumbs={[{ href: "/", label: "Acasă" }, { label: "Echipa" }]} title="Medicii" lead="Cinci medici, în Cristești și Luduș. Respectăm ora programării, iar medicii noștri au acea „mână ușoară” pe care o căutați." bookingHref="/programare" secondary={null} />
+      <ServiceHero breadcrumbs={[{ href: "/", label: "Acasă" }, { label: "Echipa" }]} title="Medicii" lead="Cinci medici, în Cristești și Luduș. Respectăm ora programării, iar medicii noștri au acea „mână ușoară” pe care o căutați." bookingHref="/programare" secondary={null} art="consult" />
       <Container className="py-sectiune">
         <ul className="grid grid-cols-1 gap-x-gutter gap-y-14 sm:grid-cols-2 lg:grid-cols-5">
           {doctors.map((d) => (

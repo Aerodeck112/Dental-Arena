@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { cn } from "@/lib/cn";
+import { isServiceSlug } from "@/content/services";
 import type { SiteImageDefault } from "@/content/site-images";
 import type { ServiceIndexRow } from "@/server/public/types";
+import { DentalArt, SERVICE_ART } from "./DentalArt";
 import { SitePhoto } from "./SitePhoto";
 
 /**
  * „Ce tratăm” as a grid with two weights: the first two services (the ones people ask about most)
- * are large photo panels; the other eight are quiet tiles. Each tile is one link to the service
+ * are large photo panels; the other eight are quiet tiles, each with the line drawing of its service. Each tile is one link to the service
  * page; the price shown is the representative price from the CRM.
  */
 export function ServiceGrid({
@@ -55,6 +57,7 @@ export function ServiceGrid({
           href={`/${r.slug}`}
           className="group flex min-h-[13rem] flex-col rounded-mediu border border-linie bg-suprafata p-6 transition-colors duration-200 hover:border-actiune hover:bg-menta-pal lg:col-span-3"
         >
+          {isServiceSlug(r.slug) && <DentalArt name={SERVICE_ART[r.slug]} className="mb-5 size-20 text-actiune" />}
           <h3 className="font-display text-[1.75rem] leading-[1.1] text-cerneala">{r.name}</h3>
           <p className="mt-3 line-clamp-4 text-mic text-discret">{r.summary}</p>
           {r.representative && (
