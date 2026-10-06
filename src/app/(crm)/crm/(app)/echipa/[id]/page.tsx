@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { DoctorProfileForm } from "@/components/crm/admin/DoctorProfileForm";
+import { PhotoUploader } from "@/components/crm/media/PhotoUploader";
 import { UserAccountActions, UserForm } from "@/components/crm/admin/UserForm";
 import { Breadcrumbs, ButtonLink, FlagTag, PageHeader, Panel } from "@/components/ui";
 import { requirePermission } from "@/lib/auth/dal";
@@ -86,6 +87,22 @@ export default async function StaffMemberPage({ params, searchParams }: PageProp
             isSelf={isSelf}
             isLastAdmin={user.role === "ADMIN" && user.active && adminCount <= 1}
           />
+        </Panel>
+      )}
+      {doctor && (
+        <Panel title="Fotografia de pe site">
+          <div className="max-w-xs">
+            <PhotoUploader
+              target={{ doctorId: doctor.id }}
+              src={doctor.photoPath}
+              alt={doctor.publicName}
+              isDefault={!doctor.photoPath}
+              aspect="aspect-[4/5]"
+              withAlt={false}
+              resetLabel="Scoateți fotografia"
+              emptyLabel="Fără fotografie: site-ul arată inițialele."
+            />
+          </div>
         </Panel>
       )}
       {(doctor || user?.role === "MEDIC") && (

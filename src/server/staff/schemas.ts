@@ -62,7 +62,7 @@ export const doctorProfileSchema = z.object({
     z
       .string()
       .trim()
-      .regex(/^\/images\/[a-z0-9/_.-]+\.(?:jpe?g|png|webp|avif)$/i, "Fotografia trebuie să fie o cale din /images/, de exemplu /images/echipa/andrei-marcoci.jpg.")
+      .regex(/^\/(?:images|media)\/[a-z0-9/_.-]+\.(?:jpe?g|png|webp|avif)$/i, "Fotografia se încarcă din câmpul „Fotografia”.")
       .optional(),
   ),
   monogram: z.preprocess(blank, z.string().trim().toUpperCase().regex(/^[A-ZĂÂÎȘȚ]{1,3}$/, "Monograma are 1–3 litere.").optional()),

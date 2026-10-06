@@ -9,6 +9,7 @@ import {
   ChartLine,
   FileText,
   House,
+  Images,
   Inbox,
   MapPin,
   MessageSquare,
@@ -48,6 +49,7 @@ const ICONS: Record<NavIcon, IconComponent> = {
   rapoarte: ChartLine,
   gdpr: ShieldCheck,
   audit: ScrollText,
+  fotografii: Images,
   setari: Settings,
 };
 

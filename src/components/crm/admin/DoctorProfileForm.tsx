@@ -130,15 +130,7 @@ export function DoctorProfileForm({
           error={e?.slug}
         />
         <TextField id={ids("roleLine")} label="Specializarea" name="roleLine" required defaultValue={doctor?.roleLine} maxLength={160} hint="De exemplu Medic dentist, stomatologie generală." error={e?.roleLine} className="md:col-span-2" />
-        <TextField
-          id={ids("photoPath")}
-          label="Fotografia"
-          name="photoPath"
-          optional
-          defaultValue={doctor?.photoPath ?? ""}
-          hint="Calea din /images/, de exemplu /images/echipa/andrei-marcoci.jpg. Fără fotografie, site-ul arată monograma."
-          error={e?.photoPath}
-        />
+        <input type="hidden" name="photoPath" value={doctor?.photoPath ?? ""} />
         <TextField id={ids("monogram")} label="Monograma" name="monogram" optional defaultValue={doctor?.monogram ?? ""} maxLength={3} hint="1–3 litere, de exemplu VP." error={e?.monogram} />
       </div>
       <TextArea id={ids("bio")} label="Prezentare" name="bio" optional rows={5} maxLength={3000} defaultValue={doctor?.bio ?? ""} error={e?.bio} />

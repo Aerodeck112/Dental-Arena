@@ -1040,3 +1040,15 @@ model RateLimitBucket {
 
   @@index([resetAt])
 }
+
+/// Fotografiile site-ului încărcate din panou (CRM → Fotografii site). Cheia este locul din pagină,
+/// de exemplu „acasa.principala” sau „serviciu.implantologie”. Fără rând: se folosește fotografia implicită.
+model SiteImage {
+  key         String   @id
+  path        String // "/media/acasa-principala-1759751234.webp"
+  alt         String
+  width       Int
+  height      Int
+  updatedById String?
+  updatedAt   DateTime @updatedAt
+}

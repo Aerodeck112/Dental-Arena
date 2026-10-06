@@ -23,6 +23,7 @@ export type NavIcon =
   | "rapoarte"
   | "gdpr"
   | "audit"
+  | "fotografii"
   | "setari";
 
 export type NavCountKey = "leadsNew" | "recallsDue";
@@ -60,6 +61,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   },
   { href: "/crm/gdpr", label: "GDPR", icon: "gdpr", permission: "gdpr.manage" },
   { href: "/crm/audit", label: "Audit", icon: "audit", permission: "audit.view" },
+  { href: "/crm/fotografii", label: "Fotografii site", icon: "fotografii", permission: "settings.manage" },
   { href: "/crm/setari", label: "Setări", icon: "setari", permission: "settings.manage" },
 ];
 

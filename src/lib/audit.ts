@@ -42,6 +42,7 @@ export type AuditAction =
   | "catalog.update"
   | "schedule.update"
   | "settings.update"
+  | "media.update"
   | "template.update"
   | "report.export"
   | "gdpr.request";
@@ -80,6 +81,7 @@ export const AUDIT_ACTION_LABEL: Record<AuditAction, string> = {
   "payment.cancel": "Încasare anulată",
   "catalog.update": "Servicii modificate",
   "schedule.update": "Program modificat",
+  "media.update": "Fotografie site schimbată",
   "settings.update": "Setări modificate",
   "template.update": "Șablon modificat",
   "report.export": "Raport exportat",
