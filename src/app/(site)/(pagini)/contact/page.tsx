@@ -1,9 +1,10 @@
 import { HoneypotFields } from "@/components/forms/HoneypotFields";
+import { getSiteImages } from "@/server/media/site-images";
+import { ServiceHero } from "@/components/site/ServiceHero";
 import { ClinicSplit } from "@/components/site/ClinicSplit";
 import { ContactForm } from "@/components/site/ContactForm";
 import { JsonLd } from "@/components/site/JsonLd";
 import { Container } from "@/components/site/Section";
-import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { SITE } from "@/content/site";
 import { dentistJsonLd, pageMetadata } from "@/server/public/seo";
@@ -20,24 +21,18 @@ export const metadata = pageMetadata({
 
 /** Both clinics split on the axis (#clinici, #cristesti, #ludus), maps behind consent, and the contact form. */
 export default async function ContactPage() {
-  const locations = await getPublicLocations();
+  const [locations, img] = await Promise.all([getPublicLocations(), getSiteImages(["clinica.cristesti", "clinica.ludus"] as const)]);
   return (
     <>
       <JsonLd data={locations.map(dentistJsonLd)} />
-      <Container className="pt-6 md:pt-10">
-        <Breadcrumbs items={[{ href: "/", label: "Acasă" }, { label: "Contact" }]} />
-        <h1 className="mt-8 font-display text-h1 text-cerneala lg:mt-12">Contact</h1>
-        <p className="mt-6 text-lead text-discret masura-lead">
-          Sunați direct la clinica la care veniți, programați-vă online sau scrieți-ne. Vă răspundem în cel mult o zi lucrătoare.
-        </p>
-      </Container>
+      <ServiceHero breadcrumbs={[{ href: "/", label: "Acasă" }, { label: "Contact" }]} title="Contact" lead="Sunați direct la clinica la care veniți, programați-vă online sau scrieți-ne. Vă răspundem în cel mult o zi lucrătoare." bookingHref="/programare" secondary={null} />
 
       <section id="clinici" aria-labelledby="clinici-titlu" className="scroll-mt-24 py-sectiune">
         <Container>
           <h2 id="clinici-titlu" className="sr-only">
             Clinicile
           </h2>
-          <ClinicSplit locations={locations} headingLevel="h2" />
+          <ClinicSplit locations={locations} headingLevel="h2" images={{ cristesti: img["clinica.cristesti"], ludus: img["clinica.ludus"] }} />
         </Container>
       </section>
 

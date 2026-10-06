@@ -1,9 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
-import { BookingCta } from "@/components/site/BookingCta";
-import { ClinicSplit } from "@/components/site/ClinicSplit";
+import { BookingBand } from "@/components/site/BookingBand";
+import { ClinicCards } from "@/components/site/ClinicCards";
 import { Container } from "@/components/site/Section";
-import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { ServiceHero } from "@/components/site/ServiceHero";
+import { SitePhoto } from "@/components/site/SitePhoto";
+import { getSiteImages } from "@/server/media/site-images";
 import { ABOUT } from "@/content/about";
 import { bookingHref } from "@/content/site";
 import { pageMetadata } from "@/server/public/seo";
@@ -22,24 +24,23 @@ const LINK = "inline-flex min-h-control items-center font-medium text-link under
 
 /** The clinic story and „Fără durere / Fără frică / Precizie”, with the texts in their correct pairing (§12.6). */
 export default async function AboutPage() {
-  const locations = await getPublicLocations();
+  const [locations, img] = await Promise.all([getPublicLocations(), getSiteImages(["despre.principala", "despre.secundara", "clinica.cristesti", "clinica.ludus"] as const)]);
   return (
     <>
-      <Container className="pt-6 pb-sectiune md:pt-10">
-        <Breadcrumbs items={[{ href: "/", label: "Acasă" }, { label: ABOUT.title }]} />
-        <div className="mt-8 grid grid-cols-1 items-end gap-x-gutter gap-y-10 lg:mt-12 lg:grid-cols-12">
-          <div className="lg:col-span-6">
-            <h1 className="font-display text-h1 text-cerneala">{ABOUT.title}</h1>
-            <p className="mt-6 text-lead text-discret masura-lead">{ABOUT.lead}</p>
+      <ServiceHero
+        breadcrumbs={[{ href: "/", label: "Acasă" }, { label: ABOUT.title }]}
+        title={ABOUT.title}
+        lead={ABOUT.lead}
+        image={img["despre.principala"]}
+        bookingHref="/programare"
+        secondary={{ href: "/echipa", label: "Cunoașteți medicii" }}
+      />
+      <Container className="py-sectiune">
+        <div className="grid items-center gap-x-gutter gap-y-12 lg:grid-cols-12">
+          <div className="relative aspect-[4/3] overflow-hidden rounded-mare bg-adancit lg:col-span-5">
+            <SitePhoto image={img["despre.secundara"]} sizes="(min-width: 1024px) 40vw, 100vw" />
           </div>
-          <figure className="lg:col-span-6">
-            <div className="relative aspect-[3/2] w-full overflow-hidden rounded-foto bg-adancit">
-              <Image src={ABOUT.heroImage.src} alt={ABOUT.heroImage.alt} fill priority sizes="(min-width: 1024px) 620px, 100vw" className="object-cover" />
-            </div>
-          </figure>
-        </div>
-        <div className="mt-16 grid gap-x-gutter lg:grid-cols-12">
-          <div className="flex flex-col gap-5 lg:col-span-7 lg:col-start-2">
+          <div className="flex flex-col gap-5 lg:col-span-6 lg:col-start-7">
             {ABOUT.story.map((p) => (
               <p key={p} className="text-corp text-cerneala masura">
                 {p}
@@ -61,7 +62,7 @@ export default async function AboutPage() {
           <ul className="mt-12 grid grid-cols-1 gap-x-gutter gap-y-14 md:grid-cols-3">
             {ABOUT.principles.map((p) => (
               <li key={p.title}>
-                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-foto bg-adancit">
+                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-mare bg-adancit">
                   <Image
                     src={p.image.src}
                     alt={p.image.alt}
@@ -92,16 +93,16 @@ export default async function AboutPage() {
         </Container>
       </section>
 
-      <section aria-labelledby="unde" className="bg-suprafata py-sectiune">
+      <section aria-labelledby="unde" className="py-sectiune">
         <Container>
           <h2 id="unde" className="font-display text-h2 text-cerneala">
             {ABOUT.clinicsTitle}
           </h2>
-          <ClinicSplit locations={locations} withMap={false} className="mt-12" />
+          <ClinicCards locations={locations} images={{ cristesti: img["clinica.cristesti"], ludus: img["clinica.ludus"] }} className="mt-12" />
         </Container>
       </section>
 
-      <BookingCta title="Programați o consultație" href={bookingHref()} />
+      <BookingBand href={bookingHref()} />
     </>
   );
 }

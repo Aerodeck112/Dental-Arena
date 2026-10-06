@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Logo } from "@/components/brand/Logo";
-import { ButtonLink } from "@/components/ui/ButtonLink";
 import { cn } from "@/lib/cn";
 import { isServiceSlug } from "@/content/services";
 import { MAIN_NAV } from "@/content/site";
@@ -27,14 +26,14 @@ export function SiteHeader() {
   };
 
   return (
-    <header data-print="ascuns" className="sticky top-0 z-40 bg-fundal">
+    <header data-print="ascuns" className="sticky top-0 z-40 bg-fundal/95 backdrop-blur-sm">
       <Container className="flex h-20 items-center gap-4 xl:h-24">
         <Link
           href="/"
           aria-label="Dental Arena, prima pagină"
           className="-ml-1 inline-flex min-h-control shrink-0 items-center rounded-control px-1"
         >
-          <Logo variant="compact" title="" className="h-11 w-auto xl:h-12" />
+          <Logo variant="full" title="" priority className="h-12 w-auto xl:h-14" />
         </Link>
 
         <nav aria-label="Principal" className="ml-8 hidden xl:block">
@@ -65,7 +64,12 @@ export function SiteHeader() {
         <div className="ml-auto flex items-center gap-2 md:gap-4">
           <CallMenu className="hidden md:block" />
           <span className="hidden md:block">
-            <ButtonLink href="/programare">Programați-vă</ButtonLink>
+            <Link
+              href="/programare"
+              className="inline-flex h-12 items-center rounded-chip bg-actiune px-6 text-control font-semibold text-pe-actiune transition-colors duration-150 hover:bg-actiune-apasat"
+            >
+              Programați-vă
+            </Link>
           </span>
           <MobileMenu className="xl:hidden" />
         </div>

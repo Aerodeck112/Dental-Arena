@@ -15,8 +15,11 @@ export function ClinicSplit({
   locations,
   withMap = true,
   headingLevel = "h3",
+  images,
   className,
 }: {
+  /** Photos changed from the CRM (Fotografii site); the content file's photo otherwise. */
+  images?: Partial<Record<ClinicSlug, { src: string; alt: string }>>;
   /** From the CRM; the content file fills in anything missing. */
   locations: PublicLocation[];
   withMap?: boolean;
@@ -40,10 +43,11 @@ export function ClinicSplit({
             aria-labelledby={`clinica-${slug}`}
             className={cn("flex scroll-mt-28 flex-col", i === 0 ? "md:pr-[calc(var(--spacing-gutter)*2)]" : "md:pl-[calc(var(--spacing-gutter)*2)]")}
           >
-            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-foto bg-adancit">
+            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-mare bg-adancit">
               <Image
-                src={c.photo.src}
-                alt={c.photo.alt}
+                src={images?.[slug]?.src ?? c.photo.src}
+                alt={images?.[slug]?.alt ?? c.photo.alt}
+                unoptimized={images?.[slug]?.src.startsWith("/media/")}
                 fill
                 sizes="(min-width: 1280px) 600px, (min-width: 768px) 46vw, 100vw"
                 className="object-cover"

@@ -98,6 +98,16 @@ export const HOME = {
     },
   },
 
+  visit: {
+    title: "Cum decurge prima vizită",
+    steps: [
+      { title: "Programarea", text: "Alegeți online o oră liberă sau sunați la clinica la care veniți. Vă confirmăm programarea." },
+      { title: "Consultația", text: "Medicul vă examinează și, dacă e nevoie, face o radiografie. Vă spune pe înțeles ce a găsit." },
+      { title: "Planul de tratament", text: "Primiți planul cu etapele și prețul fiecăreia, înainte să începem orice tratament." },
+      { title: "Tratamentul", text: "Lucrăm fără durere. Dacă vă e teamă, putem lucra sub inhalosedare." },
+    ],
+  },
+
   clinics: {
     title: "Clinicile",
     lead: "Ne găsiți în Cristești, lângă Târgu Mureș, și în Luduș. Sunați direct la clinica la care veniți.",

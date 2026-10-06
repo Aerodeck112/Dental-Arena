@@ -1,14 +1,16 @@
-import Image from "next/image";
 import Link from "next/link";
 import { AvailabilityPanel } from "@/components/site/AvailabilityPanel";
-import { ClinicSplit } from "@/components/site/ClinicSplit";
+import { BookingBand } from "@/components/site/BookingBand";
+import { ClinicCards } from "@/components/site/ClinicCards";
 import { ComfortQuestion } from "@/components/site/ComfortQuestion";
 import { DoctorFigure } from "@/components/site/DoctorFigure";
 import { JsonLd } from "@/components/site/JsonLd";
 import { PriceTable } from "@/components/site/PriceTable";
 import { Container } from "@/components/site/Section";
-import { ServiceIndex } from "@/components/site/ServiceIndex";
+import { ServiceGrid } from "@/components/site/ServiceGrid";
+import { SitePhoto } from "@/components/site/SitePhoto";
 import { HOME } from "@/content/home";
+import { getSiteImages } from "@/server/media/site-images";
 import { dentistJsonLd, pageMetadata } from "@/server/public/seo";
 import { getPricesByCodes, getPublicDoctors, getPublicLocations, getServiceIndex } from "@/server/public/queries";
 import type { PublicPrice } from "@/server/public/types";
@@ -27,94 +29,135 @@ const SEDATION_CODE = "INH-ORA";
 
 const LINK =
   "inline-flex min-h-control items-center font-medium text-link underline decoration-1 underline-offset-[0.2em] hover:decoration-2";
+const H2 = "font-display text-[clamp(2.5rem,1.6rem+2.8vw,4.25rem)] leading-[1.02] text-cerneala";
 
 export default async function HomePage() {
-  const [doctors, index, prices, locations] = await Promise.all([
+  const [doctors, index, prices, locations, img] = await Promise.all([
     getPublicDoctors(),
     getServiceIndex(),
     getPricesByCodes([...HOME.children.priceCodes, SEDATION_CODE]),
     getPublicLocations(),
+    getSiteImages([
+      "acasa.principala",
+      "acasa.secundara",
+      "acasa.confort",
+      "acasa.copii",
+      "acasa.tehnologie",
+      "clinica.cristesti",
+      "clinica.ludus",
+      "serviciu.implantologie",
+      "serviciu.inhalosedare",
+    ] as const),
   ]);
   const childPrices = HOME.children.priceCodes.map((c) => prices.get(c)).filter((p): p is PublicPrice => !!p);
   const sedation = prices.get(SEDATION_CODE);
-  const { hero, comfort, children: kids } = HOME;
+  const { hero, comfort, children: kids, visit } = HOME;
 
   return (
     <>
       <JsonLd data={locations.map(dentistJsonLd)} />
 
-      {/* Hero: the clinic's promise, the hand-over at reception, and the first free hours. */}
-      <section aria-labelledby="titlu-acasa" className="pt-6 pb-sectiune md:pt-10">
-        <Container className="grid grid-cols-1 gap-x-gutter lg:grid-cols-12">
-          <div className="lg:col-span-7 lg:row-start-1 lg:pt-14">
-            <h1 id="titlu-acasa" className="font-display text-hero text-cerneala">
+      {/* Hero: the promise, set large on forest green, beside the clinic's own moss wall. */}
+      <section aria-labelledby="titlu-acasa" className="px-3 pt-1 sm:px-4">
+        <div className="relative isolate grid overflow-hidden rounded-mare bg-padure text-white lg:min-h-[min(88svh,920px)] lg:grid-cols-12">
+          <div className="relative order-1 aspect-[4/3] sm:aspect-[16/9] lg:order-2 lg:col-span-5 lg:aspect-auto">
+            <SitePhoto image={img["acasa.principala"]} priority sizes="(min-width: 1024px) 42vw, 100vw" position="50% 42%" />
+          </div>
+          <div className="order-2 flex flex-col justify-end px-6 pt-10 pb-28 sm:px-10 lg:order-1 lg:col-span-7 lg:px-16 lg:pt-28 lg:pb-36">
+            <h1 id="titlu-acasa" className="font-display text-mega">
               {hero.lines.map((line) => (
                 <span key={line} className="block">
                   {line}
                 </span>
               ))}
             </h1>
-            <p className="mt-8 text-lead text-discret masura-lead">{hero.lead}</p>
-          </div>
-          <figure className="order-3 mt-10 lg:order-none lg:col-span-4 lg:col-start-9 lg:row-start-1 lg:mt-0">
-            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-foto bg-adancit lg:aspect-[4/5]">
-              <Image
-                src={hero.image.src}
-                alt={hero.image.alt}
-                fill
-                priority
-                sizes="(min-width: 1280px) 412px, (min-width: 1024px) 32vw, 100vw"
-                className="object-cover object-[var(--foto-lat)] lg:object-[var(--foto-inalt)]"
-                style={{ ["--foto-lat" as string]: hero.image.focusWide, ["--foto-inalt" as string]: hero.image.focusTall }}
-              />
+            <p className="mt-8 max-w-[44ch] text-lead text-padure-text">{hero.lead}</p>
+            <div className="mt-10 flex flex-wrap gap-3">
+              <Link
+                href="/programare"
+                className="inline-flex h-14 items-center rounded-chip bg-menta px-8 text-control font-semibold text-pe-menta transition-colors duration-150 hover:bg-white focus-visible:outline-white"
+              >
+                Programați-vă online
+              </Link>
+              <Link
+                href="/servicii"
+                className="inline-flex h-14 items-center rounded-chip border-[1.5px] border-white/60 px-8 text-control font-medium text-white transition-colors duration-150 hover:border-white hover:bg-white/10 focus-visible:outline-white"
+              >
+                Vedeți serviciile
+              </Link>
             </div>
-          </figure>
-          <div className="relative z-10 mt-10 lg:col-span-12 lg:row-start-2 lg:-mt-12">
-            <AvailabilityPanel title={HOME.availability.title} fallback={HOME.availability.fallback} />
           </div>
+          {/* The hand-over at reception, laid over the corner of the moss wall. */}
+          <div className="absolute right-6 bottom-6 z-10 hidden aspect-[4/3] w-[min(22vw,300px)] overflow-hidden rounded-mediu border-4 border-padure lg:block xl:right-10 xl:bottom-10">
+            <SitePhoto image={img["acasa.secundara"]} sizes="300px" />
+          </div>
+        </div>
+        <Container className="relative z-10 -mt-16 lg:-mt-24">
+          <AvailabilityPanel title={HOME.availability.title} fallback={HOME.availability.fallback} className="lg:max-w-[78%]" />
+        </Container>
+      </section>
+
+      {/* Ce tratăm */}
+      <section aria-labelledby="ce-tratam" className="pt-sectiune">
+        <Container>
+          <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+            <div>
+              <h2 id="ce-tratam" className={H2}>
+                {HOME.services.title}
+              </h2>
+              <p className="mt-5 max-w-[52ch] text-lead text-discret">{HOME.services.lead}</p>
+            </div>
+            <p className="flex flex-wrap gap-x-8">
+              <Link href="/preturi" className={LINK}>
+                {HOME.services.allPrices}
+              </Link>
+              <Link href="/servicii" className={LINK}>
+                Toate serviciile
+              </Link>
+            </p>
+          </div>
+          <ServiceGrid
+            rows={index}
+            featured={[
+              { slug: "implantologie", image: img["serviciu.implantologie"] },
+              { slug: "inhalosedare", image: img["serviciu.inhalosedare"] },
+            ]}
+            className="mt-12"
+          />
         </Container>
       </section>
 
       {/* The comfort question: asked once, seen by the doctor before the visit. */}
-      <section aria-labelledby="confort" className="bg-suprafata py-sectiune">
-        <Container className="grid grid-cols-1 items-start gap-x-gutter gap-y-12 lg:grid-cols-12">
-          <div className="lg:col-span-7 lg:pt-16">
-            <h2 id="confort" className="max-w-[20ch] font-display text-h2 text-cerneala">
+      <section aria-labelledby="confort" className="px-3 pt-sectiune sm:px-4">
+        <div className="grid overflow-hidden rounded-mare bg-menta-pal lg:grid-cols-12">
+          <div className="px-6 py-14 sm:px-10 lg:col-span-7 lg:px-16 lg:py-24">
+            <h2 id="confort" className={`${H2} max-w-[16ch]`}>
               {comfort.question}
             </h2>
-            <p className="mt-4 mb-8 text-lead text-discret masura-lead">{comfort.intro}</p>
+            <p className="mt-6 mb-10 max-w-[46ch] text-lead text-discret">{comfort.intro}</p>
             <ComfortQuestion headingId="confort" sedationPrice={sedation?.price ?? null} />
           </div>
-          <figure className="lg:col-span-4 lg:col-start-9">
-            <div className="relative aspect-[3/4] w-full overflow-hidden rounded-foto bg-adancit">
-              <Image
-                src={comfort.image.src}
-                alt={comfort.image.alt}
-                fill
-                sizes="(min-width: 1024px) 412px, 100vw"
-                className="object-cover"
-              />
-            </div>
-            <figcaption className="mt-3 text-mic text-discret">{comfort.image.caption}</figcaption>
-          </figure>
-        </Container>
+          <div className="relative min-h-[22rem] lg:col-span-5">
+            <SitePhoto image={img["acasa.confort"]} sizes="(min-width: 1024px) 42vw, 100vw" />
+          </div>
+        </div>
       </section>
 
       {/* Medicii */}
-      <section aria-labelledby="medicii" className="py-sectiune">
+      <section aria-labelledby="medicii" className="pt-sectiune">
         <Container>
-          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <div>
-              <h2 id="medicii" className="font-display text-h2 text-cerneala">
+              <h2 id="medicii" className={H2}>
                 {HOME.doctors.title}
               </h2>
-              <p className="mt-4 text-lead text-discret masura-lead">{HOME.doctors.lead}</p>
+              <p className="mt-5 max-w-[52ch] text-lead text-discret">{HOME.doctors.lead}</p>
             </div>
             <Link href="/echipa" className={LINK}>
               {HOME.doctors.all}
             </Link>
           </div>
-          <ul className="-mx-margine mt-10 flex snap-x snap-mandatory scroll-px-margine gap-gutter overflow-x-auto px-margine pb-2 lg:mx-0 lg:grid lg:grid-cols-5 lg:overflow-visible lg:px-0">
+          <ul className="-mx-margine mt-12 flex snap-x snap-mandatory scroll-px-margine gap-gutter overflow-x-auto px-margine pb-2 lg:mx-0 lg:grid lg:grid-cols-5 lg:overflow-visible lg:px-0">
             {doctors.map((d) => (
               <li key={d.id} className="flex w-[72%] shrink-0 snap-start sm:w-[40%] lg:w-auto">
                 <DoctorFigure doctor={d} className="w-full" />
@@ -124,71 +167,74 @@ export default async function HomePage() {
         </Container>
       </section>
 
-      {/* Ce tratăm */}
-      <section aria-labelledby="ce-tratam" className="bg-suprafata py-sectiune">
-        <Container>
-          <h2 id="ce-tratam" className="font-display text-h2 text-cerneala">
-            {HOME.services.title}
-          </h2>
-          <p className="mt-4 text-lead text-discret masura-lead">{HOME.services.lead}</p>
-          <ServiceIndex rows={index} className="mt-10" />
-          <p className="mt-6 flex flex-wrap gap-x-8">
-            <Link href="/preturi" className={LINK}>
-              {HOME.services.allPrices}
-            </Link>
-            <Link href="/servicii" className={LINK}>
-              Toate serviciile
-            </Link>
-          </p>
+      {/* Prima vizită: a real sequence, so the steps are numbered. */}
+      <section aria-labelledby="prima-vizita" className="pt-sectiune">
+        <Container className="grid gap-12 lg:grid-cols-12 lg:items-center">
+          <div className="relative aspect-[4/3] overflow-hidden rounded-mare bg-adancit lg:col-span-5 lg:aspect-[4/5]">
+            <SitePhoto image={img["acasa.tehnologie"]} sizes="(min-width: 1024px) 40vw, 100vw" />
+          </div>
+          <div className="lg:col-span-6 lg:col-start-7">
+            <h2 id="prima-vizita" className={H2}>
+              {visit.title}
+            </h2>
+            <ol className="mt-10 flex flex-col">
+              {visit.steps.map((s, i) => (
+                <li key={s.title} className="grid grid-cols-[3.5rem_1fr] gap-x-4 border-t border-linie py-6">
+                  <span aria-hidden className="font-display text-[2.5rem] leading-none text-menta cifre">
+                    {i + 1}
+                  </span>
+                  <div>
+                    <h3 className="text-h3 font-semibold text-cerneala">{s.title}</h3>
+                    <p className="mt-1 text-corp text-discret">{s.text}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
         </Container>
       </section>
 
       {/* Copiii */}
-      <section aria-labelledby="copiii" className="py-sectiune">
-        <Container className="grid grid-cols-1 items-center gap-x-gutter gap-y-10 lg:grid-cols-12">
-          <figure className="lg:col-span-5">
-            <div className="relative aspect-[3/4] w-full overflow-hidden rounded-foto bg-adancit sm:aspect-[4/3] lg:aspect-[3/4]">
-              <Image
-                src={kids.image.src}
-                alt={kids.image.alt}
-                fill
-                sizes="(min-width: 1024px) 520px, 100vw"
-                className="object-cover object-[50%_60%]"
-              />
-            </div>
-            <figcaption className="mt-3 text-mic text-discret">{kids.image.caption}</figcaption>
-          </figure>
-          <div className="lg:col-span-6 lg:col-start-7">
-            <h2 id="copiii" className="font-display text-h2 text-cerneala">
+      <section aria-labelledby="copiii" className="pt-sectiune">
+        <Container className="grid gap-12 lg:grid-cols-12 lg:items-center">
+          <div className="lg:col-span-6">
+            <h2 id="copiii" className={H2}>
               {kids.title}
             </h2>
-            <div className="mt-6 flex flex-col gap-4">
+            <div className="mt-8 flex flex-col gap-4">
               {kids.body.map((p) => (
                 <p key={p} className="text-corp text-cerneala masura">
                   {p}
                 </p>
               ))}
             </div>
-            {childPrices.length > 0 && (
-              <PriceTable prices={childPrices} label="Prețuri pentru copii" className="mt-8 max-w-xl" />
-            )}
+            {childPrices.length > 0 && <PriceTable prices={childPrices} label="Prețuri pentru copii" className="mt-8 max-w-xl" />}
             <Link href={kids.link.href} className={`${LINK} mt-4`}>
               {kids.link.label}
             </Link>
           </div>
+          <div className="relative aspect-[4/5] overflow-hidden rounded-mare bg-adancit lg:col-span-5 lg:col-start-8">
+            <SitePhoto image={img["acasa.copii"]} sizes="(min-width: 1024px) 40vw, 100vw" position="50% 60%" />
+          </div>
         </Container>
       </section>
 
-      {/* Clinicile, split on the axis */}
-      <section aria-labelledby="clinicile" className="bg-suprafata py-sectiune">
+      {/* Clinicile */}
+      <section aria-labelledby="clinicile" className="py-sectiune">
         <Container>
-          <h2 id="clinicile" className="font-display text-h2 text-cerneala">
+          <h2 id="clinicile" className={H2}>
             {HOME.clinics.title}
           </h2>
-          <p className="mt-4 text-lead text-discret masura-lead">{HOME.clinics.lead}</p>
-          <ClinicSplit locations={locations} className="mt-12" />
+          <p className="mt-5 max-w-[52ch] text-lead text-discret">{HOME.clinics.lead}</p>
+          <ClinicCards
+            locations={locations}
+            images={{ cristesti: img["clinica.cristesti"], ludus: img["clinica.ludus"] }}
+            className="mt-12"
+          />
         </Container>
       </section>
+
+      <BookingBand />
     </>
   );
 }

@@ -136,6 +136,9 @@
   --color-carmin-pal: var(--da-carmin-pal);
   --color-subsol: var(--da-subsol);
   --color-pe-subsol: var(--da-pe-subsol);
+  /* Public site only: the deep forest green of the booking band (brand green, darkened). */
+  --color-padure: #123D2E;
+  --color-padure-text: #CFE9DB;
   --shadow-*: initial;
   --shadow-float: var(--da-umbra);
   --font-*: initial;
@@ -147,6 +150,10 @@
       "static" keeps every variable in the output, because base rules read them directly. */
 @theme static {
   --text-*: initial;
+  /* Public site: the hero headline, set large over the photograph. */
+  --text-mega: clamp(3.25rem, 1.2rem + 6.4vw, 7.25rem);
+  --text-mega--line-height: 0.98;
+  --text-mega--letter-spacing: -0.01em;
   --text-hero: clamp(3rem, 1.9rem + 3.6vw, 4.5rem);
   --text-hero--line-height: 1.08;
   --text-h1: clamp(2.25rem, 1.6rem + 2.6vw, 3.75rem);
@@ -185,6 +192,9 @@
   --radius-foto: 2px;
   --radius-bloc: 4px;
   --radius-chip: 9999px;
+  /* Public site: photographs and large panels are framed with soft, generous corners. */
+  --radius-mare: 28px;
+  --radius-mediu: 18px;
 
   --ease-filet: cubic-bezier(.2, .7, .2, 1);
 }

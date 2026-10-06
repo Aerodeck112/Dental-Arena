@@ -5,7 +5,7 @@ import { ButtonLink } from "@/components/ui/ButtonLink";
 import { CLINICS, bookingHref, clinicAddress } from "@/content/site";
 import type { LandingContent } from "@/content/landing";
 import type { PublicDoctor, PublicLocation, PublicPrice, ServiceIndexRow } from "@/server/public/types";
-import { BookingCta } from "./BookingCta";
+import { BookingBand } from "./BookingBand";
 import { CallMenu } from "./CallMenu";
 import { ComfortNote } from "./ComfortNote";
 import { DoctorFigure } from "./DoctorFigure";
@@ -132,7 +132,7 @@ export function LandingPage({
         </Container>
       </section>
 
-      <BookingCta title="Programați o consultație în Cristești" href={bookingHref({ clinica: "cristesti" })} />
+      <BookingBand title="Programați o consultație în Cristești" href={bookingHref({ clinica: "cristesti" })} />
     </>
   );
 }

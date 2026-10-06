@@ -1,7 +1,7 @@
-import { BookingCta } from "@/components/site/BookingCta";
+import { BookingBand } from "@/components/site/BookingBand";
+import { ServiceHero } from "@/components/site/ServiceHero";
 import { DoctorFigure } from "@/components/site/DoctorFigure";
 import { Container } from "@/components/site/Section";
-import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { bookingHref } from "@/content/site";
 import { pageMetadata } from "@/server/public/seo";
 import { getPublicDoctors } from "@/server/public/queries";
@@ -20,14 +20,9 @@ export default async function TeamPage() {
   const doctors = await getPublicDoctors();
   return (
     <>
-      <Container className="pt-6 pb-sectiune md:pt-10">
-        <Breadcrumbs items={[{ href: "/", label: "Acasă" }, { label: "Echipa" }]} />
-        <h1 className="mt-8 font-display text-h1 text-cerneala lg:mt-12">Medicii</h1>
-        <p className="mt-6 text-lead text-discret masura-lead">
-          Cinci medici, în Cristești și Luduș. Respectăm ora programării, iar medicii noștri au acea „mână ușoară” pe care o
-          căutați.
-        </p>
-        <ul className="mt-14 grid grid-cols-1 gap-x-gutter gap-y-14 sm:grid-cols-2 lg:grid-cols-5">
+      <ServiceHero breadcrumbs={[{ href: "/", label: "Acasă" }, { label: "Echipa" }]} title="Medicii" lead="Cinci medici, în Cristești și Luduș. Respectăm ora programării, iar medicii noștri au acea „mână ușoară” pe care o căutați." bookingHref="/programare" secondary={null} />
+      <Container className="py-sectiune">
+        <ul className="grid grid-cols-1 gap-x-gutter gap-y-14 sm:grid-cols-2 lg:grid-cols-5">
           {doctors.map((d) => (
             <li key={d.id} className="flex">
               <DoctorFigure
@@ -40,7 +35,7 @@ export default async function TeamPage() {
           ))}
         </ul>
       </Container>
-      <BookingCta title="Programați-vă la medicul dumneavoastră" href={bookingHref()} />
+      <BookingBand title="Programați-vă la medicul dumneavoastră" href={bookingHref()} />
     </>
   );
 }

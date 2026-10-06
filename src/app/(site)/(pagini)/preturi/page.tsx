@@ -1,7 +1,7 @@
-import { BookingCta } from "@/components/site/BookingCta";
+import { BookingBand } from "@/components/site/BookingBand";
+import { ServiceHero } from "@/components/site/ServiceHero";
 import { PriceSearch } from "@/components/site/PriceSearch";
 import { Container } from "@/components/site/Section";
-import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { bookingHref } from "@/content/site";
 import { pageMetadata } from "@/server/public/seo";
 import { getAllPublicCatalog } from "@/server/public/queries";
@@ -21,16 +21,11 @@ export default async function PricesPage() {
   const visible = categories.filter((c) => c.prices.length > 0);
   return (
     <>
-      <Container className="pt-6 pb-sectiune md:pt-10">
-        <Breadcrumbs items={[{ href: "/", label: "Acasă" }, { label: "Prețuri" }]} />
-        <h1 className="mt-8 font-display text-h1 text-cerneala lg:mt-12">Prețuri</h1>
-        <p className="mt-6 mb-10 text-lead text-discret masura-lead">
-          Prețurile sunt orientative și includ manopera. Costul exact îl aflați după consultație și, unde este nevoie, după
-          radiografii.
-        </p>
+      <ServiceHero breadcrumbs={[{ href: "/", label: "Acasă" }, { label: "Prețuri" }]} title="Prețuri" lead="Prețurile sunt orientative și includ manopera. Costul exact îl aflați după consultație și, unde este nevoie, după radiografii." bookingHref="/programare" secondary={null} />
+      <Container className="py-sectiune">
         <PriceSearch categories={visible} />
       </Container>
-      <BookingCta title="Programați o consultație" href={bookingHref()} />
+      <BookingBand href={bookingHref()} />
     </>
   );
 }

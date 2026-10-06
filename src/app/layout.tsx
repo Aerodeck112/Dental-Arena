@@ -29,7 +29,7 @@ export const viewport: Viewport = {
  * (stored by the user menu in localStorage["da-theme"]); the public site always follows
  * prefers-color-scheme. Accepts both the ThemePreference enum values and plain words.
  */
-const THEME_SCRIPT = `(function(){try{if(!/^\\/crm(\\/|$)/.test(location.pathname))return;var t=localStorage.getItem("da-theme");var d=document.documentElement;if(t==="dark"||t==="INTUNECAT")d.setAttribute("data-theme","dark");else if(t==="light"||t==="LUMINOS")d.setAttribute("data-theme","light");}catch(e){}})();`;
+const THEME_SCRIPT = `(function(){try{if(!/^\\/crm(\\/|$)/.test(location.pathname)){document.documentElement.setAttribute("data-theme","light");return;}var t=localStorage.getItem("da-theme");var d=document.documentElement;if(t==="dark"||t==="INTUNECAT")d.setAttribute("data-theme","dark");else if(t==="light"||t==="LUMINOS")d.setAttribute("data-theme","light");}catch(e){}})();`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (

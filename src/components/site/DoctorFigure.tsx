@@ -50,6 +50,7 @@ export function DoctorPortrait({
             fill
             sizes={sizes}
             priority={priority}
+            unoptimized={doctor.photoPath.startsWith("/media/")}
             className="object-cover object-[50%_20%]"
           />
         )

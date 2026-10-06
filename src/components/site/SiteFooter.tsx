@@ -9,7 +9,7 @@ import { Container } from "./Section";
 const LINK = "inline-flex min-h-control items-center underline decoration-1 underline-offset-[0.25em] hover:decoration-2";
 
 /**
- * Site footer (design-system §6.3) on `subsol`: the reversed lockup centred on the axis, the two
+ * Site footer on the light page ground (the original logo needs a light background): the logo centred on the axis, the two
  * clinics split exactly on it, then the navigation, the ANPC pictograms and the legal line.
  * One text colour (`pe-subsol`) and one ring colour; the year is generated.
  */
@@ -18,19 +18,19 @@ export function SiteFooter() {
   return (
     <footer
       data-print="ascuns"
-      className="focus-subsol bg-subsol pt-16 pb-[calc(6.5rem+env(safe-area-inset-bottom))] text-pe-subsol md:pt-20 md:pb-12"
+      className="bg-fundal pt-16 pb-[calc(6.5rem+env(safe-area-inset-bottom))] text-cerneala md:pt-20 md:pb-12"
     >
       <Container>
         <div className="flex flex-col items-center text-center">
           <Link href="/" aria-label="Dental Arena, prima pagină" className="rounded-control p-1">
-            <Logo variant="reversed" lockup="full" title="" className="h-auto w-[240px] md:w-[280px]" />
+            <Logo variant="full" title="" className="h-auto w-[240px] md:w-[300px]" />
           </Link>
           <p className="mt-5 font-display text-nume">{SITE.tagline}</p>
         </div>
 
         {/* The two clinics, split on the page axis: the logo's implant line. */}
         <ul className="relative mt-14 grid grid-cols-1 gap-y-10 md:grid-cols-2">
-          <span aria-hidden="true" className="absolute inset-y-0 left-1/2 hidden w-px bg-pe-subsol/35 md:block" />
+          <span aria-hidden="true" className="absolute inset-y-0 left-1/2 hidden w-px bg-linie md:block" />
           {CLINIC_ORDER.map((slug, i) => {
             const c = CLINICS[slug];
             const number = formatPhone(c.phone);

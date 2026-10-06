@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Accordion } from "@/components/ui/Accordion";
-import { BookingCta } from "@/components/site/BookingCta";
+import { BookingBand } from "@/components/site/BookingBand";
 import { PriceTable } from "@/components/site/PriceTable";
 import { RelatedServices } from "@/components/site/RelatedServices";
 import { Container } from "@/components/site/Section";
@@ -11,6 +11,7 @@ import { WhoTreats } from "@/components/site/WhoTreats";
 import { SERVICE_SLUGS, getServiceContent } from "@/content/services";
 import { bookingHref } from "@/content/site";
 import { pageMetadata } from "@/server/public/seo";
+import { getSiteImage } from "@/server/media/site-images";
 import { getPublicCatalog } from "@/server/public/queries";
 
 /** Prices come from the CRM; a change there shows here within five minutes, or at once after revalidatePath. */
@@ -38,8 +39,9 @@ export default async function ServicePage({ params }: PageProps<"/[serviciu]">) 
   const { serviciu } = await params;
   const content = getServiceContent(serviciu);
   if (!content) notFound();
-  const data = await getPublicCatalog(content.slug);
+  const [data, photo] = await Promise.all([getPublicCatalog(content.slug), getSiteImage(`serviciu.${content.slug}`)]);
   if (!data) notFound();
+  const representative = data.prices.find((p) => !p.onRequest) ?? null;
 
   const book = bookingHref({ serviciu: data.bookingCode, confort: content.bookingComfort ?? null });
   const hasSteps = !!content.steps?.length;
@@ -51,10 +53,11 @@ export default async function ServicePage({ params }: PageProps<"/[serviciu]">) 
         title={content.title}
         lead={content.lead}
         bookingHref={book}
-        image={content.image}
+        image={photo.src === content.image?.src ? { ...photo, focus: content.image.focus } : photo}
+        priceHint={representative ? { name: representative.name, price: representative.price } : null}
       />
 
-      <Container className="grid grid-cols-1 gap-x-gutter gap-y-16 pb-sectiune lg:grid-cols-12">
+      <Container className="grid grid-cols-1 gap-x-gutter gap-y-16 py-sectiune lg:grid-cols-12">
         <div className="flex flex-col gap-16 lg:col-span-7">
           <section aria-label={`Despre ${content.title.toLocaleLowerCase("ro-RO")}`} className="flex flex-col gap-5">
             {content.body.map((p) => (
@@ -111,11 +114,11 @@ export default async function ServicePage({ params }: PageProps<"/[serviciu]">) 
         )}
       </Container>
 
-      <BookingCta title={content.ctaTitle} href={book} />
-
-      <Container className="py-12">
+      <Container className="pb-12">
         <RelatedServices slugs={content.related} />
       </Container>
+      <BookingBand title={content.ctaTitle} href={book} />
+
     </>
   );
 }
