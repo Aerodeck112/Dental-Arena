@@ -34,6 +34,7 @@ describe("sidebar items (nav.ts)", () => {
       "Rapoarte",
       "GDPR",
       "Audit",
+      "Fotografii site",
       "Setări",
     ]);
     expect(NAV_ITEMS.map((i) => i.href)).toEqual([
@@ -52,6 +53,7 @@ describe("sidebar items (nav.ts)", () => {
       "/crm/rapoarte",
       "/crm/gdpr",
       "/crm/audit",
+      "/crm/fotografii",
       "/crm/setari",
     ]);
   });
@@ -67,7 +69,7 @@ describe("sidebar items (nav.ts)", () => {
   it("shows RECEPTIE the front-desk modules but not GDPR, Audit or Setări", () => {
     const receptie = labels("RECEPTIE");
     expect(receptie).toEqual(expect.arrayContaining(["Cereri online", "Încasări", "Facturi", "Mesaje", "Rapoarte"]));
-    for (const hidden of ["GDPR", "Audit", "Setări"]) expect(receptie).not.toContain(hidden);
+    for (const hidden of ["GDPR", "Audit", "Setări", "Fotografii site"]) expect(receptie).not.toContain(hidden);
   });
 
   it("carries the count badges", () => {

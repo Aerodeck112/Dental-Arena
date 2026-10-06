@@ -28,6 +28,21 @@ npm test
 npm run build
 ```
 
+## Instalare pe cPanel
+
+```bash
+npm run build:cpanel        # face deploy/dental-arena-cpanel.zip
+```
+
+Pașii de instalare pe hosting (Setup Node.js App, fișierul `.env`, Cron Jobs, actualizări, copii de siguranță) sunt în `docs/cpanel.md`.
+
+## Ce se administrează din panou
+
+- **Echipă:** conturi noi, cu bifă pentru clinica în care lucrează fiecare (Cristești, Luduș sau ambele). Un utilizator vede doar datele clinicilor bifate. Tot aici se încarcă fotografia fiecărui medic.
+- **Servicii și prețuri:** serviciile fiecărei pagini de pe site și prețurile lor; se pot adăuga servicii noi.
+- **Fotografii site:** toate fotografiile site-ului, cu încărcare directă și revenire la fotografia inițială.
+- **Setări:** datele firmei (denumire, CUI, Reg. Com., sediu, IBAN, bancă), regulile de programare online, reamintirile.
+
 ## Documentație
 
 - `docs/architecture.md`: arhitectura, schema bazei de date, roluri și permisiuni
@@ -38,6 +53,8 @@ npm run build
 ## Înainte de lansare
 
 - Datele firmei (denumire, CUI, Reg. Com., sediu, IBAN) în Setări.
+- Prețurile, în Servicii și prețuri.
+- Fotografiile, în Fotografii site și pe profilul fiecărui medic.
 - Programul real al clinicilor și al medicilor (acum este demonstrativ).
 - Secrete noi în `.env` (`AUTH_SECRET`, `PII_ENCRYPTION_KEY`, `CRON_SECRET`) și SMTP pentru email.
-- Un job programat care apelează `/api/cron/reminders` (remindere cu 24h înainte).
+- Cron Jobs pentru `/api/cron/reminders` și `/api/cron/maintenance` (vezi `docs/cpanel.md`).
