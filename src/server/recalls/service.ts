@@ -137,3 +137,10 @@ export async function setRecallStatus(i: z.output<typeof recallStatusSchema>, ac
     },
   });
 }
+
+/** An open recall as the booking form needs it (`/crm/programari/noua?rechemare=`), or null. */
+export async function getRecallForBooking(id: string): Promise<{ id: string; patientId: string; reason: string; doctorId: string | null; locationId: string | null } | null> {
+  const r = await prisma.recall.findUnique({ where: { id }, select: { id: true, patientId: true, reason: true, doctorId: true, locationId: true, status: true } });
+  if (!r || (r.status !== "DE_FACUT" && r.status !== "CONTACTAT")) return null;
+  return { id: r.id, patientId: r.patientId, reason: r.reason, doctorId: r.doctorId, locationId: r.locationId };
+}

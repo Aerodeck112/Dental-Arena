@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { startTransition, useActionState, useEffect, useState, type FormEvent } from "react";
+import { startTransition, useActionState, type FormEvent } from "react";
 import { moveAppointmentAction } from "@/app/(crm)/crm/(app)/programari/actions";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
@@ -88,10 +88,6 @@ export function MoveDialog({
     doctorId: appointment.doctorId,
     cabinetId: appointment.cabinetId,
   };
-  const [formKey, setFormKey] = useState(0);
-  useEffect(() => {
-    if (open) setFormKey((k) => k + 1);
-  }, [open]);
 
   const [state, formAction, pending] = useActionState<ActionResult<MoveData> | null, FormData>(async (_prev, fd) => {
     const r = await moveAppointmentAction(fd);
@@ -129,7 +125,7 @@ export function MoveDialog({
         </>
       }
     >
-      <form key={formKey} id={formId} onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
+      <form id={formId} onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
         <input type="hidden" name="id" value={appointment.id} />
         <input type="hidden" name="expectedUpdatedAt" value={appointment.updatedAt} />
         {initial.cabinetId !== undefined && target?.cabinetId !== undefined && <input type="hidden" name="cabinetId" value={target.cabinetId ?? "none"} />}

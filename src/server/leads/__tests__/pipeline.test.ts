@@ -12,14 +12,22 @@ import { makeClinic, uniq, type Clinic } from "@/server/scheduling/__tests__/fix
 import {
   addLeadActivity,
   assignLead,
-  changeLeadStatus,
-  convertLead,
+  changeLeadStatus as changeLeadStatusStrict,
+  convertLead as convertLeadStrict,
   leadConsentRows,
   leadStatusProblem,
   listLeads,
   splitLeadName,
   suggestedPatient,
+  type ConvertLeadInput,
 } from "../pipeline";
+
+/** Parsed inputs leave optional fields undefined; tests pass only what matters. */
+type Loose<T> = { [K in keyof T]?: T[K] };
+type Tail<F extends (...a: never[]) => unknown> = Parameters<F> extends [unknown, ...infer R] ? R : never;
+type StatusInput = Parameters<typeof changeLeadStatusStrict>[0];
+const changeLeadStatus = (i: Loose<StatusInput>, ...rest: Tail<typeof changeLeadStatusStrict>) => changeLeadStatusStrict(i as StatusInput, ...rest);
+const convertLead = (i: Loose<ConvertLeadInput>, ...rest: Tail<typeof convertLeadStrict>) => convertLeadStrict(i as ConvertLeadInput, ...rest);
 
 const NOW = new Date();
 const DAY = addDaysISO(todayISO(NOW), 3);

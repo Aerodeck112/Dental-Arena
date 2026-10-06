@@ -53,7 +53,7 @@ export function AppointmentDetails({ a, now }: { a: CalendarAppointment; now: Da
           {a.locationName}
           {a.cabinetName ? `, ${a.cabinetName}` : ""}
         </Row>
-        {(a.serviceName || a.reason) && <Row label="Motivul">{[a.serviceName, a.reason].filter(Boolean).join(", ")}</Row>}
+        {(a.serviceName || a.reason) && <Row label="Motivul">{[...new Set([a.serviceName, a.reason].filter(Boolean))].join(", ")}</Row>}
         {a.phone && (
           <Row label="Telefon">
             <a href={telHref(a.phone)} className="telefon text-link underline underline-offset-4" aria-label={`Sunați pe ${a.title}, ${formatPhone(a.phone)}`}>

@@ -1,6 +1,7 @@
 "use client";
 
 import { startTransition, useActionState, useEffect, useId, useMemo, useRef, useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import {
   createAppointmentAction,
   createPatientInlineAction,
@@ -308,7 +309,7 @@ export function AppointmentForm({ mode, options, initial, idPrefix, onSuccess, o
 
 // ───────────────────────────── Patient picker ─────────────────────────────
 
-function PatientPicker({
+export function PatientPicker({
   idPrefix,
   value,
   onChange,
@@ -327,15 +328,14 @@ function PatientPicker({
   const [creating, setCreating] = useState(false);
   const listId = useId();
   const inputId = `${idPrefix}-patientId`;
+  const active = !value && q.trim().length >= 2;
+  const shown = active ? results : [];
 
   useEffect(() => {
-    if (value || q.trim().length < 2) {
-      setResults([]);
-      return;
-    }
+    if (value || q.trim().length < 2) return;
     let cancelled = false;
-    setSearching(true);
     const t = setTimeout(async () => {
+      setSearching(true);
       const r = await searchPatientsAction({ q });
       if (cancelled) return;
       setSearching(false);
@@ -381,13 +381,13 @@ function PatientPicker({
         autoComplete="off"
         autoFocus={autoFocus}
         role="combobox"
-        aria-expanded={results.length > 0}
+        aria-expanded={shown.length > 0}
         aria-controls={listId}
         error={error}
       />
-      {results.length > 0 && (
+      {shown.length > 0 && (
         <ul id={listId} role="listbox" aria-label="Pacienți găsiți" className="flex max-h-56 flex-col overflow-y-auto rounded-control border border-linie">
-          {results.map((r) => (
+          {shown.map((r) => (
             <li key={r.id} role="option" aria-selected={false}>
               <button
                 type="button"
@@ -401,7 +401,7 @@ function PatientPicker({
           ))}
         </ul>
       )}
-      {q.trim().length >= 2 && !searching && results.length === 0 && <p className="text-mic text-discret">Niciun pacient găsit.</p>}
+      {active && !searching && shown.length === 0 && <p className="text-mic text-discret">Niciun pacient găsit.</p>}
       <div>
         <Button type="button" variant="text" size="s" icon="plus" onClick={() => setCreating(true)}>
           Pacient nou
@@ -514,4 +514,23 @@ function splitName(s: string): { first: string; last: string } {
   const parts = s.trim().split(/\s+/).filter(Boolean);
   if (parts.length < 2) return { first: parts[0] ?? "", last: "" };
   return { first: parts[0], last: parts.slice(1).join(" ") };
+}
+
+/**
+ * The form as a page (`/crm/programari/noua`, `/crm/programari/[id]`): after a create it opens
+ * the calendar on that day; after an edit it stays and refreshes. „Renunțați” goes back.
+ */
+export function AppointmentFormPage(props: Omit<AppointmentFormProps, "onSuccess" | "onCancel"> & { backHref: string }) {
+  const router = useRouter();
+  const { backHref, ...rest } = props;
+  return (
+    <AppointmentForm
+      {...rest}
+      onSuccess={(r) => {
+        if (props.mode === "edit") router.refresh();
+        else router.push(r.dateISO ? `/crm/programari?zi=${r.dateISO}` : backHref);
+      }}
+      onCancel={() => router.push(backHref)}
+    />
+  );
 }

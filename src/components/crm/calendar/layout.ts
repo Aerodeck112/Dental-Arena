@@ -79,3 +79,33 @@ export function hourMarks(dayStart: number, dayEnd: number): number[] {
   for (let m = Math.ceil(dayStart / 60) * 60; m < dayEnd; m += 60) marks.push(m);
   return marks;
 }
+
+/** The column an appointment belongs to: its doctor, its cabinet („none” without one) or its day. */
+export function columnKeyOf(a: { doctorId: string; cabinetId: string | null; dateISO: string }, kind: "doctor" | "cabinet" | "day"): string {
+  if (kind === "doctor") return a.doctorId;
+  if (kind === "cabinet") return a.cabinetId ?? "none";
+  return a.dateISO;
+}
+
+export type CalendarParams = {
+  vedere?: "zi" | "saptamana" | "lista";
+  zi?: string;
+  coloane?: "medici" | "cabinete";
+  medic?: string | null;
+  clinica?: string | null;
+};
+
+/**
+ * `/crm/programari?vedere=…&zi=…&coloane=…&medic=…&clinica=…`, leaving out the defaults
+ * (day view, doctor columns) so links stay short and stable.
+ */
+export function calendarHref(p: CalendarParams): string {
+  const q = new URLSearchParams();
+  if (p.vedere && p.vedere !== "zi") q.set("vedere", p.vedere);
+  if (p.zi) q.set("zi", p.zi);
+  if (p.coloane === "cabinete" && p.vedere !== "saptamana") q.set("coloane", "cabinete");
+  if (p.medic && p.vedere === "saptamana") q.set("medic", p.medic);
+  if (p.clinica) q.set("clinica", p.clinica);
+  const s = q.toString();
+  return s ? `/crm/programari?${s}` : "/crm/programari";
+}

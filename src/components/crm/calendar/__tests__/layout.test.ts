@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { blockSize, clampStart, hourMarks, layoutLanes, minuteToY, snapMinutes, yToSlotMinute } from "../layout";
+import { blockSize, calendarHref, clampStart, columnKeyOf, hourMarks, layoutLanes, minuteToY, snapMinutes, yToSlotMinute } from "../layout";
 
 describe("calendar geometry", () => {
   it("draws 15-minute rows at 24 px (96 px per hour)", () => {
@@ -88,5 +88,24 @@ describe("layoutLanes", () => {
     ]);
     expect(m.get("long")?.lane).toBe(0);
     expect(m.get("short")?.lane).toBe(1);
+  });
+});
+
+describe("calendarHref and columnKeyOf", () => {
+  it("leaves out the defaults and keeps the week doctor", () => {
+    expect(calendarHref({ vedere: "zi", zi: "2026-10-06" })).toBe("/crm/programari?zi=2026-10-06");
+    expect(calendarHref({ vedere: "zi", coloane: "cabinete", medic: "d1" })).toBe("/crm/programari?coloane=cabinete");
+    expect(calendarHref({ vedere: "saptamana", zi: "2026-10-05", coloane: "cabinete", medic: "d1" })).toBe(
+      "/crm/programari?vedere=saptamana&zi=2026-10-05&medic=d1",
+    );
+    expect(calendarHref({})).toBe("/crm/programari");
+  });
+
+  it("maps an appointment to its doctor, cabinet or day column", () => {
+    const a = { doctorId: "d1", cabinetId: null, dateISO: "2026-10-06" };
+    expect(columnKeyOf(a, "doctor")).toBe("d1");
+    expect(columnKeyOf(a, "cabinet")).toBe("none");
+    expect(columnKeyOf({ ...a, cabinetId: "c1" }, "cabinet")).toBe("c1");
+    expect(columnKeyOf(a, "day")).toBe("2026-10-06");
   });
 });

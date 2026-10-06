@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Icon } from "@/components/ui/Icon";
 import { useDismiss } from "@/components/ui/use-dismiss";
 import { minutesToHHMM } from "@/lib/time";
@@ -39,21 +39,18 @@ export function QuickCreatePopover({
   onCreated: (id: string) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState<{ left: number; top: number; sheet: boolean } | null>(null);
-  const dismiss = useCallback(() => onClose(), [onClose]);
-  useDismiss(ref, true, dismiss);
-
-  useEffect(() => {
+  // Rendered only after a click, so the viewport is known on the first render.
+  const [pos] = useState<{ left: number; top: number; sheet: boolean } | null>(() => {
+    if (typeof window === "undefined") return null;
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    if (vw < 640) {
-      setPos({ left: 0, top: 0, sheet: true });
-      return;
-    }
+    if (vw < 640) return { left: 0, top: 0, sheet: true };
     const left = slot.x + 12 + WIDTH > vw - 8 ? Math.max(8, slot.x - WIDTH - 12) : slot.x + 12;
     const top = Math.max(8, Math.min(slot.y - 48, vh - Math.min(640, vh * 0.85) - 8));
-    setPos({ left, top, sheet: false });
-  }, [slot.x, slot.y]);
+    return { left, top, sheet: false };
+  });
+  const dismiss = useCallback(() => onClose(), [onClose]);
+  useDismiss(ref, true, dismiss);
 
   const time = minutesToHHMM(slot.startMinute);
   return (

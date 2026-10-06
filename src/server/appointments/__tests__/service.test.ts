@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 
 vi.hoisted(() => {
-  process.env.DATABASE_URL = "file:./prisma/test-wp6.db";
+  process.env.DATABASE_URL = "file:./prisma/test.db";
 });
 
 import { prisma } from "@/lib/db";
@@ -9,8 +9,24 @@ import { DomainError } from "@/lib/errors";
 import { addDaysISO, localToUtc, todayISO, utcToLocal } from "@/lib/time";
 import { makeClinic, makePatient, testUser, type Clinic } from "@/server/scheduling/__tests__/fixtures";
 import { statusAfterAttempt } from "@/server/recalls/service";
-import { createAppointment, createRecallForCompleted, moveAppointment, recallDueDateISO, recallReason, updateAppointment } from "../service";
+import {
+  createAppointment as createAppointmentStrict,
+  createRecallForCompleted,
+  moveAppointment,
+  recallDueDateISO,
+  recallReason,
+  updateAppointment as updateAppointmentStrict,
+  type CreateAppointmentInput,
+  type UpdateAppointmentInput,
+} from "../service";
 import { appointmentFlags, mergeRanges, subtractRanges } from "../calendar";
+
+/** Parsed inputs leave optional fields undefined; tests pass only what matters. */
+type Loose<T> = { [K in keyof T]?: T[K] };
+const createAppointment = (i: Loose<CreateAppointmentInput>, ...rest: Parameters<typeof createAppointmentStrict> extends [unknown, ...infer R] ? R : never) =>
+  createAppointmentStrict(i as CreateAppointmentInput, ...rest);
+const updateAppointment = (i: Loose<UpdateAppointmentInput>, ...rest: Parameters<typeof updateAppointmentStrict> extends [unknown, ...infer R] ? R : never) =>
+  updateAppointmentStrict(i as UpdateAppointmentInput, ...rest);
 
 const NOW = new Date();
 const DAY = addDaysISO(todayISO(NOW), 4);
