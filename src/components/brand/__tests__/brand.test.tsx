@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { Logo } from "../Logo";
-import { BAND_PARTS, CROWN_PARTS, MARK, MARK_BOXES, SUBLINE, WORDMARK } from "../logo-paths";
+import { BAND_PARTS, CROWN_PARTS, MARK, MARK_BOXES } from "../logo-paths";
 import { partsViewBox, stepState, threadParts, threadSegments, ThreadGlyph, THREAD_MAX_STEPS } from "../ThreadGlyph";
 import { stepCounterText, ThreadSteps } from "../ThreadSteps";
 
@@ -11,12 +11,12 @@ import { stepCounterText, ThreadSteps } from "../ThreadSteps";
  */
 const html = (node: React.ReactElement) => renderToStaticMarkup(node);
 
-describe("logo geometry", () => {
+describe("thread glyph geometry (from the mark)", () => {
   it("keeps the mark as separate traced parts: two crown strokes, four bands and the apex", () => {
     expect(Object.keys(MARK)).toEqual(["crownLeft", "crownRight", "band1", "band2", "band3", "band4", "apex"]);
     expect(CROWN_PARTS).toEqual(["crownLeft", "crownRight"]);
     expect(BAND_PARTS).toEqual(["band1", "band2", "band3", "band4"]);
-    for (const d of [...Object.values(MARK), WORDMARK, SUBLINE]) expect(d).toMatch(/^M[\d.-]+ [\d.-]+c[\d\s.,-]+z/);
+    for (const d of Object.values(MARK)) expect(d).toMatch(/^M[\d.-]+ [\d.-]+c[\d\s.,-]+z/);
   });
 
   it("stacks the bands top to bottom and narrows them towards the apex", () => {
@@ -40,56 +40,29 @@ describe("logo geometry", () => {
 });
 
 describe("Logo", () => {
-  it("is an image named „Dental Arena” by default", () => {
+  it("shows the original logo of dentalarena.ro, named „Dental Arena” by default", () => {
     const out = html(<Logo />);
-    expect(out).toContain('role="img"');
-    expect(out).toContain('aria-label="Dental Arena"');
-    expect(out).not.toContain("<text");
+    expect(out).toContain("/brand/logo-dental-arena.webp");
+    expect(out).toContain('alt="Dental Arena"');
+    expect(out).not.toContain("<svg");
   });
 
   it("is hidden from screen readers when it sits inside a labelled link", () => {
     const out = html(<Logo title="" />);
     expect(out).toContain('aria-hidden="true"');
-    expect(out).not.toContain("role=");
+    expect(out).toContain('alt=""');
   });
 
-  it("draws the parts each lockup needs", () => {
-    const count = (s: string) => (s.match(/<path/g) ?? []).length + (s.match(/<rect/g) ?? []).length;
-    expect(count(html(<Logo variant="mark" />))).toBe(7);
-    expect(count(html(<Logo variant="compact" />))).toBe(8);
-    expect(count(html(<Logo variant="full" />))).toBe(10);
-    expect(count(html(<Logo variant="mark" simplified />))).toBe(5);
+  it("uses the original tooth mark alone for the mark variant", () => {
+    expect(html(<Logo variant="mark" />)).toContain("/brand/semn-dental-arena.png");
+    expect(html(<Logo variant="reversed" lockup="mark" />)).toContain("/brand/semn-dental-arena.png");
+    expect(html(<Logo variant="full" />)).toContain("/brand/logo-dental-arena.webp");
   });
 
-  it("uses the fixed logo colours; reversed is white text, mono is one colour", () => {
-    const full = html(<Logo variant="full" />);
-    expect(full).toContain('fill="var(--da-logo-marca)"');
-    expect(full).toContain('fill="var(--da-logo-text)"');
-    const reversed = html(<Logo variant="reversed" lockup="compact" />);
-    expect(reversed).toContain('fill="var(--da-logo-marca)"');
-    expect(reversed).toContain('fill="var(--da-logo-invers)"');
-    const mono = html(<Logo variant="mono" />);
-    expect(mono).not.toContain("var(--da-logo");
-    expect(mono).toContain('fill="currentColor"');
-  });
-
-  it("has a default size at or above the documented minimum (220px full, 140px compact, 16px mark)", () => {
-    const width = (s: string) => Number(s.match(/width="([\d.]+)"/)?.[1]);
-    const height = (s: string) => Number(s.match(/height="([\d.]+)"/)?.[1]);
-    expect(width(html(<Logo variant="full" />))).toBeGreaterThanOrEqual(220);
-    expect(width(html(<Logo variant="compact" />))).toBeGreaterThanOrEqual(140);
-    expect(height(html(<Logo variant="mark" />))).toBeGreaterThanOrEqual(16);
-  });
-
-  it("frames every part of its lockup inside the viewBox", () => {
-    const box = (s: string) => s.match(/viewBox="([^"]+)"/)![1].split(" ").map(Number);
-    const [mx, my, mw, mh] = box(html(<Logo variant="mark" />));
-    for (const [x0, y0, x1, y1] of Object.values(MARK_BOXES)) {
-      expect(x0).toBeGreaterThanOrEqual(mx);
-      expect(y0).toBeGreaterThanOrEqual(my);
-      expect(x1).toBeLessThanOrEqual(mx + mw);
-      expect(y1).toBeLessThanOrEqual(my + mh);
-    }
+  it("keeps the original proportions", () => {
+    const dims = (s: string) => [Number(s.match(/width="(\d+)"/)![1]), Number(s.match(/height="(\d+)"/)![1])];
+    const [w, h] = dims(html(<Logo variant="full" />));
+    expect(w / h).toBeCloseTo(1640 / 617, 1);
   });
 });
 
