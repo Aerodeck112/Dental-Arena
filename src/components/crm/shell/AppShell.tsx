@@ -124,7 +124,7 @@ export function AppShell({
           <main
             id="continut"
             tabIndex={-1}
-            className="min-w-0 flex-1 border-linie bg-suprafata px-4 py-5 outline-none md:rounded-tl-panou md:border-l md:border-t md:px-6"
+            className="min-w-0 flex-1 border-linie bg-suprafata px-4 py-5 outline-none md:rounded-tl-panou md:border-l md:border-t md:px-6 print:rounded-none print:border-0 print:p-0"
           >
             {children}
           </main>

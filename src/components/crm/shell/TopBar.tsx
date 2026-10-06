@@ -49,7 +49,7 @@ export function TopBar({ user, scope }: { user: ShellUser; scope: ClinicScope })
   }, [router, user.canCreateAppointment]);
 
   return (
-    <header className="sticky top-0 z-20 flex flex-wrap items-center gap-x-3 gap-y-2 bg-fundal px-3 py-2 md:px-4">
+    <header data-print="ascuns" className="sticky top-0 z-20 flex flex-wrap items-center gap-x-3 gap-y-2 bg-fundal px-3 py-2 md:px-4">
       <button
         type="button"
         onClick={() => setMobileOpen(true)}

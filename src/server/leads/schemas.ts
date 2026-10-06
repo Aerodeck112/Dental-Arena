@@ -82,20 +82,17 @@ export const contactLeadSchema = z
     name: zName,
     email: zOptionalEmail,
     phone: optionalField(zPhoneRo),
-    message: zText(2000),
+    message: zText(2000, "Scrieți mesajul dumneavoastră."),
     /** Optional clinic the message is about. */
     location: zLocationSlug,
     consentGdpr: zConsentRequired,
     sourcePath: zSourcePath,
   })
-  .superRefine((v, ctx) => {
-    if (!v.email && !v.phone) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["email"],
-        message: "Lăsați-ne un e-mail sau un număr de telefon, ca să vă putem răspunde.",
-      });
-    }
+  .refine((v) => Boolean(v.email || v.phone), {
+    path: ["email"],
+    error: "Lăsați-ne un e-mail sau un număr de telefon, ca să vă putem răspunde.",
+    // Show the rule together with the other field errors, not only once everything else is valid.
+    when: (payload) => !payload.issues.some((i) => i.path?.[0] === "email" || i.path?.[0] === "phone"),
   });
 
 export type ContactLeadInput = z.output<typeof contactLeadSchema>;

@@ -43,7 +43,8 @@ export default async function ReportsPage() {
   const scopeLabel = scope === "ambele" ? "ambele clinici" : CLINIC_SCOPE_LABEL[scope];
   const sentence = [
     `Luna aceasta, ${scopeLabel}${ownOnly ? ", programările dumneavoastră" : ""}: ${count(kpis.appointmentsTotal, "programare", "programări")}`,
-    `${count(kpis.completed, "finalizată", "finalizate")}`,
+    // Adjective, so no „de” (23 finalizate, not „23 de finalizate”).
+    `${kpis.completed} ${kpis.completed === 1 ? "finalizată" : "finalizate"}`,
     `${count(kpis.noShows, "neprezentare", "neprezentări")}${kpis.noShowRate !== null ? ` (${percent.format(kpis.noShowRate)})` : ""}`,
   ];
   if (!ownOnly && can(user, "reports.operational")) {

@@ -315,11 +315,13 @@ export function BookingWizard({
               <span />
             )}
             {isLast ? (
-              <Button type="submit" form={FORM_ID} size="l" loading={pending} className="min-w-0">
+              // Distinct keys: reusing the "Continuați" <button> as the submit button would let the
+              // click that opened this step also submit the form (errors shown before typing).
+              <Button key="trimite" type="submit" form={FORM_ID} size="l" loading={pending} className="min-w-0">
                 {pending ? "Se trimite" : submitLabel}
               </Button>
             ) : (
-              <Button size="l" onClick={next}>
+              <Button key="continua" size="l" onClick={next}>
                 Continuați
               </Button>
             )}

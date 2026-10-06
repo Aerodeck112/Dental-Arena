@@ -135,7 +135,7 @@ function UserFooter({ user, compact }: { user: ShellUser; compact: "always" | "b
   const textClass = compact === "always" ? "sr-only" : compact === "below-lg" ? "sr-only lg:not-sr-only" : "";
   return (
     <div className={cn("min-w-0 px-3 py-2 text-mic", textClass)}>
-      <p className="truncate font-semibold text-cerneala">{user.firstName}</p>
+      <p className="truncate font-semibold text-cerneala">{user.displayName}</p>
       <p className="truncate text-discret">{user.roleLabel}</p>
     </div>
   );
@@ -169,6 +169,7 @@ export function Sidebar({ user, counts }: { user: ShellUser; counts: Partial<Rec
   return (
     <>
       <aside
+        data-print="ascuns"
         aria-label="Meniul principal"
         className={cn(
           "sticky top-0 hidden h-dvh shrink-0 flex-col bg-fundal py-3 md:flex",

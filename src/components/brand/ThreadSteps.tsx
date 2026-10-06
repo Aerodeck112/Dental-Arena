@@ -227,14 +227,14 @@ function ThreadList({
           <li
             key={i}
             aria-current={state === "current" ? "step" : undefined}
-            className="grid grid-cols-[2.75rem_1fr] items-start gap-4"
+            className="grid grid-cols-[3.5rem_1fr] items-start gap-4"
           >
             <ThreadGlyph
               count={items.length}
               current={current}
               segments={segs}
               viewBox={box}
-              className="mt-1 w-11"
+              className="mt-1 w-14"
               style={{ aspectRatio: `${boxW} / ${boxH}` }}
             />
             <div>

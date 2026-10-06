@@ -104,6 +104,15 @@ describe("onlineBookingSchema", () => {
 });
 
 describe("contactLeadSchema", () => {
+  it("asks for the message and for a phone or e-mail together with the other errors", () => {
+    const r = contactLeadSchema.safeParse({});
+    expect(r.success).toBe(false);
+    const byPath = Object.fromEntries((r.error?.issues ?? []).map((i) => [i.path.join("."), i.message]));
+    expect(byPath.message).toBe("Scrieți mesajul dumneavoastră.");
+    expect(byPath.email).toMatch(/e-mail sau un număr de telefon/);
+    expect(byPath.name).toBeDefined();
+  });
+
   const base = { name: "Ion Pop", message: "Aș vrea o programare pentru copil.", consentGdpr: true };
 
   it("needs an e-mail or a phone number", () => {

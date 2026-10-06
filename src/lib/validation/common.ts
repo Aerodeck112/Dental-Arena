@@ -33,12 +33,12 @@ function cleanText(v: string): string {
 }
 
 /** Required text: trimmed, control characters stripped, at most `max` characters. */
-export const zText = (max: number): z.ZodType<string> =>
+export const zText = (max: number, requiredMessage = "Completați acest câmp."): z.ZodType<string> =>
   z.preprocess(
     (v) => (typeof v === "string" ? cleanText(v) : v),
     z
-      .string({ error: "Completați acest câmp." })
-      .min(1, { error: "Completați acest câmp." })
+      .string({ error: requiredMessage })
+      .min(1, { error: requiredMessage })
       .max(max, { error: tooLong(max) }),
   );
 
