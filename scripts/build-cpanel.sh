@@ -8,7 +8,12 @@ OUT=deploy/dental-arena
 BUILD_DB="$PWD/deploy/build.db"
 rm -rf deploy && mkdir -p "$OUT/initial"
 
-# Throw-away secrets for the build only; the server uses its own .env.
+# Defaults from .env.example (CI has no .env), then throw-away secrets for the build only;
+# the server uses its own .env.
+set -a
+# shellcheck disable=SC1091
+source .env.example
+set +a
 export NODE_ENV=production
 export DATABASE_URL="file:$BUILD_DB"
 export AUTH_SECRET="build-$(openssl rand -hex 32)"
