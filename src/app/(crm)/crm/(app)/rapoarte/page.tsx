@@ -60,6 +60,7 @@ export default async function ReportsPage() {
           title={`Vizite pe săptămână, ultimele 12 săptămâni${ownOnly ? ", pacienții dumneavoastră" : ""}`}
           weeks={visits.weeks}
           series={visits.series}
+          partialLast
         />
       </Panel>
 

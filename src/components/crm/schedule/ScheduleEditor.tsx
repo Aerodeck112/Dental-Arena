@@ -15,7 +15,7 @@ import type { ActionResult } from "@/lib/actions";
 import { minutesToHHMM } from "@/lib/time";
 import type { ScheduleEditorData, ShiftDTO } from "@/server/scheduling/schedules";
 import { confirmScheduleAction, deleteShiftAction, saveShiftAction } from "@/app/(crm)/crm/(app)/echipa/[id]/program/actions";
-import { rangeLabel, ShiftRow, WEEKDAYS } from "./ShiftRow";
+import { rangeLabel, ShiftCard, ShiftRow, WEEKDAYS } from "./ShiftRow";
 
 type Draft = {
   id?: string;
@@ -254,38 +254,61 @@ export function ScheduleEditor({ data, canManage }: { data: ScheduleEditorData; 
             {shifts.length === 0 ? (
               <p className="text-corp text-discret">Nu lucrează la {l.shortName}.</p>
             ) : (
-              <div className="-mx-1 overflow-x-auto px-1">
-                <table className="w-full min-w-[44rem] text-mic">
-                  <caption className="sr-only">Programul săptămânal la {l.shortName}</caption>
-                  <thead>
-                    <tr className="border-b border-linie text-left text-discret">
-                      <th scope="col" className="py-2 pr-4 font-medium">Ziua</th>
-                      <th scope="col" className="py-2 pr-4 font-medium">Interval</th>
-                      <th scope="col" className="py-2 pr-4 font-medium">Pauze</th>
-                      <th scope="col" className="py-2 pr-4 font-medium">Cabinet</th>
-                      <th scope="col" className="py-2 pr-4 font-medium">Programare</th>
-                      <th scope="col" className="py-2 pr-4 font-medium">Valabilitate</th>
-                      {canManage && (
-                        <th scope="col" className="py-2">
-                          <span className="sr-only">Acțiuni</span>
-                        </th>
-                      )}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {shifts.map((s) => (
-                      <ShiftRow
-                        key={s.id}
-                        shift={s}
-                        cabinetName={cabinetName(s.cabinetId)}
-                        canManage={canManage}
-                        onEdit={() => setDraft(draftOf(s, l.id))}
-                        onDelete={() => setToDelete(s)}
-                      />
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <>
+                <ul className="flex flex-col md:hidden" aria-label={`Programul săptămânal la ${l.shortName}`}>
+                  {shifts.map((s) => (
+                    <ShiftCard
+                      key={s.id}
+                      shift={s}
+                      cabinetName={cabinetName(s.cabinetId)}
+                      canManage={canManage}
+                      onEdit={() => setDraft(draftOf(s, l.id))}
+                      onDelete={() => setToDelete(s)}
+                    />
+                  ))}
+                </ul>
+                <div className="relative -mx-1 hidden overflow-x-auto px-1 md:block">
+                  <table className="w-full min-w-[44rem] table-fixed text-mic">
+                    <caption className="sr-only">Programul săptămânal la {l.shortName}</caption>
+                    <colgroup>
+                      <col className="w-[13%]" />
+                      <col className="w-[14%]" />
+                      <col className="w-[17%]" />
+                      <col className="w-[12%]" />
+                      <col className="w-[14%]" />
+                      <col />
+                      {canManage && <col className="w-[13rem]" />}
+                    </colgroup>
+                    <thead>
+                      <tr className="border-b border-linie text-left text-discret">
+                        <th scope="col" className="py-2 pr-4 font-medium">Ziua</th>
+                        <th scope="col" className="py-2 pr-4 font-medium">Interval</th>
+                        <th scope="col" className="py-2 pr-4 font-medium">Pauze</th>
+                        <th scope="col" className="py-2 pr-4 font-medium">Cabinet</th>
+                        <th scope="col" className="py-2 pr-4 font-medium">Programare</th>
+                        <th scope="col" className="py-2 pr-4 font-medium">Valabilitate</th>
+                        {canManage && (
+                          <th scope="col" className="py-2">
+                            <span className="sr-only">Acțiuni</span>
+                          </th>
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {shifts.map((s) => (
+                        <ShiftRow
+                          key={s.id}
+                          shift={s}
+                          cabinetName={cabinetName(s.cabinetId)}
+                          canManage={canManage}
+                          onEdit={() => setDraft(draftOf(s, l.id))}
+                          onDelete={() => setToDelete(s)}
+                        />
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </Panel>
         );

@@ -58,6 +58,14 @@ describe("onlineBookingSchema", () => {
     expect(fieldErrors(r).consentGdpr?.[0]).toMatch(/acordul dumneavoastră/);
   });
 
+  it("asks for the name when it is missing or too short, instead of a generic message", () => {
+    for (const name of [undefined, "", "   ", "A"]) {
+      const r = onlineBookingSchema.safeParse(booking({ name }));
+      expect(fieldErrors(r).name).toEqual(["Scrieți numele și prenumele."]);
+    }
+    expect(fieldErrors(onlineBookingSchema.safeParse(booking({ name: "x".repeat(81) }))).name?.[0]).toMatch(/80/);
+  });
+
   it("explains a bad phone number with an example", () => {
     const r = onlineBookingSchema.safeParse(booking({ phone: "12" }));
     expect(fieldErrors(r).phone).toEqual(["Introduceți un număr de telefon, de exemplu 0745 123 456."]);

@@ -20,20 +20,64 @@ export function validityLabel(from: string | null, until: string | null): string
   return null;
 }
 
-/** One weekly shift in the schedule table: hours, breaks, cabinet, online flag, validity. */
-export function ShiftRow({
-  shift,
-  cabinetName,
-  canManage,
-  onEdit,
-  onDelete,
-}: {
+type ShiftViewProps = {
   shift: ShiftDTO;
   cabinetName: string | null;
   canManage: boolean;
   onEdit: () => void;
   onDelete: () => void;
-}) {
+};
+
+function shiftName(shift: ShiftDTO): string {
+  return `${WEEKDAYS[shift.weekday - 1].toLowerCase()}, ${rangeLabel(shift.startMinute, shift.endMinute)}`;
+}
+
+function ShiftActions({ shift, onEdit, onDelete }: Pick<ShiftViewProps, "shift" | "onEdit" | "onDelete">) {
+  return (
+    <>
+      <Button variant="text" size="s" icon="pencil" onClick={onEdit} aria-label={`Modificați intervalul de ${shiftName(shift)}`}>
+        Modificați
+      </Button>
+      <Button variant="text" size="s" icon="x" onClick={onDelete} aria-label={`Ștergeți intervalul de ${shiftName(shift)}`}>
+        Ștergeți
+      </Button>
+    </>
+  );
+}
+
+/** The same shift as a stacked list item, for narrow screens where the table would scroll sideways. */
+export function ShiftCard({ shift, cabinetName, canManage, onEdit, onDelete }: ShiftViewProps) {
+  const validity = validityLabel(shift.validFrom, shift.validUntil);
+  return (
+    <li className="flex flex-col gap-2 border-b border-linie py-3 first:pt-0 last:border-b-0 last:pb-0">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <p className="text-corp text-cerneala">
+          <span className="font-semibold">{WEEKDAYS[shift.weekday - 1]}</span>{" "}
+          <span className="cifre">{rangeLabel(shift.startMinute, shift.endMinute)}</span>
+        </p>
+        {shift.onlineBooking ? <FlagTag kind="online">Online</FlagTag> : <span className="text-mic text-discret">Doar la telefon</span>}
+      </div>
+      <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-mic">
+        <dt className="text-discret">Pauze</dt>
+        <dd className="cifre text-cerneala">
+          {shift.breaks.length > 0 ? shift.breaks.map((b) => rangeLabel(b.startMinute, b.endMinute)).join(", ") : "Fără pauză"}
+        </dd>
+        <dt className="text-discret">Cabinet</dt>
+        <dd className="text-cerneala">{cabinetName ?? "Oricare"}</dd>
+        <dt className="text-discret">Valabilitate</dt>
+        <dd className="cifre text-cerneala">{validity ?? "Permanent"}</dd>
+      </dl>
+      {canManage && (
+        <div className="-ml-2 flex flex-wrap gap-1">
+          <ShiftActions shift={shift} onEdit={onEdit} onDelete={onDelete} />
+        </div>
+      )}
+    </li>
+  );
+}
+
+/** One weekly shift in the schedule table: hours, breaks, cabinet, online flag, validity. */
+export function ShiftRow({ shift, cabinetName, canManage, onEdit, onDelete }: ShiftViewProps) {
   const validity = validityLabel(shift.validFrom, shift.validUntil);
   return (
     <tr className="border-b border-linie align-top last:border-b-0">
@@ -51,12 +95,7 @@ export function ShiftRow({
       <td className="py-2 pr-4 cifre text-discret">{validity ?? "Permanent"}</td>
       {canManage && (
         <td className="py-1 text-right whitespace-nowrap">
-          <Button variant="text" size="s" icon="pencil" onClick={onEdit} aria-label={`Modificați intervalul de ${WEEKDAYS[shift.weekday - 1].toLowerCase()}, ${rangeLabel(shift.startMinute, shift.endMinute)}`}>
-            Modificați
-          </Button>
-          <Button variant="text" size="s" icon="x" onClick={onDelete} aria-label={`Ștergeți intervalul de ${WEEKDAYS[shift.weekday - 1].toLowerCase()}, ${rangeLabel(shift.startMinute, shift.endMinute)}`}>
-            Ștergeți
-          </Button>
+          <ShiftActions shift={shift} onEdit={onEdit} onDelete={onDelete} />
         </td>
       )}
     </tr>

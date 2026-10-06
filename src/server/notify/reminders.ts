@@ -3,7 +3,7 @@ import { prisma, type Db } from "@/lib/db";
 import { getSettings, type SettingsMap } from "@/lib/settings";
 import { utcToLocal } from "@/lib/time";
 import { loadAppointmentForMessage, resolveContact, sendForAppointment } from "./send";
-import type { MessageChannel, ReminderRunResult } from "./types";
+import type { MessageChannel, ReminderRunResult, SendOutcome } from "./types";
 
 /**
  * 24h reminders (docs/architecture.md §6.6). `/api/cron/reminders` runs `runReminders` hourly.
@@ -96,7 +96,7 @@ export async function runReminders(
     }
 
     // 3–5. Render, send and log.
-    let outcomes;
+    let outcomes: SendOutcome[];
     try {
       outcomes = await sendForAppointment("REMINDER", a, usable, { stripDiacritics: s.smsStripDiacritics, db });
     } catch (e) {

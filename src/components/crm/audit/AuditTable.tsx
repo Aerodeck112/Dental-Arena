@@ -69,7 +69,7 @@ export function AuditTable({ rows }: { rows: AuditRow[] }) {
               <th scope="col" className="px-3 pb-2 font-semibold">
                 Cine
               </th>
-              <th scope="col" className="px-3 pb-2 font-semibold">
+              <th scope="col" className="min-w-44 px-3 pb-2 font-semibold">
                 Acțiune
               </th>
               <th scope="col" className="px-3 pb-2 font-semibold">

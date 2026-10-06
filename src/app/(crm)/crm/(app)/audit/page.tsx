@@ -4,9 +4,12 @@ import { Button, ButtonLink, DateInput, EmptyState, PageHeader, Pagination, Sele
 import { AUDIT_ACTION_LABEL, type AuditAction } from "@/lib/audit";
 import { requirePermission } from "@/lib/auth/dal";
 import { prisma } from "@/lib/db";
-import { APPOINTMENT_STATUS_LABEL, PAYMENT_METHOD_LABEL, ROLE_LABEL } from "@/lib/labels";
+import { formatDateRo } from "@/lib/format";
+import { APPOINTMENT_STATUS_LABEL, CLINIC_SCOPE_LABEL, PAYMENT_METHOD_LABEL, ROLE_LABEL } from "@/lib/labels";
 import { normalizeSearch } from "@/lib/search";
 import { isValidDateISO, localDayRangeUtc } from "@/lib/time";
+import { REPORTS } from "@/server/reports/reports";
+import { isReportSlug } from "@/server/reports/types";
 
 export const metadata: Metadata = { title: "Jurnal de audit" };
 
@@ -61,26 +64,46 @@ const METADATA_KEY_LABEL: Record<string, string> = {
   medic: "medic",
   rows: "rânduri",
   format: "format",
+  op: "operațiune",
+  kind: "tip",
+  channel: "canal",
+  warning: "avertisment",
 };
 
-function metadataValue(key: string, v: unknown): string {
-  if (Array.isArray(v)) return v.map((x) => metadataValue(key, x)).join(", ");
+/** Values written by the login action (`auth.failed`). */
+const REASON_LABEL: Record<string, string> = {
+  "parola-gresita": "parolă greșită",
+  "email-necunoscut": "adresă de e-mail necunoscută",
+  "cont-blocat": "cont blocat temporar",
+  "cont-blocat-acum": "cont blocat acum, după prea multe încercări",
+  "cont-inactiv": "cont dezactivat",
+};
+
+type MetadataContext = { doctorName: Map<string, string> };
+
+function metadataValue(key: string, v: unknown, ctx: MetadataContext): string {
+  if (Array.isArray(v)) return v.map((x) => metadataValue(key, x, ctx)).join(", ");
   if (typeof v === "boolean") return v ? "da" : "nu";
   if (v !== null && typeof v === "object") return JSON.stringify(v);
   const s = String(v);
   if ((key === "from" || key === "to") && s in APPOINTMENT_STATUS_LABEL) return APPOINTMENT_STATUS_LABEL[s as keyof typeof APPOINTMENT_STATUS_LABEL];
   if (key === "method" && s in PAYMENT_METHOD_LABEL) return PAYMENT_METHOD_LABEL[s as keyof typeof PAYMENT_METHOD_LABEL];
+  if (key === "reason" && s in REASON_LABEL) return REASON_LABEL[s];
+  if (key === "report" && isReportSlug(s)) return REPORTS[s].title;
+  if (key === "clinica" && s in CLINIC_SCOPE_LABEL) return CLINIC_SCOPE_LABEL[s as keyof typeof CLINIC_SCOPE_LABEL];
+  if (key === "medic") return ctx.doctorName.get(s) ?? s;
+  if ((key === "de" || key === "pana") && isValidDateISO(s)) return formatDateRo(s, "short");
   return s;
 }
 
 /** Metadata JSON → „câmpuri: a, b; din: Confirmat” (field names and ids only, by contract). */
-function describeMetadata(raw: string | null): string | null {
+function describeMetadata(raw: string | null, ctx: MetadataContext): string | null {
   if (!raw) return null;
   try {
     const obj = JSON.parse(raw) as Record<string, unknown>;
     const parts = Object.entries(obj)
       .filter(([, v]) => v !== null && v !== undefined && v !== "")
-      .map(([k, v]) => `${METADATA_KEY_LABEL[k] ?? k}: ${metadataValue(k, v)}`);
+      .map(([k, v]) => `${METADATA_KEY_LABEL[k] ?? k}: ${metadataValue(k, v, ctx)}`);
     const text = parts.join("; ");
     return text.length > 220 ? `${text.slice(0, 219)}…` : text || null;
   } catch {
@@ -127,10 +150,12 @@ export default async function AuditPage({ searchParams }: PageProps<"/crm/audit"
     ...(de || pana ? { at } : {}),
   };
 
-  const [total, users] = await Promise.all([
+  const [total, users, doctors] = await Promise.all([
     prisma.auditLog.count({ where }),
     prisma.user.findMany({ orderBy: [{ lastName: "asc" }, { firstName: "asc" }], select: { id: true, firstName: true, lastName: true } }),
+    prisma.doctor.findMany({ select: { id: true, publicName: true } }),
   ]);
+  const ctx: MetadataContext = { doctorName: new Map(doctors.map((d) => [d.id, d.publicName])) };
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const page = Number.isFinite(pageRaw) && pageRaw > 0 ? Math.min(pageRaw, pageCount) : 1;
   const logs = await prisma.auditLog.findMany({
@@ -159,7 +184,7 @@ export default async function AuditPage({ searchParams }: PageProps<"/crm/audit"
     entity: ENTITY_LABEL[l.entityType] ?? l.entityType,
     entityHref: l.entityId && ENTITY_HREF[l.entityType] ? ENTITY_HREF[l.entityType](l.entityId) : null,
     patient: l.patientId ? { id: l.patientId, label: patientLabel.get(l.patientId) ?? "Pacient" } : null,
-    details: describeMetadata(l.metadata),
+    details: describeMetadata(l.metadata, ctx),
   }));
 
   const filtered = Boolean(actorId || action || patientQuery || de || pana);

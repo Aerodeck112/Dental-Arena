@@ -77,6 +77,12 @@ describe("sendAppointmentMessage", () => {
     const log = await prisma.messageLog.findFirstOrThrow({ where: { appointmentId: a.id } });
     expect(log.body).toBe("Programarea de marti, 10 mai, ora 10:30, la Dental Arena Ludus este confirmata. Daca nu mai puteti veni, sunati la 0365 430 125.");
     expect(log.leadId).toBe(lead.id);
+    // The console provider prints the GSM-7 text it was given (development only).
+    const printed = (info.mock.calls as unknown[][]).map((c) => String(c[0])).filter((t) => t.includes("+40744555002")).at(-1) ?? "";
+    expect(printed).toContain("GSM-7, 128 caractere, 1 segment(e)");
+    const printedText = printed.split("├")[1] ?? "";
+    expect(printedText).toContain("Ludus este confirmata");
+    expect(printedText).not.toMatch(/[ăâîșțĂÂÎȘȚ„”]/);
   });
 
   it("sends nothing for an anonymised patient or a missing appointment", async () => {

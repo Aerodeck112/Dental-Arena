@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import { Button, Dialog, ErrorSummary, RadioGroup, SubmitButton, TextArea, TextField, Toaster, showToast } from "@/components/ui";
+import { useState, useTransition, type FormEvent } from "react";
+import { Button, Dialog, ErrorSummary, RadioGroup, TextArea, TextField, Toaster, showToast } from "@/components/ui";
 import type { ActionResult } from "@/lib/actions";
 import { formatPhone } from "@/lib/format";
 import type { MessageChannel } from "@/server/notify/types";
@@ -46,17 +46,32 @@ export function SendMessageDialog({
   const [channel, setChannel] = useState<MessageChannel>(initial);
   const [body, setBody] = useState("");
   const [formKey, setFormKey] = useState(0);
-  const [state, formAction] = useActionState<Result, FormData>(async (_prev, fd) => {
-    const r = await sendMessage(fd);
-    if (r.ok) {
-      showToast({ kind: r.data.status === "EROARE" ? "error" : "success", message: r.message ?? "Mesaj trimis." });
-      setOpen(false);
-      setBody("");
-      setFormKey((k) => k + 1);
-      return null;
-    }
-    return r;
-  }, null);
+  const [state, setState] = useState<Result>(null);
+  const [pending, startTransition] = useTransition();
+
+  // Submitted by hand rather than through `<form action>`: React resets a form after every action,
+  // which would wipe the typed recipient and subject and desync the channel radio on a validation error.
+  const close = () => {
+    setOpen(false);
+    setState(null);
+  };
+
+  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    startTransition(async () => {
+      const r = await sendMessage(fd);
+      if (r.ok) {
+        showToast({ kind: r.data.status === "EROARE" ? "error" : "success", message: r.message ?? "Mesaj trimis." });
+        setOpen(false);
+        setBody("");
+        setFormKey((k) => k + 1);
+        setState(null);
+        return;
+      }
+      setState(r);
+    });
+  };
 
   const recipient = channel === "SMS" ? (phone ? formatPhone(phone) : null) : (email ?? null);
   const errors = state && !state.ok ? state.fieldErrors : null;
@@ -71,7 +86,7 @@ export function SendMessageDialog({
       <Toaster />
       <Dialog
         open={open}
-        onClose={() => setOpen(false)}
+        onClose={close}
         title="Trimiteți un mesaj"
         description={
           bound
@@ -82,7 +97,7 @@ export function SendMessageDialog({
         }
         size="m"
       >
-        <form key={formKey} action={formAction} className="flex flex-col gap-4" noValidate>
+        <form key={formKey} onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
           {(errors || formError) && <ErrorSummary errors={errors} message={formError} />}
           {patientId && <input type="hidden" name="patientId" value={patientId} />}
           {leadId && <input type="hidden" name="leadId" value={leadId} />}
@@ -129,12 +144,12 @@ export function SendMessageDialog({
             required
           />
           <div className="flex flex-wrap justify-end gap-2">
-            <Button type="button" variant="text" onClick={() => setOpen(false)}>
+            <Button type="button" variant="text" onClick={close}>
               Renunțați
             </Button>
-            <SubmitButton icon="message-square" pendingLabel="Se trimite" disabled={tooLong || (!canSms && !canEmail)}>
-              Trimiteți mesajul
-            </SubmitButton>
+            <Button type="submit" icon="message-square" loading={pending} disabled={tooLong || (!canSms && !canEmail)}>
+              {pending ? "Se trimite" : "Trimiteți mesajul"}
+            </Button>
           </div>
         </form>
       </Dialog>

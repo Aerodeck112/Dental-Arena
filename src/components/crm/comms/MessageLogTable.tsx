@@ -130,7 +130,7 @@ export function MessageLogTable({
               >
                 Data
               </th>
-              <th scope="col" className="px-3 pb-2 font-semibold">
+              <th scope="col" className="min-w-44 px-3 pb-2 font-semibold">
                 Canal și tip
               </th>
               <th scope="col" className="px-3 pb-2 font-semibold">

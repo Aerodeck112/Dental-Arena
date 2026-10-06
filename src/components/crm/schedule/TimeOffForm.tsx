@@ -41,6 +41,7 @@ export function TimeOffForm({
   const [doctorId, setDoctorId] = useState(fixedDoctor?.id ?? defaultDoctorId ?? "");
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(today);
+  const [kind, setKind] = useState("CONCEDIU");
   const [formKey, setFormKey] = useState(0);
   const [state, action] = useActionState<Result, FormData>(async (prev, fd) => {
     const r = (await createTimeOffAction(prev, fd)) as Result;
@@ -48,6 +49,7 @@ export function TimeOffForm({
       showToast({ kind: "success", message: r.message ?? "Absența a fost adăugată." });
       setStartDate(today);
       setEndDate(today);
+      setKind(doctorId === CLOSURE ? "SARBATOARE" : "CONCEDIU");
       setFormKey((k) => k + 1);
     }
     return r;
@@ -77,7 +79,14 @@ export function TimeOffForm({
               label="Medic"
               name="doctorChoice"
               value={doctorId}
-              onChange={(e) => setDoctorId(e.target.value)}
+              onChange={(e) => {
+                const next = e.target.value;
+                setDoctorId(next);
+                // A closure is usually a public holiday; a doctor's absence usually leave. Only the
+                // untouched default follows the choice.
+                if (next === CLOSURE && kind === "CONCEDIU") setKind("SARBATOARE");
+                if (next !== CLOSURE && doctorId === CLOSURE && kind === "SARBATOARE") setKind("CONCEDIU");
+              }}
               placeholder="Alegeți"
               options={[...doctors.map((d) => ({ value: d.id, label: d.name })), { value: CLOSURE, label: "Toată clinica (închisă)" }]}
               error={errors?.doctorId}
@@ -97,7 +106,8 @@ export function TimeOffForm({
         <Select
           label="Tipul"
           name="kind"
-          defaultValue={closure ? "SARBATOARE" : "CONCEDIU"}
+          value={kind}
+          onChange={(e) => setKind(e.target.value)}
           options={labelOptions(TIME_OFF_KIND_LABEL)}
           error={errors?.kind}
         />

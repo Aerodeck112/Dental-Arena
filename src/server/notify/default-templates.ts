@@ -198,6 +198,7 @@ export const SAMPLE_VARIABLES: Required<TemplateVars> = {
   adresa: "str. Principală 536J/1, Cristești, jud. Mureș",
   telefonClinica: "0265 326 316",
   medic: "Dr. Andrei Marcoci",
-  link: "https://dentalarena.ro/p/Y2x4YWJjZGVm.0.t3k9z1.Q2hlY2tTaWduYXR1cmU",
+  // Real length (§6.6), so the SMS preview counts segments as the clinic will be billed.
+  link: "https://dentalarena.ro/p/Y21nOHgyazR2MDAwYjA4bDdkM2Y5cTF6cg.0.tmkvi0.fobZDs_MJ6WltrPPWX8ppd",
   motiv: "Programare online",
 };

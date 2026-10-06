@@ -22,6 +22,8 @@ type Props = {
   weeks: string[];
   series: WeeklySeries[];
   unit?: { one: string; many: string };
+  /** The last week is still in progress: it is shaded and labelled „în curs”, so its drop reads as partial. */
+  partialLast?: boolean;
   className?: string;
 };
 
@@ -76,7 +78,7 @@ function LineKey({ index }: { index: number }) {
   );
 }
 
-export function LineChart({ title, weeks, series, unit = { one: "vizită", many: "vizite" }, className }: Props) {
+export function LineChart({ title, weeks, series, unit = { one: "vizită", many: "vizite" }, partialLast = false, className }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(720);
   const [active, setActive] = useState<number | null>(null);
@@ -102,6 +104,8 @@ export function LineChart({ title, weeks, series, unit = { one: "vizită", many:
   const y = (v: number) => M.top + plotH - (v / yMax) * plotH;
   const ticks = [0, 0.25, 0.5, 0.75, 1].map((t) => Math.round(t * yMax));
   const labelEvery = narrow ? Math.ceil(n / 4) : n > 8 ? 2 : 1;
+  const inProgress = (i: number) => partialLast && i === n - 1;
+  const weekTitle = (i: number) => `${weekLabel(weeks[i])}${inProgress(i) ? " (în curs)" : ""}`;
 
   // Direct labels at the line ends, kept at least 18px apart; a short leader joins label and line.
   const endLabels = (() => {
@@ -177,6 +181,22 @@ export function LineChart({ title, weeks, series, unit = { one: "vizită", many:
           onBlur={() => setActive(null)}
           className="block max-w-full overflow-visible rounded-control text-micro outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
         >
+          {/* The week in progress: a recessive band behind the last point. */}
+          {partialLast && n >= 2 ? (
+            <g aria-hidden="true">
+              <rect
+                x={(x(n - 2) + x(n - 1)) / 2}
+                y={M.top}
+                width={x(n - 1) - (x(n - 2) + x(n - 1)) / 2}
+                height={plotH}
+                fill="var(--color-adancit)"
+              />
+              <text x={x(n - 1) - 4} y={M.top + 12} textAnchor="end" fill="var(--color-discret)">
+                în curs
+              </text>
+            </g>
+          ) : null}
+
           {/* Grid and y axis: hairlines, recessive. */}
           <g aria-hidden="true">
             {ticks.map((t) => (
@@ -259,7 +279,7 @@ export function LineChart({ title, weeks, series, unit = { one: "vizită", many:
             className="pointer-events-none absolute top-2 z-10 w-48 rounded-control border border-linie bg-suprafata px-3 py-2 text-mic shadow-float"
             style={{ left: tipLeft }}
           >
-            <p className="mb-1 font-semibold cifre">Săptămâna {weekLabel(weeks[active])}</p>
+            <p className="mb-1 font-semibold cifre">Săptămâna {weekTitle(active)}</p>
             <ul className="flex flex-col gap-1">
               {series.map((s, i) => (
                 <li key={s.key} className="flex items-center gap-2 cifre">
@@ -296,7 +316,7 @@ export function LineChart({ title, weeks, series, unit = { one: "vizită", many:
               {weeks.map((w, i) => (
                 <tr key={w} className="h-rand border-b border-linie">
                   <th scope="row" className="px-3 py-1 font-normal">
-                    {weekLabel(w)}
+                    {weekTitle(i)}
                   </th>
                   {series.map((s) => (
                     <td key={s.key} className="px-3 py-1 text-right">

@@ -106,7 +106,7 @@ export function TemplateEditor(p: Props) {
   const isDefault = subject === (p.defaultSubject ?? "") && body === p.defaultBody;
 
   return (
-    <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+    <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <Toaster />
       <form action={formAction} className="flex flex-col gap-4" noValidate>
         {(serverErrors || formError) && <ErrorSummary errors={serverErrors} message={formError} />}
@@ -184,7 +184,7 @@ export function TemplateEditor(p: Props) {
                   <span className="font-semibold">{preview.subject}</span>
                 </p>
               )}
-              <div className="rounded-control border border-linie bg-fundal p-4 text-corp whitespace-pre-line break-words masura">
+              <div className="rounded-control border border-linie bg-fundal p-4 text-corp whitespace-pre-line [overflow-wrap:anywhere] masura">
                 {preview.sms ? preview.sms.text : preview.text}
               </div>
               {preview.sms && (

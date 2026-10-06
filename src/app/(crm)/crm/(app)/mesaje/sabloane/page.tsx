@@ -37,10 +37,10 @@ export default async function TemplatesPage() {
                   <th scope="col" className="px-3 pb-2 font-semibold">
                     Șablon
                   </th>
-                  <th scope="col" className="px-3 pb-2 font-semibold">
+                  <th scope="col" className="hidden px-3 pb-2 font-semibold md:table-cell">
                     Canal
                   </th>
-                  <th scope="col" className="px-3 pb-2 font-semibold">
+                  <th scope="col" className="hidden px-3 pb-2 font-semibold md:table-cell">
                     Text
                   </th>
                   <th scope="col" className="px-3 pb-2 font-semibold whitespace-nowrap">
@@ -57,8 +57,8 @@ export default async function TemplatesPage() {
                       </Link>
                       <span className="block text-discret">{t.description}</span>
                     </th>
-                    <td className="px-3 py-2 whitespace-nowrap">{MESSAGE_CHANNEL_LABEL[t.channel]}</td>
-                    <td className="px-3 py-2 text-discret">
+                    <td className="hidden px-3 py-2 whitespace-nowrap md:table-cell">{MESSAGE_CHANNEL_LABEL[t.channel]}</td>
+                    <td className="hidden px-3 py-2 text-discret md:table-cell">
                       <span className="line-clamp-2 masura">{t.subject ?? t.body}</span>
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap">

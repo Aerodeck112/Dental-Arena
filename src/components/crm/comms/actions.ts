@@ -23,7 +23,25 @@ const sendSchema = z
   .refine((v) => v.channel !== "SMS" || v.body.length <= 640, {
     path: ["body"],
     error: "Un SMS are cel mult 640 de caractere (4 segmente). Scurtați textul.",
+  })
+  // These two also run when another field is invalid, so one submit reports every missing field.
+  .refine((v) => Boolean(v.patientId || v.leadId || v.to), {
+    path: ["to"],
+    error: (iss) =>
+      (iss.input as { channel?: string } | undefined)?.channel === "EMAIL"
+        ? "Introduceți adresa de e-mail a destinatarului."
+        : "Introduceți numărul de telefon al destinatarului.",
+    when: (payload) => isRecord(payload.value) && (payload.value.channel === "SMS" || payload.value.channel === "EMAIL"),
+  })
+  .refine((v) => v.channel !== "EMAIL" || Boolean(v.subject), {
+    path: ["subject"],
+    error: "Scrieți subiectul e-mailului.",
+    when: (payload) => isRecord(payload.value) && payload.value.channel === "EMAIL",
   });
+
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null;
+}
 
 export const sendMessage = crmAction(
   {

@@ -35,9 +35,14 @@ export type LocationSlug = (typeof LOCATION_SLUGS)[number];
 const GDPR_REQUIRED = "Pentru a trimite cererea, avem nevoie de acordul dumneavoastră pentru prelucrarea datelor.";
 const NAME_MESSAGE = "Scrieți numele și prenumele.";
 
+/** An empty name asks for the name (§12.4: say what to do), not a generic „Completați acest câmp.” */
 const zName = z.preprocess(
-  (v) => (typeof v === "string" ? v.replace(/\s+/g, " ") : v),
-  zText(80).refine((v) => v.length >= 2, { error: NAME_MESSAGE }),
+  (v) => (typeof v === "string" ? v.replace(/\s+/g, " ").trim() : v),
+  z
+    .string({ error: NAME_MESSAGE })
+    .min(2, { error: NAME_MESSAGE })
+    // zText accepts any input; it also strips control characters and enforces the length.
+    .pipe((zText(80) as z.ZodType<string, string>).refine((v) => v.length >= 2, { error: NAME_MESSAGE })),
 );
 
 const zConsentRequired = zCheckbox.refine((v) => v === true, { error: GDPR_REQUIRED });

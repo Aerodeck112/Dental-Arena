@@ -55,7 +55,36 @@ export function TimeOffList({ items, showDoctor = true }: { items: TimeOffDTO[];
 
   return (
     <>
+      {/* Narrow screens: one stacked item per absence instead of a table that scrolls sideways. */}
+      {items.length === 0 ? (
+        <p className="text-corp text-discret md:hidden">Nicio absență programată.</p>
+      ) : (
+        <ul className="flex flex-col md:hidden" aria-label="Absențe și zile în care clinica este închisă">
+          {items.map((t) => (
+            <li key={t.id} className="flex flex-col gap-1 border-b border-linie py-3 first:pt-0 last:border-b-0 last:pb-0">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+                {showDoctor && (
+                  <p className="text-corp font-semibold text-cerneala">{t.doctorName ?? "Clinica închisă"}</p>
+                )}
+                <p className="cifre text-corp text-cerneala">{periodLabel(t)}</p>
+              </div>
+              <p className="text-mic text-discret">
+                {TIME_OFF_KIND_LABEL[t.kind]}, {t.locationName ?? "ambele clinici"}
+                {t.reason ? `. ${t.reason}` : ""}
+              </p>
+              {t.canDelete && (
+                <div className="-ml-2">
+                  <Button variant="text" size="s" icon="x" onClick={() => setToDelete(t)} aria-label={`Ștergeți absența din ${periodLabel(t)}`}>
+                    Ștergeți
+                  </Button>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
       <DataTable
+        className="hidden md:block"
         caption="Absențe și zile în care clinica este închisă"
         columns={columns}
         rows={items}

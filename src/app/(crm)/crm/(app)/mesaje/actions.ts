@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { crmAction, DomainError } from "@/lib/actions";
 import { zCheckbox } from "@/lib/validation/common";
-import { SAMPLE_VARIABLES } from "@/server/notify/default-templates";
+import { DEFAULT_TEMPLATES, SAMPLE_VARIABLES } from "@/server/notify/default-templates";
 import { smsInfo, toGsm7 } from "@/server/notify/gsm";
 import { getSettings } from "@/lib/settings";
 import {
@@ -15,13 +15,11 @@ import {
   saveTemplate,
   templateProblems,
 } from "@/server/notify/templates";
-import { DEFAULT_TEMPLATES } from "@/server/notify/default-templates";
 import type { TemplatePreview } from "@/server/notify/types";
 
 /** Template editor actions (Mesaje → Șabloane). ADMIN only (`templates.manage`). */
 
 const zKey = z.string().refine(isTemplateKey, { error: "Șablonul nu există." });
-
 
 /** Renders the draft with sample data and lists unknown variables; nothing is saved. */
 export const previewTemplate = crmAction(
