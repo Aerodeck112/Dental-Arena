@@ -22,6 +22,7 @@ export async function makeUsers(tag: string) {
     displayName: `${firstName} Test`,
     doctorId: null,
     homeLocationId: null,
+    locationIds: [],
     theme: "SISTEM",
     density: "COMPACT",
     mustChangePassword: false,

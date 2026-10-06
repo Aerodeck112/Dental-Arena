@@ -22,6 +22,8 @@ export type CurrentUser = {
   displayName: string;
   doctorId: string | null;
   homeLocationId: string | null;
+  /** Clinicile bifate pe cont. Gol = toate clinicile (un ADMIN vede mereu toate). */
+  locationIds: string[];
   theme: ThemePreference;
   density: Density;
   mustChangePassword: boolean;
@@ -49,6 +51,7 @@ export const getCurrentUser: () => Promise<CurrentUser | null> = cache(async () 
       sessionVersion: true,
       lockedUntil: true,
       homeLocationId: true,
+      locations: { select: { locationId: true } },
       theme: true,
       density: true,
       mustChangePassword: true,
@@ -68,6 +71,7 @@ export const getCurrentUser: () => Promise<CurrentUser | null> = cache(async () 
     displayName: user.doctor?.publicName ?? `${user.firstName} ${user.lastName}`.trim(),
     doctorId: user.doctor?.id ?? null,
     homeLocationId: user.homeLocationId,
+    locationIds: user.role === "ADMIN" ? [] : user.locations.map((l) => l.locationId),
     theme: user.theme,
     density: user.density,
     mustChangePassword: user.mustChangePassword,

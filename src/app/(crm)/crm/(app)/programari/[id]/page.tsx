@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireLocationAccess } from "@/lib/clinic-scope";
 import { notFound } from "next/navigation";
 import { AppointmentDetails } from "@/components/crm/calendar/AppointmentDrawer";
 import { AppointmentFormPage } from "@/components/crm/calendar/AppointmentForm";
@@ -22,6 +23,7 @@ export default async function AppointmentPage({ params }: PageProps<"/crm/progra
   const now = new Date();
   const a = await getAppointmentDTO(user, id, now);
   if (!a) notFound();
+  await requireLocationAccess(a.locationId);
   const [options, patient] = await Promise.all([
     a.canManage ? getAppointmentFormOptions(user) : Promise.resolve(null),
     a.patientId ? getPatientPick(a.patientId) : Promise.resolve(null),

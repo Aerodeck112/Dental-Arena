@@ -5,7 +5,7 @@ import { PaymentList } from "@/components/crm/billing/PaymentList";
 import { Button, ButtonLink, DataTable, DateInput, EmptyState, PageHeader, Panel, SearchField, Select } from "@/components/ui";
 import type { DataTableColumn } from "@/components/ui/DataTable";
 import { requirePermission } from "@/lib/auth/dal";
-import { getActiveLocations, getClinicScope, scopeLocationIds } from "@/lib/clinic-scope";
+import { getAllowedLocations, getClinicScope, scopeLocationIds } from "@/lib/clinic-scope";
 import { capitalize, formatDateRo, formatLei, pluralRo } from "@/lib/format";
 import { CLINIC_SCOPE_LABEL, PAYMENT_METHOD_LABEL } from "@/lib/labels";
 import { can } from "@/lib/permissions";
@@ -41,7 +41,7 @@ export default async function PaymentsPage({ searchParams }: PageProps<"/crm/inc
   if (pana < de) [de, pana] = [pana, de];
   const metodaRaw = one(params.metoda);
   const metoda = (PAYMENT_METHODS as readonly string[]).includes(metodaRaw ?? "") ? (metodaRaw as PaymentMethod) : null;
-  const [scope, locationIds, locations] = await Promise.all([getClinicScope(), scopeLocationIds(), getActiveLocations()]);
+  const [scope, locationIds, locations] = await Promise.all([getClinicScope(), scopeLocationIds(), getAllowedLocations()]);
   const journal = await getPaymentJournal({
     from: localDayRangeUtc(de).start,
     to: localDayRangeUtc(pana).end,

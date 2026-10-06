@@ -30,6 +30,7 @@ function user(role: "ADMIN" | "MEDIC" | "RECEPTIE") {
     displayName: `Test ${role}`,
     doctorId: role === "MEDIC" ? "doctor-1" : null,
     homeLocationId: null,
+    locationIds: [],
     theme: "SISTEM",
     density: "COMPACT",
     mustChangePassword: false,

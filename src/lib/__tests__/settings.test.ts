@@ -23,6 +23,7 @@ const admin: CurrentUser = {
   displayName: "Admin Test",
   doctorId: null,
   homeLocationId: null,
+  locationIds: [],
   theme: "SISTEM",
   density: "COMPACT",
   mustChangePassword: false,

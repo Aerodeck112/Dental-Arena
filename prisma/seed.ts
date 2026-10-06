@@ -178,6 +178,9 @@ async function main() {
           lastName: u.lastName,
           mustChangePassword,
           homeLocationId: u.homeLocation ? locations[u.homeLocation].id : null,
+          locations: {
+            create: (u.homeLocation ? [locations[u.homeLocation]] : Object.values(locations)).map((l) => ({ locationId: l.id })),
+          },
         },
         update: {},
       });
@@ -197,6 +200,7 @@ async function main() {
           firstName: d.firstName,
           lastName: d.lastName,
           mustChangePassword,
+          locations: { create: Object.values(locations).map((l) => ({ locationId: l.id })) },
         },
         update: {},
       });

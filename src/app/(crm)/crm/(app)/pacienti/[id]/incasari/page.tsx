@@ -7,7 +7,7 @@ import { PaymentList } from "@/components/crm/billing/PaymentList";
 import { ButtonLink, DataTable, EmptyState, Panel } from "@/components/ui";
 import type { DataTableColumn } from "@/components/ui/DataTable";
 import { requirePermission } from "@/lib/auth/dal";
-import { getActiveLocations } from "@/lib/clinic-scope";
+import { getAllowedLocations } from "@/lib/clinic-scope";
 import { formatDateRo, formatLei } from "@/lib/format";
 import { can } from "@/lib/permissions";
 import { todayISO } from "@/lib/time";
@@ -36,7 +36,7 @@ export default async function PatientBillingPage({ params }: PageProps<"/crm/pac
     listPatientInvoices(id),
     listPatientPayments(id),
     listOpenInvoices(id),
-    getActiveLocations(),
+    getAllowedLocations(),
   ]);
   const canCreate = can(user, "billing.create") && !patient.anonymized;
 

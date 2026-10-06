@@ -39,7 +39,7 @@ export async function listStaff(): Promise<StaffRow[]> {
         role: true,
         active: true,
         lastLoginAt: true,
-        homeLocation: { select: { shortName: true } },
+        locations: { select: { location: { select: { shortName: true, sortOrder: true } } } },
         doctor: { select: { id: true, publicName: true, publicVisible: true, acceptsOnlineBooking: true } },
       },
     }),
@@ -58,7 +58,12 @@ export async function listStaff(): Promise<StaffRow[]> {
         email: u.email,
         role: u.role,
         active: u.active,
-        homeLocation: u.homeLocation?.shortName ?? null,
+        homeLocation:
+          u.role === "ADMIN" || u.locations.length !== 1
+            ? u.locations.length === 0 && u.role !== "ADMIN"
+              ? null
+              : "Ambele"
+            : u.locations[0].location.shortName,
         doctor: u.doctor,
         lastLoginAt: u.lastLoginAt?.toISOString() ?? null,
       }),
@@ -88,6 +93,7 @@ export type StaffUserDTO = {
   role: Role;
   active: boolean;
   homeLocationId: string | null;
+  locationIds: string[];
   mustChangePassword: boolean;
   lastLoginAt: string | null;
   lockedUntil: string | null;
@@ -144,6 +150,7 @@ export async function getStaffMember(id: string): Promise<{ user: StaffUserDTO |
       role: true,
       active: true,
       homeLocationId: true,
+      locations: { select: { locationId: true } },
       mustChangePassword: true,
       lastLoginAt: true,
       lockedUntil: true,
@@ -151,9 +158,9 @@ export async function getStaffMember(id: string): Promise<{ user: StaffUserDTO |
     },
   });
   if (user) {
-    const { doctor, ...u } = user;
+    const { doctor, locations, ...u } = user;
     return {
-      user: { ...u, lastLoginAt: u.lastLoginAt?.toISOString() ?? null, lockedUntil: u.lockedUntil?.toISOString() ?? null },
+      user: { ...u, locationIds: locations.map((l) => l.locationId), lastLoginAt: u.lastLoginAt?.toISOString() ?? null, lockedUntil: u.lockedUntil?.toISOString() ?? null },
       doctor,
     };
   }
@@ -175,6 +182,18 @@ function passwordErrors(password: string, email: string): void {
   if (problems.length) throw new DomainError("VALIDATION", undefined, { fieldErrors: { password: problems } });
 }
 
+/** With one clinic ticked, that clinic opens by default; with several, the CRM opens on „Ambele”. */
+function homeOf(locationIds: string[]): string | null {
+  return locationIds.length === 1 ? locationIds[0] : null;
+}
+
+async function assertLocationsExist(tx: Tx, locationIds: string[]): Promise<void> {
+  const found = await tx.location.count({ where: { id: { in: locationIds } } });
+  if (found !== new Set(locationIds).size) {
+    throw new DomainError("VALIDATION", undefined, { fieldErrors: { locationIds: ["Clinica aleasă nu există."] } });
+  }
+}
+
 export async function createUser(i: CreateUserInput, actor: CurrentUser): Promise<{ id: string }> {
   passwordErrors(i.password, i.email);
   const passwordHash = await hashPassword(i.password);
@@ -182,9 +201,7 @@ export async function createUser(i: CreateUserInput, actor: CurrentUser): Promis
     if (await tx.user.findUnique({ where: { email: i.email }, select: { id: true } })) {
       throw new DomainError("VALIDATION", undefined, { fieldErrors: { email: ["Există deja un cont cu acest e-mail."] } });
     }
-    if (i.homeLocationId && !(await tx.location.findUnique({ where: { id: i.homeLocationId }, select: { id: true } }))) {
-      throw new DomainError("VALIDATION", undefined, { fieldErrors: { homeLocationId: ["Clinica nu există."] } });
-    }
+    await assertLocationsExist(tx, i.locationIds);
     const user = await tx.user.create({
       data: {
         email: i.email,
@@ -193,8 +210,9 @@ export async function createUser(i: CreateUserInput, actor: CurrentUser): Promis
         firstName: i.firstName,
         lastName: i.lastName,
         phone: i.phone ?? null,
-        homeLocationId: i.homeLocationId ?? null,
+        homeLocationId: homeOf(i.locationIds),
         mustChangePassword: true,
+        locations: { create: i.locationIds.map((locationId) => ({ locationId })) },
       },
       select: { id: true },
     });
@@ -216,7 +234,17 @@ export async function updateUser(i: UpdateUserInput, actor: CurrentUser): Promis
   return prisma.$transaction(async (tx) => {
     const before = await tx.user.findUnique({
       where: { id: i.id },
-      select: { email: true, firstName: true, lastName: true, phone: true, role: true, homeLocationId: true, active: true, doctor: { select: { id: true } } },
+      select: {
+        email: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        role: true,
+        homeLocationId: true,
+        active: true,
+        doctor: { select: { id: true } },
+        locations: { select: { locationId: true } },
+      },
     });
     if (!before) throw new DomainError("NOT_FOUND", "Contul nu există.");
     if (before.role === "ADMIN" && i.role !== "ADMIN") {
@@ -228,11 +256,19 @@ export async function updateUser(i: UpdateUserInput, actor: CurrentUser): Promis
     if (i.email !== before.email && (await tx.user.findUnique({ where: { email: i.email }, select: { id: true } }))) {
       throw new DomainError("VALIDATION", undefined, { fieldErrors: { email: ["Există deja un cont cu acest e-mail."] } });
     }
-    const next = { email: i.email, firstName: i.firstName, lastName: i.lastName, phone: i.phone ?? null, role: i.role, homeLocationId: i.homeLocationId ?? null };
-    const changed = (Object.keys(next) as (keyof typeof next)[]).filter((k) => next[k] !== before[k]);
+    await assertLocationsExist(tx, i.locationIds);
+    const next = { email: i.email, firstName: i.firstName, lastName: i.lastName, phone: i.phone ?? null, role: i.role, homeLocationId: homeOf(i.locationIds) };
+    const changed: string[] = (Object.keys(next) as (keyof typeof next)[]).filter((k) => next[k] !== before[k]);
+    const beforeLocations = before.locations.map((l) => l.locationId).sort();
+    const locationsChanged = beforeLocations.join(",") !== [...i.locationIds].sort().join(",");
+    if (locationsChanged) changed.push("locations");
     if (changed.length === 0) return { id: i.id, doctorId: before.doctor?.id ?? null };
     const roleChanged = changed.includes("role");
     await tx.user.update({ where: { id: i.id }, data: { ...next, ...(roleChanged ? { sessionVersion: { increment: 1 } } : {}) } });
+    if (locationsChanged) {
+      await tx.userLocation.deleteMany({ where: { userId: i.id } });
+      await tx.userLocation.createMany({ data: i.locationIds.map((locationId) => ({ userId: i.id, locationId })) });
+    }
     await audit({ action: "user.update", entityType: "User", entityId: i.id, metadata: { fields: changed, sessionsRevoked: roleChanged } }, { actor, db: tx });
     return { id: i.id, doctorId: before.doctor?.id ?? null };
   });

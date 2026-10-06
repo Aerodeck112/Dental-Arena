@@ -276,6 +276,7 @@ model Location {
   payments     Payment[]
   staff        User[]          @relation("HomeLocation")
   recalls      Recall[]
+  staffAccess  UserLocation[]
 }
 
 model LocationHours {
@@ -330,6 +331,19 @@ model User {
   assignedLeads  Lead[]         @relation("LeadAssignee")
   leadActivities LeadActivity[]
   patientNotes   PatientNote[]
+  locations      UserLocation[]
+}
+
+/// Clinicile în care lucrează un utilizator (bifate la crearea contului). Un ADMIN vede toate clinicile.
+model UserLocation {
+  userId     String
+  locationId String
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  location Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@id([userId, locationId])
+  @@index([locationId])
 }
 
 model Doctor {

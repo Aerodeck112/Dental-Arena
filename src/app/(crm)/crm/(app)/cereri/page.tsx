@@ -6,7 +6,7 @@ import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Select } from "@/components/ui/Select";
 import { TextField } from "@/components/ui/TextField";
 import { requirePermission } from "@/lib/auth/dal";
-import { getActiveLocations, getClinicScope, scopeLocationIds } from "@/lib/clinic-scope";
+import { getAllowedLocations, getClinicScope, scopeLocationIds } from "@/lib/clinic-scope";
 import { pluralRo } from "@/lib/format";
 import { LEAD_SOURCE_LABEL, LEAD_STATUS_LABEL, labelOptions } from "@/lib/labels";
 import { can } from "@/lib/permissions";
@@ -30,7 +30,7 @@ export default async function LeadsPage({ searchParams }: PageProps<"/crm/cereri
   const status = (LEAD_STATUSES as readonly string[]).includes(statusParam) ? (statusParam as LeadStatus) : null;
   const sourceParam = one(sp.sursa);
   const source = sourceParam in LEAD_SOURCE_LABEL ? (sourceParam as LeadSource) : null;
-  const [locations, assignees, scopeIds] = await Promise.all([getActiveLocations(), listLeadAssignees(), getClinicScope().then(scopeLocationIds)]);
+  const [locations, assignees, scopeIds] = await Promise.all([getAllowedLocations(), listLeadAssignees(), getClinicScope().then(scopeLocationIds)]);
   const clinicParam = one(sp.clinica);
   const clinic = locations.find((l) => l.id === clinicParam || l.slug === clinicParam) ?? null;
   const assignedParam = one(sp.responsabil);

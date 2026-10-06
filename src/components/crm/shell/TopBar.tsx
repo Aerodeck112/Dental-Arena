@@ -21,7 +21,7 @@ function isTyping(target: EventTarget | null): boolean {
  * Top bar (WP1): clinic switch, patient search (a GET form to /crm/pacienti?q=, focused with „/”
  * or Ctrl+K), „Programare nouă” (also „N”) and the user menu.
  */
-export function TopBar({ user, scope }: { user: ShellUser; scope: ClinicScope }) {
+export function TopBar({ user, scope, scopes }: { user: ShellUser; scope: ClinicScope; scopes: ClinicScope[] }) {
   const { setMobileOpen } = useShell();
   const router = useRouter();
   const searchRef = useRef<HTMLInputElement>(null);
@@ -59,7 +59,7 @@ export function TopBar({ user, scope }: { user: ShellUser; scope: ClinicScope })
         <Menu className="size-5" aria-hidden strokeWidth={1.5} />
       </button>
 
-      <ClinicSwitch scope={scope} className="order-3 w-full sm:order-none sm:w-auto" />
+      <ClinicSwitch scope={scope} options={scopes} className="order-3 w-full sm:order-none sm:w-auto" />
 
       <form action="/crm/pacienti" method="get" role="search" className="order-2 min-w-0 flex-1 sm:order-none">
         <label htmlFor="cautare-pacient" className="sr-only">

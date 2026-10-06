@@ -66,11 +66,13 @@ function storedTheme(): ShellUser["theme"] {
 export function AppShell({
   user,
   scope,
+  scopes,
   counts,
   children,
 }: {
   user: ShellUser;
   scope: ClinicScope;
+  scopes: ClinicScope[];
   counts: Partial<Record<NavCountKey, number>>;
   children: ReactNode;
 }) {
@@ -120,7 +122,7 @@ export function AppShell({
       <div className="flex min-h-dvh bg-fundal text-cerneala">
         <Sidebar user={user} counts={counts} />
         <div className="flex min-w-0 flex-1 flex-col">
-          <TopBar user={user} scope={scope} />
+          <TopBar user={user} scope={scope} scopes={scopes} />
           <main
             id="continut"
             tabIndex={-1}

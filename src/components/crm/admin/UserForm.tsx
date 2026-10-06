@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { Checkbox } from "@/components/ui/Checkbox";
 import { Dialog } from "@/components/ui/Dialog";
 import { ErrorSummary } from "@/components/ui/ErrorSummary";
 import { PhoneField } from "@/components/ui/PhoneField";
@@ -28,7 +29,7 @@ export type UserFormValues = {
   lastName: string;
   phone: string | null;
   role: Role;
-  homeLocationId: string | null;
+  locationIds: string[];
   active: boolean;
 };
 
@@ -84,16 +85,31 @@ export function UserForm({
         hint={isSelf && user?.role === "ADMIN" ? "Nu vă puteți schimba singur rolul de administrator." : "Schimbarea rolului deconectează utilizatorul de pe toate dispozitivele."}
         error={e?.role}
       />
+      <fieldset id={ids("locationIds")} tabIndex={-1} className="flex flex-col gap-1">
+        <legend className="text-control font-medium">Clinica în care lucrează</legend>
+        <p className="text-mic text-discret">
+          {role === "ADMIN"
+            ? "Administratorul vede oricum ambele clinici. Bifați clinica unde lucrează de obicei."
+            : "Utilizatorul vede doar programările, cererile și facturile clinicilor bifate."}
+        </p>
+        {e?.locationIds && (
+          <p role="alert" className="text-mic font-medium text-carmin">
+            {e.locationIds.join(" ")}
+          </p>
+        )}
+        <div className="flex flex-wrap gap-x-8">
+          {locations.map((l) => (
+            <Checkbox
+              key={l.id}
+              name="locationIds"
+              value={l.id}
+              label={l.shortName}
+              defaultChecked={user ? user.locationIds.includes(l.id) : locations.length === 1}
+            />
+          ))}
+        </div>
+      </fieldset>
       <div className="grid gap-4 md:grid-cols-2">
-        <Select
-          id={ids("homeLocationId")}
-          label="Clinica de bază"
-          name="homeLocationId"
-          defaultValue={user?.homeLocationId ?? ""}
-          options={[{ value: "", label: "Ambele clinici" }, ...locations.map((l) => ({ value: l.id, label: l.shortName }))]}
-          hint="Clinica afișată implicit după intrarea în cont."
-          error={e?.homeLocationId}
-        />
         {!user && role === "MEDIC" && unlinkedDoctors.length > 0 && (
           <Select
             id={ids("linkDoctorId")}

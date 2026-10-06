@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireLocationAccess } from "@/lib/clinic-scope";
 import { notFound } from "next/navigation";
 import { LeadDetail } from "@/components/crm/leads/LeadDetail";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
@@ -18,6 +19,7 @@ export default async function LeadPage({ params }: PageProps<"/crm/cereri/[id]">
   const { id } = await params;
   const lead = await getLeadDetail(id);
   if (!lead) notFound();
+  await requireLocationAccess(lead.locationId);
   const canManage = can(user, "leads.manage");
   const converted = !!lead.convertedAt && !!lead.patientId;
   const [assignees, options, duplicates] = await Promise.all([

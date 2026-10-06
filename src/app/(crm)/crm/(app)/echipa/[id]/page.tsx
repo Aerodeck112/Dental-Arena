@@ -71,7 +71,7 @@ export default async function StaffMemberPage({ params, searchParams }: PageProp
               lastName: user.lastName,
               phone: user.phone,
               role: user.role,
-              homeLocationId: user.homeLocationId,
+              locationIds: user.locationIds,
               active: user.active,
             }}
             locations={locationOptions}

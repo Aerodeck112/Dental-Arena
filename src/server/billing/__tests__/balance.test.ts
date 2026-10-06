@@ -22,6 +22,7 @@ const admin: CurrentUser = {
   displayName: "Ana Admin",
   doctorId: null,
   homeLocationId: null,
+  locationIds: [],
   theme: "SISTEM",
   density: "COMPACT",
   mustChangePassword: false,

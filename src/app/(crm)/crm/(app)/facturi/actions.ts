@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { assertLocationAccess, assertRecordAccess } from "@/lib/clinic-scope";
 import { redirect } from "next/navigation";
 import { crmAction } from "@/lib/actions";
 import { createInvoice, cancelInvoice } from "@/server/billing/invoices";
@@ -22,6 +23,7 @@ function revalidateBilling(patientId: string) {
 export const createInvoiceAction = crmAction(
   { permission: "billing.create", schema: createInvoiceSchema },
   async (i, { user }) => {
+    await assertLocationAccess(i.locationId);
     const r = await createInvoice(
       {
         patientId: i.patientId,
@@ -46,6 +48,7 @@ export const createInvoiceAction = crmAction(
 export const cancelInvoiceAction = crmAction(
   { permission: "billing.cancel", schema: cancelSchema, successMessage: "Factura a fost anulată. Plățile ei au trecut în contul pacientului." },
   async ({ id, reason }, { user }) => {
+    await assertRecordAccess("invoice", id);
     const r = await cancelInvoice(id, reason, user);
     revalidateBilling(r.patientId);
     return r;

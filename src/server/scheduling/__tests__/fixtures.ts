@@ -89,6 +89,7 @@ export function testUser(role: "ADMIN" | "MEDIC" | "RECEPTIE", doctorId: string 
     displayName: `Test ${role}`,
     doctorId,
     homeLocationId: null,
+    locationIds: [],
     theme: "SISTEM",
     density: "COMPACT",
     mustChangePassword: false,

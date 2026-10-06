@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { assertRecordAccess } from "@/lib/clinic-scope";
 import { crmAction } from "@/lib/actions";
 import {
   addLeadActivity,
@@ -25,6 +26,7 @@ export const assignLeadAction = crmAction(
   { permission: "leads.manage", schema: assignLeadSchema, successMessage: (d: { assigned: boolean }) => (d.assigned ? "Cererea a fost atribuită." : "Atribuirea a fost scoasă.") },
   async (input, { user }) => {
     const to = input.assignedToId && input.assignedToId !== "none" ? input.assignedToId : null;
+    await assertRecordAccess("lead", input.id);
     await assignLead(input.id, to, user);
     revalidateLeads(input.id);
     return { assigned: !!to };
@@ -38,6 +40,7 @@ export const addLeadActivityAction = crmAction(
     successMessage: (d: { statusChanged: boolean; note: boolean }) => (d.note ? "Nota a fost adăugată." : d.statusChanged ? "Apel notat. Cererea este acum Contactat." : "Contactul a fost notat."),
   },
   async (input, { user }) => {
+    await assertRecordAccess("lead", input.id);
     const r = await addLeadActivity(input, user);
     revalidateLeads(input.id);
     return { ...r, note: input.type === "NOTA" };
@@ -49,6 +52,7 @@ const STATUS_DONE = { NOU: "Cererea este din nou Nou.", CONTACTAT: "Cererea este
 export const changeLeadStatusAction = crmAction(
   { permission: "leads.manage", schema: leadStatusSchema, successMessage: (d: { status: keyof typeof STATUS_DONE }) => STATUS_DONE[d.status] },
   async (input, { user }) => {
+    await assertRecordAccess("lead", input.id);
     await changeLeadStatus(input, user);
     revalidateLeads(input.id);
     return { status: input.status };
@@ -62,6 +66,7 @@ export const convertLeadAction = crmAction(
     successMessage: (d: { createdPatient: boolean }) => (d.createdPatient ? "Pacient creat și programare legată." : "Programarea a fost legată de pacientul existent."),
   },
   async (input, { user }) => {
+    await assertRecordAccess("lead", input.leadId);
     const r = await convertLead(input, user);
     revalidateLeads(input.leadId);
     revalidatePath("/crm/programari");

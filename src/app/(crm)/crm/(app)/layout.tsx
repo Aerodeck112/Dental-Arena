@@ -1,7 +1,7 @@
 import { AppShell, type ShellUser } from "@/components/crm/shell/AppShell";
 import type { NavCountKey } from "@/components/crm/shell/nav";
 import { requireUser, type CurrentUser } from "@/lib/auth/dal";
-import { getClinicScope, scopeLocationIds, type ClinicScope } from "@/lib/clinic-scope";
+import { getAllowedScopes, getClinicScope, scopeLocationIds, type ClinicScope } from "@/lib/clinic-scope";
 import { prisma } from "@/lib/db";
 import { ROLE_LABEL } from "@/lib/labels";
 import { can } from "@/lib/permissions";
@@ -37,7 +37,7 @@ async function getNavCounts(user: CurrentUser, scope: ClinicScope): Promise<Part
 
 export default async function CrmAppLayout({ children }: LayoutProps<"/crm">) {
   const user = await requireUser();
-  const scope = await getClinicScope();
+  const [scope, scopes] = await Promise.all([getClinicScope(), getAllowedScopes()]);
   const counts = await getNavCounts(user, scope);
 
   const shellUser: ShellUser = {
@@ -50,7 +50,7 @@ export default async function CrmAppLayout({ children }: LayoutProps<"/crm">) {
   };
 
   return (
-    <AppShell user={shellUser} scope={scope} counts={counts}>
+    <AppShell user={shellUser} scope={scope} scopes={scopes} counts={counts}>
       {children}
     </AppShell>
   );

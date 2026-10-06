@@ -46,6 +46,7 @@ async function makeUser(role: "ADMIN" | "RECEPTIE", doctorId: string | null = nu
     displayName: `${u.firstName} ${u.lastName}`,
     doctorId,
     homeLocationId: null,
+    locationIds: [],
     theme: "SISTEM",
     density: "COMPACT",
     mustChangePassword: false,

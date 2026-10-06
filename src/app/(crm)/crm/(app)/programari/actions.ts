@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { assertLocationAccess, assertRecordAccess } from "@/lib/clinic-scope";
 import { after } from "next/server";
 import { z } from "zod";
 import { crmAction, DomainError } from "@/lib/actions";
@@ -41,6 +42,7 @@ function revalidateAgenda(appointmentId?: string) {
 export const createAppointmentAction = crmAction(
   { permission: [...MANAGE], schema: createAppointmentSchema, successMessage: (d: { time: string }) => `Programare creată pentru ora ${d.time}` },
   async (input, { user }) => {
+    await assertLocationAccess(input.locationId);
     const r = await createAppointment(input, user);
     revalidateAgenda(r.id);
     if (input.leadId) revalidatePath("/crm/cereri");
@@ -52,6 +54,8 @@ export const createAppointmentAction = crmAction(
 export const updateAppointmentAction = crmAction(
   { permission: [...MANAGE], schema: updateAppointmentSchema, successMessage: (d: { moved: boolean; time: string }) => (d.moved ? `Programare mutată la ${d.time}` : "Modificările au fost salvate.") },
   async (input, { user }) => {
+    await assertRecordAccess("appointment", input.id);
+    await assertLocationAccess(input.locationId);
     const r = await updateAppointment(input, user);
     revalidateAgenda(r.id);
     if (r.moved) {
@@ -73,6 +77,7 @@ function scheduleMovedMessage(id: string, tokenVersion: number, userId: string) 
 export const moveAppointmentAction = crmAction(
   { permission: [...MANAGE], schema: moveAppointmentSchema, successMessage: (d: { undo: boolean; time: string }) => (d.undo ? "Mutarea a fost anulată." : `Programare mutată la ${d.time}`) },
   async (input, { user }) => {
+    await assertRecordAccess("appointment", input.id);
     const r = await moveAppointment(input, user);
     if (!input.undo) scheduleMovedMessage(r.id, r.tokenVersion, user.id);
     revalidateAgenda(r.id);
@@ -102,6 +107,7 @@ export const changeStatusAction = crmAction(
     successMessage: (d: { status: keyof typeof STATUS_MESSAGE }) => STATUS_MESSAGE[d.status],
   },
   async (input, { user }) => {
+    await assertRecordAccess("appointment", input.id);
     await assertCanActOnAppointment(user, input.id);
     const appt = await transitionAppointment(input.id, input.to, {
       actor: user,

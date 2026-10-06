@@ -74,6 +74,7 @@ describe("getCurrentUser", () => {
       displayName: "Ioana Man",
       doctorId: null,
       homeLocationId: null,
+      locationIds: [],
       theme: "SISTEM",
       density: "COMPACT",
       mustChangePassword: false,

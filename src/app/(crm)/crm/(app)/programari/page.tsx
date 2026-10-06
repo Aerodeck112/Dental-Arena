@@ -4,7 +4,7 @@ import { CalendarToolbar } from "@/components/crm/calendar/CalendarToolbar";
 import { CalendarWeek } from "@/components/crm/calendar/CalendarWeek";
 import { TodayList } from "@/components/crm/dashboard/TodayList";
 import { requirePermission } from "@/lib/auth/dal";
-import { getClinicScope, isClinicScope } from "@/lib/clinic-scope";
+import { getAllowedScopes, getClinicScope, isClinicScope } from "@/lib/clinic-scope";
 import { pluralRo } from "@/lib/format";
 import { can } from "@/lib/permissions";
 import { isValidDateISO, todayISO } from "@/lib/time";
@@ -28,7 +28,8 @@ export default async function CalendarPage({ searchParams }: PageProps<"/crm/pro
   const zi = isValidDateISO(one(sp.zi)) ? one(sp.zi) : todayISO(now);
   const coloane = one(sp.coloane) === "cabinete" ? "cabinete" : "medici";
   const clinicaParam = one(sp.clinica);
-  const scope = isClinicScope(clinicaParam) ? clinicaParam : await getClinicScope();
+  const allowedScopes = await getAllowedScopes();
+  const scope = isClinicScope(clinicaParam) && allowedScopes.includes(clinicaParam) ? clinicaParam : await getClinicScope();
   const canCreate = can(user, ["appointments.manage", "appointments.manageOwn"]);
 
   const [data, options] = await Promise.all([
@@ -43,7 +44,7 @@ export default async function CalendarPage({ searchParams }: PageProps<"/crm/pro
     canCreate ? getAppointmentFormOptions(user) : Promise.resolve(null),
   ]);
   const active = data.appointments.filter((a) => a.status !== "ANULAT").length;
-  const clinica = isClinicScope(clinicaParam) ? clinicaParam : null;
+  const clinica = isClinicScope(clinicaParam) && clinicaParam === scope ? clinicaParam : null;
   const multiClinic = scope === "ambele";
   const nowISO = now.toISOString();
 

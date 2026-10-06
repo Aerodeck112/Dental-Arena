@@ -5,6 +5,11 @@ import { zCheckbox, zEmail, zId, zOptionalText, zPhoneRo, zText } from "@/lib/va
 
 const blank = (v: unknown) => (v === "" || v === null ? undefined : v);
 const zRole = z.enum(["ADMIN", "MEDIC", "RECEPTIE"], { error: "Alegeți rolul." });
+/** Clinicile bifate. Cel puțin una; un administrator vede oricum toate clinicile. */
+const zLocationIds = z.preprocess(
+  (v) => (v === undefined || v === null || v === "" ? [] : Array.isArray(v) ? v : [v]),
+  z.array(zId).min(1, "Bifați cel puțin o clinică."),
+);
 const zName = (label: string) => zText(80).pipe(z.string().min(1, `Completați ${label}.`));
 
 export const createUserSchema = z.object({
@@ -13,7 +18,7 @@ export const createUserSchema = z.object({
   lastName: zName("numele"),
   phone: z.preprocess(blank, zPhoneRo.optional()),
   role: zRole,
-  homeLocationId: z.preprocess(blank, zId.optional()),
+  locationIds: zLocationIds,
   password: z.string().min(1, "Completați parola inițială.").max(200),
   linkDoctorId: z.preprocess(blank, zId.optional()),
 });
@@ -25,7 +30,7 @@ export const updateUserSchema = z.object({
   lastName: zName("numele"),
   phone: z.preprocess(blank, zPhoneRo.optional()),
   role: zRole,
-  homeLocationId: z.preprocess(blank, zId.optional()),
+  locationIds: zLocationIds,
 });
 
 export const resetPasswordSchema = z.object({

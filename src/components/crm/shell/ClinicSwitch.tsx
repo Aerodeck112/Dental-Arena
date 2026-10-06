@@ -7,14 +7,12 @@ import type { ClinicScope } from "@/lib/clinic-scope";
 import { CLINIC_SCOPE_LABEL } from "@/lib/labels";
 import { setClinicScope } from "./actions";
 
-const OPTIONS: ClinicScope[] = ["cristesti", "ludus", "ambele"];
-
 /**
  * Clinic switch (design system §6.8): a segmented control Cristești | Luduș | Ambele. The choice
  * persists in the `da_clinica` cookie, so every page keeps it. Works without JavaScript (a form
  * with three submit buttons).
  */
-export function ClinicSwitch({ scope, className }: { scope: ClinicScope; className?: string }) {
+export function ClinicSwitch({ scope, options, className }: { scope: ClinicScope; options: ClinicScope[]; className?: string }) {
   const [state, formAction] = useActionState<ActionResult<{ scope: ClinicScope }> | null, FormData>(
     setClinicScope,
     null,
@@ -23,12 +21,22 @@ export function ClinicSwitch({ scope, className }: { scope: ClinicScope; classNa
   const [, startTransition] = useTransition();
   const current = optimistic;
 
+  // An account ticked for a single clinic sees only that clinic: no switch, just its name.
+  if (options.length <= 1) {
+    return (
+      <p className={cn("text-control font-semibold text-cerneala", className)}>
+        <span className="sr-only">Clinica afișată: </span>
+        {CLINIC_SCOPE_LABEL[scope]}
+      </p>
+    );
+  }
+
   return (
     <form action={formAction} className={cn("min-w-0", className)}>
       <fieldset className="flex items-center">
         <legend className="sr-only">Clinica afișată</legend>
         <div className="inline-flex rounded-control border border-linie-control bg-suprafata p-0.5">
-          {OPTIONS.map((value) => {
+          {options.map((value) => {
             const selected = current === value;
             return (
               <button
