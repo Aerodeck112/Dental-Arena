@@ -28,9 +28,9 @@ export const LANDINGS: Record<LandingSlug, LandingContent> = {
   "dentist-targu-mures": {
     slug: "dentist-targu-mures",
     title: "Dentist lângă Târgu Mureș",
-    seoTitle: "Dentist lângă Târgu Mureș: Dental Arena Cristești",
+    seoTitle: "Dentist lângă Târgu Mureș, în Cristești",
     description:
-      "Căutați un dentist în Târgu Mureș? Dental Arena are clinica în Cristești, lângă Târgu Mureș: consultații, implanturi, ortodonție, copii și tratament sub inhalosedare.",
+      "Căutați un dentist în Târgu Mureș? Dental Arena are clinica în Cristești, lângă oraș: implanturi, aparat dentar, copii și tratament fără frică.",
     lead: "Clinica Dental Arena din Cristești este lângă Târgu Mureș, pe str. Principală 536J/1. Vedeți pe site medicii, prețurile și orele libere, apoi vă programați online sau la telefon.",
     intro: [
       "Suntem o clinică stomatologică de familie, cu cinci medici, în care punem pe primul loc confortul și siguranța pacientului. Se respectă programările, iar tratamentele sunt făcute fără durere.",
@@ -48,9 +48,9 @@ export const LANDINGS: Record<LandingSlug, LandingContent> = {
   "cabinet-stomatologic-targu-mures": {
     slug: "cabinet-stomatologic-targu-mures",
     title: "Cabinet stomatologic lângă Târgu Mureș",
-    seoTitle: "Cabinet stomatologic lângă Târgu Mureș: Dental Arena Cristești",
+    seoTitle: "Cabinet stomatologic lângă Târgu Mureș, în Cristești",
     description:
-      "Cabinet stomatologic în Cristești, lângă Târgu Mureș: stomatologie generală, implantologie, chirurgie, ortodonție și pedodonție, cu prețuri afișate pe site.",
+      "Cabinet stomatologic în Cristești, lângă Târgu Mureș: carii, implanturi, extracții, aparat dentar și stomatologie pentru copii. Prețuri pe site.",
     lead: "În Cristești, lângă Târgu Mureș, Dental Arena are un cabinet stomatologic de familie: de la controlul periodic și igienizare până la implanturi și aparate dentare.",
     intro: [
       "Planificăm tratamentele după radiografii, iar lucrările dentare le proiectăm pe calculator, cu o precizie foarte mare. Prețurile le vedeți mai jos, înainte să veniți.",

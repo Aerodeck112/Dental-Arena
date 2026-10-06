@@ -11,7 +11,7 @@ import { ServiceGrid } from "@/components/site/ServiceGrid";
 import { SitePhoto } from "@/components/site/SitePhoto";
 import { HOME } from "@/content/home";
 import { getSiteImages } from "@/server/media/site-images";
-import { dentistJsonLd, pageMetadata } from "@/server/public/seo";
+import { dentistJsonLd, organizationJsonLd, pageMetadata } from "@/server/public/seo";
 import { getPricesByCodes, getPublicDoctors, getPublicLocations, getServiceIndex } from "@/server/public/queries";
 import type { PublicPrice } from "@/server/public/types";
 
@@ -55,7 +55,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <JsonLd data={locations.map(dentistJsonLd)} />
+      <JsonLd data={[...organizationJsonLd(locations), ...locations.map(dentistJsonLd)]} />
 
       {/* Hero: the promise, set large on forest green, beside the clinic's own moss wall. */}
       <section aria-labelledby="titlu-acasa" className="px-3 pt-1 sm:px-4">

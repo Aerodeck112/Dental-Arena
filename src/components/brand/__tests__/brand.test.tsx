@@ -42,7 +42,8 @@ describe("thread glyph geometry (from the mark)", () => {
 describe("Logo", () => {
   it("shows the original logo of dentalarena.ro, named „Dental Arena” by default", () => {
     const out = html(<Logo />);
-    expect(out).toContain("/brand/logo-dental-arena.webp");
+    // Served through the image optimiser at the displayed size: /_next/image?url=%2Fbrand%2F…
+    expect(decodeURIComponent(out)).toContain("/brand/logo-dental-arena.webp");
     expect(out).toContain('alt="Dental Arena"');
     expect(out).not.toContain("<svg");
   });
@@ -54,9 +55,9 @@ describe("Logo", () => {
   });
 
   it("uses the original tooth mark alone for the mark variant", () => {
-    expect(html(<Logo variant="mark" />)).toContain("/brand/semn-dental-arena.png");
-    expect(html(<Logo variant="reversed" lockup="mark" />)).toContain("/brand/semn-dental-arena.png");
-    expect(html(<Logo variant="full" />)).toContain("/brand/logo-dental-arena.webp");
+    expect(decodeURIComponent(html(<Logo variant="mark" />))).toContain("/brand/semn-dental-arena.png");
+    expect(decodeURIComponent(html(<Logo variant="reversed" lockup="mark" />))).toContain("/brand/semn-dental-arena.png");
+    expect(decodeURIComponent(html(<Logo variant="full" />))).toContain("/brand/logo-dental-arena.webp");
   });
 
   it("keeps the original proportions", () => {

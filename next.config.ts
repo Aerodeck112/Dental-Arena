@@ -32,6 +32,8 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   /** cPanel (Setup Node.js App): a self-contained server in .next/standalone, see docs/cpanel.md. */
   output: "standalone",
+  /** AVIF first: the clinic photos (the moss wall above all) come out far lighter than in WebP. */
+  images: { formats: ["image/avif", "image/webp"] },
   experimental: {
     serverActions: {
       bodySizeLimit: "2mb",

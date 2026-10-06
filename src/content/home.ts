@@ -12,7 +12,7 @@ export const COMFORT_STORAGE_KEY = "da-confort";
 export const HOME = {
   title: SITE.homeTitle,
   description:
-    "Clinică stomatologică de familie în Cristești, lângă Târgu Mureș, și în Luduș: consultații, implanturi, ortodonție, copii și tratament fără frică, sub inhalosedare.",
+    "Clinică stomatologică în Cristești, lângă Târgu Mureș, și în Luduș: implanturi, ortodonție, copii, tratament fără frică sub inhalosedare. Programare online.",
 
   hero: {
     lines: ["Fără durere,", "fără frică,", "cu precizie."],

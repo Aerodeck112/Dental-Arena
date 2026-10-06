@@ -23,7 +23,7 @@ export function SiteFooter() {
       <Container>
         <div className="flex flex-col items-center text-center">
           <Link href="/" aria-label="Dental Arena, prima pagină" className="rounded-control p-1">
-            <Logo variant="full" title="" className="h-auto w-[240px] md:w-[300px]" />
+            <Logo variant="full" title="" sizes="(min-width: 768px) 300px, 240px" className="h-auto w-[240px] md:w-[300px]" />
           </Link>
           <p className="mt-5 font-display text-nume">{SITE.tagline}</p>
         </div>

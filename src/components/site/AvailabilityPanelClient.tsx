@@ -29,7 +29,6 @@ function ClinicSlots({ clinic, fallback, layout }: { clinic: ClinicAvailability;
           <li key={s.startsAt}>
             <Link
               href={s.href}
-              aria-label={`${s.dayLong}, ora ${s.time}, la ${clinic.shortName}`}
               className={cn(
                 SLOT,
                 layout === "tiles"
@@ -40,7 +39,10 @@ function ClinicSlots({ clinic, fallback, layout }: { clinic: ClinicAvailability;
               <span className={cn("cifre", layout === "tiles" ? "text-mic text-discret" : "text-control")}>
                 {layout === "tiles" ? s.dayShort : s.dayLong}
               </span>
-              <span className="text-h3 font-semibold cifre">{s.time}</span>
+              <span className="text-h3 font-semibold cifre">
+                {s.time}
+                <span className="sr-only">, la {clinic.shortName}</span>
+              </span>
             </Link>
           </li>
         ))}

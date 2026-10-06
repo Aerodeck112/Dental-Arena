@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { JsonLd } from "@/components/site/JsonLd";
 import { notFound } from "next/navigation";
 import { Accordion } from "@/components/ui/Accordion";
 import { BookingBand } from "@/components/site/BookingBand";
@@ -10,7 +11,7 @@ import { ServiceSteps } from "@/components/site/ServiceSteps";
 import { WhoTreats } from "@/components/site/WhoTreats";
 import { SERVICE_SLUGS, getServiceContent } from "@/content/services";
 import { bookingHref } from "@/content/site";
-import { pageMetadata } from "@/server/public/seo";
+import { breadcrumbJsonLd, faqJsonLd, pageMetadata, serviceJsonLd } from "@/server/public/seo";
 import { getSiteImage } from "@/server/media/site-images";
 import { getPublicCatalog } from "@/server/public/queries";
 
@@ -46,8 +47,18 @@ export default async function ServicePage({ params }: PageProps<"/[serviciu]">) 
   const book = bookingHref({ serviciu: data.bookingCode, confort: content.bookingComfort ?? null });
   const hasSteps = !!content.steps?.length;
 
+  const ld = [
+    breadcrumbJsonLd([
+      { name: "Servicii", path: "/servicii" },
+      { name: content.title, path: `/${content.slug}` },
+    ]),
+    serviceJsonLd({ name: content.title, description: content.description, path: `/${content.slug}`, prices: data.prices }),
+    faqJsonLd(content.faqs),
+  ].filter((x): x is Record<string, unknown> => x !== null);
+
   return (
     <>
+      <JsonLd data={ld} />
       <ServiceHero
         breadcrumbs={[{ href: "/servicii", label: "Servicii" }, { label: content.title }]}
         title={content.title}

@@ -3,9 +3,9 @@ import type { ServiceContent } from "./types";
 export const implantologie: ServiceContent = {
   slug: "implantologie",
   title: "Implantologie",
-  seoTitle: "Implant dentar și coroane pe implant în Cristești și Luduș",
+  seoTitle: "Implant dentar în Cristești și Luduș, lângă Tg. Mureș",
   description:
-    "Implant dentar din titan, bont protetic și coroane pe implant la Dental Arena Cristești și Luduș. Planul se face după radiografii, iar vindecarea durează 3–6 luni.",
+    "Implant dentar din titan și coroane pe implant în Cristești și Luduș, lângă Târgu Mureș. Plan după radiografii, prețuri afișate. Programați o consultație.",
   lead: "Dinții lipsă se pot înlocui cu un implant: o piesă din titan care ține locul rădăcinii.",
   summary: "Medici pregătiți pentru cele mai complexe cazuri de implantologie și chirurgie dentară.",
   body: [
@@ -29,7 +29,13 @@ export const implantologie: ServiceContent = {
     focus: "50% 45%",
   },
   priceNote: "Prețurile sunt orientative. Costul exact îl aflați după consultație și radiografii.",
-  faqs: [],
+  // Răspunsuri scrise din textele site-ului actual; de verificat de clinică.
+  faqs: [
+    { question: "Cât durează tratamentul cu implant dentar?", answer: "După inserarea implantului urmează o perioadă de vindecare de 3–6 luni. Apoi se atașează bontul protetic, iar medicul fixează coroana, puntea sau proteza." },
+    { question: "Se poate pune implantul imediat după extracție?", answer: "Da, în unele cazuri implantul se inserează imediat după extracție. Medicul decide după analiza radiografiilor speciale, la consultație." },
+    { question: "Cât costă un implant dentar?", answer: "Prețurile pentru implant, bont protetic, adiție de os și lucrările pe implant sunt în lista de pe această pagină. Costul exact îl aflați după consultație și radiografii." },
+    { question: "Doare inserarea unui implant?", answer: "Intervenția se face sub anestezie locală. Dacă vă e teamă, se poate face și sub inhalosedare: rămâneți conștient, dar mult mai relaxat." },
+  ],
   ctaTitle: "Programați o consultație de implantologie",
   bookingCode: "IMP-CONSULT",
   comfortNote: true,

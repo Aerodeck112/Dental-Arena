@@ -27,6 +27,7 @@ export function SitePhoto({
       fill
       sizes={sizes}
       priority={priority}
+      fetchPriority={priority ? "high" : undefined}
       unoptimized={image.src.startsWith("/media/")}
       className={cn("object-cover", className)}
       style={position ? { objectPosition: position } : undefined}

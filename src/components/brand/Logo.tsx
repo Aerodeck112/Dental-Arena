@@ -21,13 +21,15 @@ type LogoProps = {
   className?: string;
   /** Loads the logo eagerly (header). */
   priority?: boolean;
+  /** Displayed width, so the browser downloads a file of that size (next/image `sizes`). */
+  sizes?: string;
 };
 
 const FULL = { src: "/brand/logo-dental-arena.webp", width: 640, height: 241 };
 const MARK = { src: "/brand/semn-dental-arena.png", width: 296, height: 487 };
 
 /** The Dental Arena logo. Size it with a height or width class (`h-10 w-auto`). */
-export function Logo({ variant = "compact", lockup, title = "Dental Arena", className, priority = false }: LogoProps) {
+export function Logo({ variant = "compact", lockup, title = "Dental Arena", className, priority = false, sizes = "160px" }: LogoProps) {
   const isMark = variant === "mark" || (lockup === "mark" && (variant === "reversed" || variant === "mono"));
   const file = isMark ? MARK : FULL;
   return (
@@ -38,7 +40,7 @@ export function Logo({ variant = "compact", lockup, title = "Dental Arena", clas
       alt={title}
       aria-hidden={title === "" ? true : undefined}
       priority={priority}
-      unoptimized
+      sizes={sizes}
       className={cn("shrink-0 select-none", className)}
       draggable={false}
     />

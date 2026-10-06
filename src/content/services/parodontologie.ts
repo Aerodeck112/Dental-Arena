@@ -3,9 +3,9 @@ import type { ServiceContent } from "./types";
 export const parodontologie: ServiceContent = {
   slug: "parodontologie",
   title: "Parodontologie",
-  seoTitle: "Parodontologie: tratamentul parodontozei în Cristești și Luduș",
+  seoTitle: "Tratament parodontoză în Cristești și Luduș",
   description:
-    "Parodontoza, depistată devreme, se poate trata: igienizare profesională, chiuretaj parodontal și imobilizarea dinților. Dental Arena Cristești și Luduș.",
+    "Tratament pentru parodontoză în Cristești și Luduș: igienizare profesională, chiuretaj parodontal și imobilizarea dinților. Prețuri pe site.",
   lead: "Parodontoza, boala gingiilor și a osului din jurul dinților, duce în timp la pierderea dinților. Depistată devreme, se poate trata.",
   summary: "Boala parodontală, depistată devreme, se poate trata înainte să ducă la pierderea dinților.",
   body: [
@@ -23,7 +23,12 @@ export const parodontologie: ServiceContent = {
     focus: "60% 40%",
   },
   priceNote: "Prețurile sunt orientative. Costul exact îl aflați după consultație și radiografii.",
-  faqs: [],
+  // Răspunsuri scrise din textele site-ului actual; de verificat de clinică.
+  faqs: [
+    { question: "Ce este parodontoza?", answer: "Este boala gingiilor și a țesuturilor care susțin dinții, cauzată în principal de placa bacteriană. Netratată, duce la pierderea dinților." },
+    { question: "Se poate trata parodontoza?", answer: "Da, mai ales dacă este depistată devreme: prin igienizare profesională, chiuretaj parodontal și, la nevoie, imobilizarea dinților." },
+    { question: "Care sunt semnele parodontozei?", answer: "Sângerarea gingiilor, retragerea lor și dinții care se mișcă. Dacă le observați, programați o consultație." },
+  ],
   ctaTitle: "Programați o consultație",
   bookingCode: "CON-CONSULT",
   comfortNote: true,

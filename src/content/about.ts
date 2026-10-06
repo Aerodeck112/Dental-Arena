@@ -5,9 +5,9 @@
 
 export const ABOUT = {
   title: "Despre noi",
-  seoTitle: "Despre Dental Arena, clinica stomatologică din Cristești și Luduș",
+  seoTitle: "Despre clinica stomatologică din Cristești și Luduș",
   description:
-    "Dental Arena este o clinică stomatologică de familie din Cristești, lângă Târgu Mureș, și din Luduș: medici tineri, programări respectate și tratamente fără durere.",
+    "Dental Arena, clinică stomatologică de familie din Cristești, lângă Târgu Mureș, și din Luduș: medici tineri, programări respectate, tratamente fără durere.",
   lead: "O clinică stomatologică în care vă întoarceți cu plăcere de fiecare dată.",
   story: [
     "La Dental Arena, problemele dentare vă sunt rezolvate cu răbdare, pasiune, dedicare și seriozitate, de o echipă de medici tineri și profesioniști, în care puteți avea încredere. Este un loc pozitiv, cu o atmosferă plăcută, în care punem pe primul loc confortul și siguranța pacientului.",

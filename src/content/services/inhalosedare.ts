@@ -3,9 +3,9 @@ import type { ServiceContent } from "./types";
 export const inhalosedare: ServiceContent = {
   slug: "inhalosedare",
   title: "Inhalosedare",
-  seoTitle: "Inhalosedare: tratament stomatologic fără frică, în Cristești și Luduș",
+  seoTitle: "Inhalosedare: dentist fără frică în Cristești, Luduș",
   description:
-    "Inhalosedare la Dental Arena: respirați un amestec care vă relaxează, rămâneți conștient și vă reveniți în 3–5 minute. Se poate folosi la adulți și la copii.",
+    "Tratament stomatologic fără frică, sub inhalosedare, în Cristești și Luduș: rămâneți conștient și relaxat, vă reveniți în 3–5 minute. Și pentru copii.",
   lead: "Dacă vă e teamă de dentist, puteți face tratamentul relaxat: respirați un amestec care vă liniștește, iar medicul lucrează în timp ce rămâneți conștient.",
   summary: "Sunteți relaxat și colaborați cu medicul, iar după tratament vă reveniți în câteva minute.",
   body: [
@@ -35,7 +35,13 @@ export const inhalosedare: ServiceContent = {
     focus: "40% 50%",
   },
   priceNote: "Inhalosedarea se adaugă la prețul tratamentului și se plătește pe oră.",
-  faqs: [],
+  // Răspunsuri scrise din textele site-ului actual; de verificat de clinică.
+  faqs: [
+    { question: "Ce este inhalosedarea?", answer: "Este o metodă de sedare conștientă: respirați un amestec care vă relaxează, rămâneți conștient, răspundeți la ce vă spune medicul și colaborați cu el pe tot parcursul tratamentului." },
+    { question: "Se poate face inhalosedare la copii?", answer: "Da. Inhalosedarea se poate folosi și la copii, mai ales la cei cărora le e frică de dentist." },
+    { question: "Cât durează revenirea după inhalosedare?", answer: "Starea de relaxare trece repede: vă reveniți în 3–5 minute după tratament." },
+    { question: "Cum cer inhalosedare la programare?", answer: "Când vă programați online, bifați „Aș vrea inhalosedare”, iar recepția pregătește totul pentru vizita dumneavoastră. O puteți cere și la telefon." },
+  ],
   ctaTitle: "Programați-vă cu inhalosedare",
   bookingCode: "CON-CONSULT",
   bookingComfort: "frica",

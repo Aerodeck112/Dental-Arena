@@ -7,7 +7,7 @@ export const ANNIVERSARY = {
   title: "15 ani împreună cu Dental Arena",
   seoTitle: "15 ani împreună cu Dental Arena",
   description:
-    "În vara lui 2024, Dental Arena Clinic a împlinit 15 ani de stomatologie în Mureș. Povestea aniversării și ce a rămas din ea: aceeași grijă, în Cristești și Luduș.",
+    "În 2024, Dental Arena a împlinit 15 ani de stomatologie în județul Mureș. Povestea clinicii din Cristești și Luduș și a pacienților care ne-au fost alături.",
   lead: "În vara lui 2024, Dental Arena Clinic a împlinit 15 ani de stomatologie. Le-am mulțumit atunci pacienților care ne-au fost alături, cu o aniversare care a durat două luni.",
   celebration: {
     title: "Cum am sărbătorit",

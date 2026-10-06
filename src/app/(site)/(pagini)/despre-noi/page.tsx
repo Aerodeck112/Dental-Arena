@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { JsonLd } from "@/components/site/JsonLd";
 import Link from "next/link";
 import { BookingBand } from "@/components/site/BookingBand";
 import { ClinicCards } from "@/components/site/ClinicCards";
@@ -8,7 +9,7 @@ import { SitePhoto } from "@/components/site/SitePhoto";
 import { getSiteImages } from "@/server/media/site-images";
 import { ABOUT } from "@/content/about";
 import { bookingHref } from "@/content/site";
-import { pageMetadata } from "@/server/public/seo";
+import { pageMetadata, breadcrumbJsonLd } from "@/server/public/seo";
 import { getPublicLocations } from "@/server/public/queries";
 
 export const revalidate = 300;
@@ -27,6 +28,7 @@ export default async function AboutPage() {
   const [locations, img] = await Promise.all([getPublicLocations(), getSiteImages(["despre.principala", "despre.secundara", "clinica.cristesti", "clinica.ludus"] as const)]);
   return (
     <>
+      <JsonLd data={breadcrumbJsonLd([{ name: "Despre noi", path: "/despre-noi" }])} />
       <ServiceHero
         breadcrumbs={[{ href: "/", label: "Acasă" }, { label: ABOUT.title }]}
         title={ABOUT.title}

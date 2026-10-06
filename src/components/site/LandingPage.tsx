@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { breadcrumbJsonLd } from "@/server/public/seo";
 import Link from "next/link";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { ButtonLink } from "@/components/ui/ButtonLink";
@@ -40,7 +41,7 @@ export function LandingPage({
     .map((r) => ({ id: r.slug, code: null, name: r.representative!.name, price: r.representative!.price, onRequest: false }));
   return (
     <>
-      {jsonLd && <JsonLd data={jsonLd} />}
+      <JsonLd data={[...(jsonLd ? [jsonLd] : []), breadcrumbJsonLd([{ name: content.title, path: `/${content.slug}` }])]} />
       <Container className="pt-6 pb-sectiune md:pt-10">
         <Breadcrumbs items={[{ href: "/", label: "Acasă" }, { label: content.title }]} />
         <div className="mt-8 grid grid-cols-1 items-start gap-x-gutter gap-y-10 lg:mt-12 lg:grid-cols-12">

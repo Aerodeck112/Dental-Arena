@@ -3,9 +3,9 @@ import type { ServiceContent } from "./types";
 export const esteticaDentara: ServiceContent = {
   slug: "estetica-dentara",
   title: "Estetică dentară",
-  seoTitle: "Estetică dentară: albire profesională în Cristești și Luduș",
+  seoTitle: "Albire dentară profesională în Cristești și Luduș",
   description:
-    "Albire profesională Opalescence Boost într-o singură ședință, albire internă, bijuterii dentare și gutiere pentru bruxism, la Dental Arena Cristești și Luduș.",
+    "Albire dentară profesională Opalescence Boost într-o ședință, albire internă și bijuterii dentare, în Cristești și Luduș. Prețuri afișate pe site.",
   lead: "Albirea profesională se face într-o singură ședință, după ce dinții sunt sănătoși.",
   summary: "Albire profesională într-o singură ședință și alte metode de înfrumusețare a zâmbetului.",
   body: [
@@ -14,7 +14,12 @@ export const esteticaDentara: ServiceContent = {
     "Gutiera pentru bruxism este o placă subțire, purtată în timpul somnului, care vă protejează dinții dacă îi strângeți sau îi scrâșniți noaptea.",
   ],
   priceNote: "Prețurile sunt orientative. Costul exact îl aflați după consultație.",
-  faqs: [],
+  // Răspunsuri scrise din textele site-ului actual; de verificat de clinică.
+  faqs: [
+    { question: "Cât durează albirea dentară profesională?", answer: "Albirea profesională Opalescence Boost se face într-o singură ședință, în cabinet." },
+    { question: "Ce tratamente de estetică dentară faceți?", answer: "Albire profesională, albire internă pentru dinții tratați, bijuterii dentare și gutiere pentru bruxism." },
+    { question: "Cât costă albirea dinților?", answer: "Prețul albirii și al celorlalte tratamente estetice este în lista de pe această pagină." },
+  ],
   ctaTitle: "Programați o consultație",
   bookingCode: "CON-CONSULT",
   comfortNote: true,

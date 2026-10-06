@@ -7,7 +7,7 @@ import { JsonLd } from "@/components/site/JsonLd";
 import { Container } from "@/components/site/Section";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { SITE } from "@/content/site";
-import { dentistJsonLd, pageMetadata } from "@/server/public/seo";
+import { dentistJsonLd, pageMetadata, breadcrumbJsonLd } from "@/server/public/seo";
 import { getPublicLocations } from "@/server/public/queries";
 
 export const revalidate = 300;
@@ -15,7 +15,7 @@ export const revalidate = 300;
 export const metadata = pageMetadata({
   title: "Contact: clinicile din Cristești și Luduș",
   description:
-    "Adresele, telefoanele și hărțile clinicilor Dental Arena din Cristești, lângă Târgu Mureș, și din Luduș. Ne puteți scrie și din formularul de pe pagină.",
+    "Adresa, telefonul și harta clinicilor Dental Arena din Cristești, lângă Târgu Mureș, și din Luduș. Sunați, scrieți-ne sau programați-vă online.",
   path: "/contact",
 });
 
@@ -24,6 +24,7 @@ export default async function ContactPage() {
   const [locations, img] = await Promise.all([getPublicLocations(), getSiteImages(["clinica.cristesti", "clinica.ludus"] as const)]);
   return (
     <>
+      <JsonLd data={breadcrumbJsonLd([{ name: "Contact", path: "/contact" }])} />
       <JsonLd data={locations.map(dentistJsonLd)} />
       <ServiceHero breadcrumbs={[{ href: "/", label: "Acasă" }, { label: "Contact" }]} title="Contact" lead="Sunați direct la clinica la care veniți, programați-vă online sau scrieți-ne. Vă răspundem în cel mult o zi lucrătoare." bookingHref="/programare" secondary={null} />
 

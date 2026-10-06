@@ -4,9 +4,9 @@ export const consultatieProfilaxie: ServiceContent = {
   slug: "consultatie-profilaxie",
   title: "Consultație și profilaxie",
   // The live site used the Ortodonție title here (design-system §12.6); this page has its own.
-  seoTitle: "Consultație stomatologică și igienizare în Cristești și Luduș",
+  seoTitle: "Consultație și igienizare dentară, Cristești, Luduș",
   description:
-    "Consultație stomatologică, plan de tratament și igienizare profesională (detartraj, periaj, air-flow) la Dental Arena, în Cristești, lângă Târgu Mureș, și în Luduș.",
+    "Consultație stomatologică, plan de tratament și igienizare (detartraj, periaj, air-flow) în Cristești, lângă Târgu Mureș, și în Luduș. Prețuri pe site.",
   lead: "Un control la timp vă scutește de tratamente lungi. La consultație vă evaluăm dantura și vă întocmim un plan de tratament.",
   summary: "Control periodic, plan de tratament și igienizare profesională.",
   body: [
@@ -25,7 +25,12 @@ export const consultatieProfilaxie: ServiceContent = {
   },
   priceNote:
     "Prețurile sunt orientative. Prețul consultației îl aflați la telefon, iar costul tratamentului îl stabilim împreună după consultație.",
-  faqs: [],
+  // Răspunsuri scrise din textele site-ului actual; de verificat de clinică.
+  faqs: [
+    { question: "Ce se face la o consultație stomatologică?", answer: "Medicul vă examinează dantura, vă spune ce probleme are și întocmește un plan de tratament potrivit nevoilor dumneavoastră." },
+    { question: "Cât de des ar trebui să merg la control?", answer: "Vă recomandăm control stomatologic periodic. Medicul vă spune la consultație intervalul potrivit pentru dumneavoastră." },
+    { question: "Ce include igienizarea profesională?", answer: "Detartrajul și periajul profesional, iar la cerere și air-flow. Prețurile sunt pe arcadă și le găsiți în lista de pe această pagină." },
+  ],
   ctaTitle: "Programați o consultație sau o igienizare",
   bookingCode: "CON-CONSULT",
   comfortNote: true,

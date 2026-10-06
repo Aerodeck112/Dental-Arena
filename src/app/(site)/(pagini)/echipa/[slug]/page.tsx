@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { JsonLd } from "@/components/site/JsonLd";
 import { notFound } from "next/navigation";
 import { CallMenu } from "@/components/site/CallMenu";
 import { DoctorPortrait } from "@/components/site/DoctorFigure";
@@ -7,7 +8,7 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { PORTRAITS } from "@/content/portraits";
 import { bookingHref } from "@/content/site";
-import { pageMetadata } from "@/server/public/seo";
+import { pageMetadata, breadcrumbJsonLd, physicianJsonLd } from "@/server/public/seo";
 import { getDoctorWorkplaces, getPublicDoctor, getPublicDoctors } from "@/server/public/queries";
 
 export const revalidate = 300;
@@ -33,7 +34,7 @@ export async function generateMetadata({ params }: PageProps<"/echipa/[slug]">) 
   const doctor = await getPublicDoctor(slug);
   if (!doctor) return {};
   return pageMetadata({
-    title: doctor.publicName,
+    title: `${doctor.publicName}, medic dentist`,
     description: `${doctor.publicName}, ${doctor.roleLine.charAt(0).toLocaleLowerCase("ro-RO")}${doctor.roleLine.slice(1)}, la Dental Arena în Cristești și Luduș. Programați-vă online sau la telefon.`,
     path: `/echipa/${doctor.slug}`,
     image: doctor.photoPath && PORTRAITS[doctor.photoPath]
@@ -52,6 +53,15 @@ export default async function DoctorPage({ params }: PageProps<"/echipa/[slug]">
 
   return (
     <Container className="pt-6 pb-sectiune md:pt-10">
+      <JsonLd
+        data={[
+          physicianJsonLd(doctor),
+          breadcrumbJsonLd([
+            { name: "Echipa", path: "/echipa" },
+            { name: doctor.publicName, path: `/echipa/${doctor.slug}` },
+          ]),
+        ]}
+      />
       <Breadcrumbs items={[{ href: "/echipa", label: "Echipa" }, { label: doctor.publicName }]} />
       <div className="mt-8 grid grid-cols-1 gap-x-gutter gap-y-10 lg:mt-12 lg:grid-cols-12">
         <div className="lg:col-span-4">

@@ -1,17 +1,18 @@
 import { BookingBand } from "@/components/site/BookingBand";
+import { JsonLd } from "@/components/site/JsonLd";
 import { ServiceHero } from "@/components/site/ServiceHero";
 import { DoctorFigure } from "@/components/site/DoctorFigure";
 import { Container } from "@/components/site/Section";
 import { bookingHref } from "@/content/site";
-import { pageMetadata } from "@/server/public/seo";
+import { pageMetadata, breadcrumbJsonLd } from "@/server/public/seo";
 import { getPublicDoctors } from "@/server/public/queries";
 
 export const revalidate = 300;
 
 export const metadata = pageMetadata({
-  title: "Medicii Dental Arena",
+  title: "Medicii dentiști din Cristești și Luduș",
   description:
-    "Cei cinci medici Dental Arena din Cristești și Luduș: stomatologie generală, implantologie, chirurgie dento-alveolară și ortodonție. Vă programați direct la medicul ales.",
+    "Cei cinci medici dentiști Dental Arena din Cristești și Luduș: stomatologie generală, implanturi, chirurgie și ortodonție. Programare direct la medic.",
   path: "/echipa",
 });
 
@@ -20,6 +21,7 @@ export default async function TeamPage() {
   const doctors = await getPublicDoctors();
   return (
     <>
+      <JsonLd data={breadcrumbJsonLd([{ name: "Echipa", path: "/echipa" }])} />
       <ServiceHero breadcrumbs={[{ href: "/", label: "Acasă" }, { label: "Echipa" }]} title="Medicii" lead="Cinci medici, în Cristești și Luduș. Respectăm ora programării, iar medicii noștri au acea „mână ușoară” pe care o căutați." bookingHref="/programare" secondary={null} />
       <Container className="py-sectiune">
         <ul className="grid grid-cols-1 gap-x-gutter gap-y-14 sm:grid-cols-2 lg:grid-cols-5">
