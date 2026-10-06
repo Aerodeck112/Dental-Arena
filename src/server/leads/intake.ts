@@ -357,3 +357,36 @@ export async function createContactLead(i: ContactLeadInput, meta: IntakeMeta): 
 export const CONTACT_SUCCESS_MESSAGE = "Mesajul a fost trimis. Vă răspundem în cel mult o zi lucrătoare.";
 /** Message shown after a callback request (to be approved by the clinic). */
 export const CALLBACK_SUCCESS_MESSAGE = "Vă sunăm noi în cel mult o zi lucrătoare.";
+
+/** What the wizard receives after a booking (§6.5 step 6): no internal ids. */
+export type PublicBookingResult = Omit<BookingResult, "leadId" | "appointmentId">;
+
+export function toPublicBooking(r: BookingResult): PublicBookingResult {
+  return {
+    startsAtISO: r.startsAtISO,
+    localDateLabel: r.localDateLabel,
+    localTime: r.localTime,
+    locationName: r.locationName,
+    locationPhone: r.locationPhone,
+    doctorName: r.doctorName,
+    manageUrl: r.manageUrl,
+  };
+}
+
+/**
+ * The fake success a suspected bot receives (§8.2): shaped like a real result, built only from
+ * what it sent, with no link. Nothing is written.
+ */
+export function botBookingResult(raw: Record<string, unknown>): PublicBookingResult {
+  const value = typeof raw.startsAt === "string" ? new Date(raw.startsAt) : null;
+  const startsAt = value && !Number.isNaN(value.getTime()) ? value : new Date();
+  return {
+    startsAtISO: startsAt.toISOString(),
+    localDateLabel: capitalize(formatDateRo(startsAt, "long")),
+    localTime: formatTime(startsAt),
+    locationName: "Dental Arena",
+    locationPhone: "",
+    doctorName: "",
+    manageUrl: "",
+  };
+}

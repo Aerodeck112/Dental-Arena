@@ -270,16 +270,29 @@ export function assertConflictsAllowed(
   }
 }
 
-function isWriteConflict(e: unknown): boolean {
-  if (typeof e !== "object" || e === null) return false;
-  const code = "code" in e ? String((e as { code: unknown }).code) : "";
-  if (code === "P2034") return true;
+function errorCode(e: unknown): string {
+  return typeof e === "object" && e !== null && "code" in e ? String((e as { code: unknown }).code) : "";
+}
+
+/** PostgreSQL serialisation failure (P2034): another transaction wrote the same rows first. */
+function isSerializationFailure(e: unknown): boolean {
   const message = e instanceof Error ? e.message : "";
-  // SQLite reports a locked database instead of a serialisation failure.
-  return /SQLITE_BUSY|database is locked|could not serialize|deadlock/i.test(message);
+  return errorCode(e) === "P2034" || /could not serialize|deadlock/i.test(message);
+}
+
+/**
+ * SQLite's equivalent: a second writer cannot upgrade its lock (SQLITE_BUSY, which the
+ * better-sqlite3 adapter reports as a timeout, P1008). Within one server process the adapter
+ * serialises transactions; this happens only with several processes on one file.
+ */
+function isBusy(e: unknown): boolean {
+  const message = e instanceof Error ? e.message : "";
+  return errorCode(e) === "P1008" || /SQLITE_BUSY|database is locked|Operation has timed out/i.test(message);
 }
 
 const MAX_ATTEMPTS = 3;
+/** A busy SQLite file frees up within milliseconds; waiting a little longer costs nothing. */
+const MAX_BUSY_ATTEMPTS = 10;
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -288,8 +301,8 @@ function sleep(ms: number) {
 /**
  * Runs an appointment write in a Serializable transaction (§6.3). The callback must re-check
  * conflicts with `findConflicts(tx, …)` inside the transaction. On a write conflict (Prisma
- * P2034 on PostgreSQL, a busy database on SQLite) it retries up to 3 times with jitter, then
- * raises `SLOT_TAKEN`. Domain errors thrown by the callback propagate unchanged.
+ * P2034 on PostgreSQL, a busy database on SQLite) it retries up to 3 times with jitter; a
+ * serialisation failure that persists raises `SLOT_TAKEN`. Domain errors thrown by the callback propagate unchanged.
  */
 export async function withSchedulingTx<T>(fn: (tx: Tx) => Promise<T>): Promise<T> {
   for (let attempt = 1; ; attempt++) {
@@ -300,9 +313,12 @@ export async function withSchedulingTx<T>(fn: (tx: Tx) => Promise<T>): Promise<T
         timeout: 10000,
       });
     } catch (e) {
-      if (!isWriteConflict(e)) throw e;
-      if (attempt >= MAX_ATTEMPTS) throw new DomainError("SLOT_TAKEN");
-      await sleep(20 + Math.floor(Math.random() * 60) * attempt);
+      const serialization = isSerializationFailure(e);
+      if (!serialization && !isBusy(e)) throw e;
+      // A lost serialisation race means someone else took the slot; a busy database is not that.
+      if (serialization && attempt >= MAX_ATTEMPTS) throw new DomainError("SLOT_TAKEN");
+      if (!serialization && attempt >= MAX_BUSY_ATTEMPTS) throw e;
+      await sleep(20 + Math.floor(Math.random() * 40) * attempt);
     }
   }
 }

@@ -4,6 +4,7 @@ import { DomainError } from "@/lib/errors";
 import { capitalize, formatDateRo, formatPhone, formatTime } from "@/lib/format";
 import { getSettings } from "@/lib/settings";
 import { verifyAppointmentToken } from "@/lib/tokens";
+import { mapsSearchUrl } from "./booking";
 import { buildIcs } from "./ics";
 import { transitionAppointment } from "./status";
 
@@ -61,7 +62,7 @@ const select = {
   patient: { select: { firstName: true } },
   lead: { select: { name: true } },
   doctor: { select: { publicName: true } },
-  location: { select: { name: true, shortName: true, street: true, city: true, county: true, phone: true, mapsUrl: true } },
+  location: { select: { name: true, shortName: true, street: true, city: true, county: true, phone: true } },
 } as const;
 
 async function loadByToken(token: string, now: Date) {
@@ -87,7 +88,7 @@ function toView(a: Loaded, now: Date, cutoffHours: number): ManagedAppointment {
     locationName: l.name,
     locationShortName: l.shortName,
     address: [l.street, l.city, l.county].filter(Boolean).join(", "),
-    mapsUrl: l.mapsUrl,
+    mapsUrl: mapsSearchUrl(l),
     phone: l.phone,
     doctorName: a.doctor.publicName,
     status: a.status === "PROGRAMAT" || a.status === "CONFIRMAT" ? a.status : "OTHER",

@@ -77,7 +77,10 @@ export type BookingClinic = {
   name: string;
   shortName: string;
   address: string;
+  /** „lângă Târgu Mureș” for Cristești; null otherwise. */
+  addressNote: string | null;
   phone: string;
+  mapsUrl: string | null;
   /** Next free slot for the default service, if any (shown on the clinic panel). */
   nextSlot: { startsAt: string; localTime: string; dateISO: string } | null;
 };
@@ -86,6 +89,9 @@ export type BookingDoctor = {
   id: string;
   slug: string;
   publicName: string;
+  /** „/images/echipa/…”; null = monogram plate. */
+  photoPath: string | null;
+  monogram: string | null;
   /** Locations (ids) where the doctor has online-bookable shifts. */
   locationIds: string[];
   /** Service categories (ids) the doctor does; empty = all. */
