@@ -1,6 +1,6 @@
 /**
  * The two Târgu Mureș landing pages (design-system §6.2). They keep their WordPress URLs and
- * point to the Cristești clinic, „lângă Târgu Mureș” (never „la 1 km”, §0.4). Each has its own
+ * point to the Cristești clinic, „lângă Târgu Mureș” (no invented distance, design-system §0.4). Each has its own
  * copy, so neither duplicates the home page.
  */
 

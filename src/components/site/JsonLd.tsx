@@ -4,7 +4,7 @@
  * U+2028 and U+2029 are escaped too, because some parsers treat them as line breaks.
  */
 export function serializeJsonLd(data: unknown): string {
-  return JSON.stringify(data).replace(/</g, "\\u003c").replace(/ /g, "\\u2028").replace(/ /g, "\\u2029");
+  return JSON.stringify(data).replace(/</g, "\\u003c").replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
 }
 
 export function JsonLd({ data }: { data: Record<string, unknown> | Record<string, unknown>[] }) {

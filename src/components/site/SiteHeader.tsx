@@ -64,9 +64,9 @@ export function SiteHeader() {
 
         <div className="ml-auto flex items-center gap-2 md:gap-4">
           <CallMenu className="hidden md:block" />
-          <ButtonLink href="/programare" className="hidden md:inline-flex">
-            Programați-vă
-          </ButtonLink>
+          <span className="hidden md:block">
+            <ButtonLink href="/programare">Programați-vă</ButtonLink>
+          </span>
           <MobileMenu className="xl:hidden" />
         </div>
       </Container>

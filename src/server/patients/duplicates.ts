@@ -105,7 +105,7 @@ export async function findDuplicatePatients(q: {
   birthDate?: string | null;
 }): Promise<PatientSummary[]> {
   const matches = await findDuplicateMatches(q);
-  return matches.map(({ reasons: _reasons, ...summary }) => summary);
+  return matches.map((m) => ({ id: m.id, fileNumber: m.fileNumber, name: m.name, phone: m.phone, email: m.email, birthDate: m.birthDate, anonymized: m.anonymized }));
 }
 
 export const DUPLICATE_REASON_LABEL: Record<DuplicateReason, string> = {
