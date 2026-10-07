@@ -44,7 +44,8 @@ async function main() {
   const startedAt = Date.now();
   const prisma = new PrismaClient({ adapter: new PrismaBetterSqlite3({ url: env.DATABASE_URL }) });
   const password = process.env.SEED_PASSWORD?.trim() || DEFAULT_SEED_PASSWORD;
-  const mustChangePassword = env.NODE_ENV === "production";
+  // A test copy keeps the demo password, so testers can log in again after it is reset.
+  const mustChangePassword = env.NODE_ENV === "production" && process.env.SITE_MODE !== "test";
   const now = new Date();
   const today = todayISO(now);
 

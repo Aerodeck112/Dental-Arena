@@ -15,6 +15,7 @@ const eslintConfig = defineConfig([
     // The cPanel package (built output) and its CommonJS startup files.
     "deploy/**",
     "scripts/cpanel/**",
+    "scripts/test-env/**",
     "src/generated/**",
   ]),
 ]);

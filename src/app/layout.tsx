@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { isTestSite } from "@/lib/site-mode";
 import { forum, redHat } from "./fonts";
 import "./globals.css";
 
@@ -15,6 +16,8 @@ export const metadata: Metadata = {
   },
   // Phone numbers are always explicit tel: links with the clinic's name; no auto-linking.
   formatDetection: { telephone: false, address: false, email: false },
+  // A test copy (SITE_MODE=test) stays out of Google.
+  ...(isTestSite ? { robots: { index: false, follow: false } } : {}),
 };
 
 export const viewport: Viewport = {

@@ -36,6 +36,10 @@ npm run build:cpanel        # face deploy/dental-arena-cpanel.zip
 
 Pașii de instalare pe hosting (Setup Node.js App, fișierul `.env`, Cron Jobs, actualizări, copii de siguranță) sunt în `docs/cpanel.md`.
 
+## Mediu de test
+
+O copie cu date demonstrative, gratuită, pe Render.com: pașii sunt în `docs/mediu-test.md`.
+
 ## Ce se administrează din panou
 
 - **Echipă:** conturi noi, cu bifă pentru clinica în care lucrează fiecare (Cristești, Luduș sau ambele). Un utilizator vede doar datele clinicilor bifate. Tot aici se încarcă fotografia fiecărui medic.

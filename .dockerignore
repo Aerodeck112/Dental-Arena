@@ -1,0 +1,17 @@
+# Docker build context (Dockerfile.test): sources only, never local data or secrets.
+.git
+.claude
+node_modules
+.next
+deploy
+storage
+data
+research
+docs/screenshots
+coverage
+tsconfig.tsbuildinfo
+.env
+.env.*
+!.env.example
+prisma/*.db
+prisma/*.db-journal

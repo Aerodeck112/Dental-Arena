@@ -1,0 +1,46 @@
+name: Mediu de test
+
+# Builds the test copy of the site and CRM (Dockerfile.test, docs/mediu-test.md) and publishes it as
+# ghcr.io/aerodeck112/dental-arena:test. If the repository has the secret RENDER_DEPLOY_HOOK (the
+# service's Deploy Hook in Render), Render then installs the new version by itself.
+
+on:
+  push:
+    branches: [main, claude/wizardly-galileo-5nwys4]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: test-image
+  cancel-in-progress: true
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.test
+          push: true
+          tags: ghcr.io/aerodeck112/dental-arena:test
+          labels: |
+            org.opencontainers.image.source=https://github.com/Aerodeck112/Dental-Arena
+            org.opencontainers.image.description=Dental Arena, mediu de test (date demonstrative)
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Render installs the new version
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        if: ${{ env.RENDER_DEPLOY_HOOK != '' }}
+        run: curl -fsS -X POST "$RENDER_DEPLOY_HOOK" > /dev/null
