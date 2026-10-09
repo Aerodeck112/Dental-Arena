@@ -7,11 +7,14 @@ declare(strict_types=1);
 
 /** The panel's menu: path, label, icon, administrators only. */
 const ADMIN_NAV = [
-    ['/admin', 'Acasă', 'house', false],
-    ['/admin/cereri', 'Cereri', 'inbox', false],
+    ['/admin', 'Azi', 'house', false],
+    ['/admin/calendar', 'Calendar', 'calendar', false],
+    ['/admin/pacienti', 'Pacienți', 'users', false],
+    ['/admin/cereri', 'Cereri online', 'inbox', false],
+    ['/admin/rechemari', 'Rechemări', 'phone-call', false],
     ['/admin/servicii', 'Servicii și prețuri', 'tag', true],
     ['/admin/fotografii', 'Fotografii site', 'image', true],
-    ['/admin/echipa', 'Echipa', 'users', true],
+    ['/admin/echipa', 'Echipa', 'user-round', true],
     ['/admin/utilizatori', 'Utilizatori', 'shield', true],
     ['/admin/setari', 'Setări', 'settings', true],
 ];

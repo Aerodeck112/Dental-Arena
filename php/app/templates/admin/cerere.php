@@ -35,8 +35,13 @@ foreach (lead_summary_lines($lead) as $line) {
     $lines .= '<div class="grid gap-1 border-t border-linie py-3 sm:grid-cols-[12rem_1fr]"><dt class="text-mic font-semibold text-discret">' . e(trim($k)) . '</dt><dd class="whitespace-pre-line text-corp">' . e(trim($v)) . '</dd></div>';
 }
 $actions = '';
+if (!empty($lead['appointment_id'])) {
+    $actions .= '<a href="/admin/programari/' . (int) $lead['appointment_id'] . '" class="' . e(btn('secondary')) . '">' . icon('calendar', 20) . 'Vedeți programarea</a>';
+} elseif ($lead['kind'] === 'programare' || $lead['phone'] !== '') {
+    $actions .= '<a href="/admin/programari/noua?cerere=' . $id . '" class="' . e(btn('primary')) . '">' . icon('calendar-plus', 20) . 'Faceți programarea</a>';
+}
 if ($lead['phone'] !== '') {
-    $actions .= '<a href="' . e(tel_href($lead['phone'])) . '" class="' . e(btn('primary')) . '">' . icon('phone', 20) . 'Sunați: <span class="telefon">' . e(format_phone($lead['phone'])) . '</span></a>';
+    $actions .= '<a href="' . e(tel_href($lead['phone'])) . '" class="' . e(btn('secondary')) . '">' . icon('phone', 20) . 'Sunați: <span class="telefon">' . e(format_phone($lead['phone'])) . '</span></a>';
 }
 if ($lead['email'] && ($mail = admin_mailto($lead['email'])) !== null) {
     $actions .= '<a href="' . e($mail) . '" class="' . e(btn('secondary')) . '">' . icon('mail', 20) . 'Scrieți un e-mail</a>';

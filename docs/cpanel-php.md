@@ -73,7 +73,11 @@ Arhiva `dentalarena-php.zip` conține:
      cererile, adresele, telefoanele și programul clinicilor (bifați „Programul apare pe site”);
    - **Servicii și prețuri**: verificați prețurile;
    - **Fotografii site** și **Echipa**: fotografiile;
-   - **Utilizatori**: conturile pentru recepție și medici, cu bifa Cristești și/sau Luduș.
+   - **Echipa** → fiecare medic → **Unde lucrează**: bifați Cristești și/sau Luduș (după asta apare
+     coloana lui în calendarul clinicii);
+   - **Utilizatori**: conturile pentru recepție și medici, cu bifa Cristești și/sau Luduș. La un cont
+     de medic alegeți și **Medicul** din echipă căruia îi aparține contul;
+   - **Cron Jobs** pentru reamintiri (vedeți mai jos).
 8. **Google:** în Google Search Console adăugați dentalarena.ro și trimiteți `https://dentalarena.ro/sitemap.xml`.
    Adresele vechi ale paginilor sunt aceleași, deci Google le găsește imediat.
 
@@ -86,6 +90,45 @@ Arhiva `dentalarena-php.zip` conține:
 - **Cererile închise** mai vechi decât perioada din **Setări** (implicit 365 de zile) se șterg singure (GDPR).
 - **Protecție:** 10 parole greșite în 15 minute blochează intrarea pentru 15 minute; formularele
   resping roboții și cel mult 5 cereri la 10 minute din aceeași rețea.
+
+## Programări și pacienți (panoul /admin)
+
+- **Azi**: programările zilei la clinica aleasă, în ordine, cu butoanele pentru pasul următor
+  (Confirmat, A sosit, Începe tratamentul, Finalizat, Nu a venit), alertele medicale ale pacientului,
+  cererile noi de pe site și câți pacienți trebuie sunați pentru control.
+- **Calendar**: ziua (o coloană pentru fiecare medic, rânduri de 15 minute; un clic pe un loc liber
+  deschide o programare nouă acolo) sau săptămâna. Programul nu permite două programări suprapuse
+  la același medic, decât dacă bifați „Programez oricum”.
+- **Cereri online** → o cerere → **Faceți programarea**: datele pacientului se completează singure,
+  iar cererea se leagă de programare.
+- **Pacienți**: fișa (nr. fișei, CNP, date de contact, clinica și medicul), **anamneza** (alergii,
+  medicamente, afecțiuni; cele bifate apar ca alertă roșie la fiecare programare), programările,
+  rechemările și notele.
+- **Rechemări**: lista pacienților de chemat la control (cele întârziate și cele din următoarele
+  14 zile), cu Am sunat, Programați, Peste o lună, Nu dorește.
+- **Cine ce vede:** fiecare utilizator vede doar clinicile bifate la contul lui. Anamneza completă și
+  notele clinice le văd și le modifică doar administratorii și medicii; recepția vede doar alertele.
+- **CNP-ul** se păstrează criptat în baza de date. Cheia de criptare este rândul `secret` din
+  `dentalarena/config.php`: **dacă pierdeți fișierul `config.php`, CNP-urile salvate nu mai pot fi
+  citite.** Păstrați o copie a lui (vedeți **Copii de siguranță**).
+
+## Reamintiri pe e-mail (Cron Jobs)
+
+Pacienții cu e-mail primesc o reamintire în ziua dinaintea programării (între orele 10 și 21), dacă
+programarea a fost făcută cu cel puțin 18 ore înainte și au bifa „Primește reamintirea” în fișă.
+Reamintirile pleacă și singure, când cineva lucrează în panou, dar ca să plece sigur la timp:
+
+1. cPanel → **Cron Jobs** → **Add New Cron Job**;
+2. **Common Settings**: **Once Per Hour** (`0 * * * *`);
+3. **Command** (înlocuiți `contcpanel` cu numele contului cPanel, cel din File Manager → `/home/...`):
+
+   ```
+   php /home/contcpanel/dentalarena/cron.php
+   ```
+
+4. **Add New Cron Job**.
+
+Pe copia de test e-mailurile nu pleacă: se scriu în `dentalarena/storage/logs/app.log`.
 
 ## E-mailurile ajung în Spam?
 
@@ -107,7 +150,9 @@ Implicit site-ul trimite prin serverul cPanel. Pentru o livrare mai bună, trimi
 ## Copii de siguranță
 
 cPanel → **Backup**: descărcați regulat **MySQL Database** (baza site-ului) și **Home Directory**.
-Fișierul `dentalarena/config.php` conține parola bazei de date: păstrați-l în siguranță.
+Descărcați și fișierul `dentalarena/config.php` (File Manager → **Download**) și păstrați-l în
+siguranță: conține parola bazei de date și cheia cu care sunt criptate CNP-urile. Fără el, CNP-urile
+din copia bazei de date nu mai pot fi citite.
 
 ## Dacă ceva nu merge
 

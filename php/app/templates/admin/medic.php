@@ -14,6 +14,8 @@ if (!$isNew) {
         $links[(int) $l['category_id']] = (int) $l['show_on_site'];
     }
 }
+$clinicNames = admin_clinic_names();
+$workLocs = $isNew ? array_keys($clinicNames) : array_map('intval', array_column(db_all('SELECT location_id FROM doctor_locations WHERE doctor_id = ?', [$doc['id']]), 'location_id'));
 $errors = [];
 $v = [
     'public_name' => $doc['public_name'] ?? 'Dr. ',
@@ -39,6 +41,7 @@ if (is_post()) {
         $v[$k] = post($k);
     }
     $v['public_visible'] = post('public_visible') === '1' ? '1' : '0';
+    $workLocs = array_values(array_filter(array_map('intval', is_array($_POST['locations'] ?? null) ? $_POST['locations'] : []), static fn ($lid) => isset($clinicNames[$lid])));
     foreach (['public_name' => 'Scrieți numele afișat pe site.', 'first_name' => 'Scrieți prenumele.', 'last_name' => 'Scrieți numele de familie.', 'role_line' => 'Scrieți specialitatea.'] as $k => $msg) {
         if (mb_strlen($v[$k]) < 2) {
             $errors[$k] = $msg;
@@ -65,7 +68,7 @@ if (is_post()) {
         if ($photo !== null) {
             $row['photo_path'] = $photo['path'];
         }
-        $id = db_tx(static function () use ($row, $id, $cats, $doc) {
+        $id = db_tx(static function () use ($row, $id, $cats, $doc, $workLocs) {
             if ($id === null) {
                 $base = slugify(preg_replace('/^dr\.?\s+/i', '', $row['public_name']) ?? $row['public_name']) ?: 'medic';
                 $slug = $base;
@@ -78,6 +81,10 @@ if (is_post()) {
                 if (isset($row['photo_path'])) {
                     delete_media($doc['photo_path']);
                 }
+            }
+            db_run('DELETE FROM doctor_locations WHERE doctor_id = ?', [$id]);
+            foreach ($workLocs as $lid) {
+                db_run('INSERT INTO doctor_locations (doctor_id, location_id) VALUES (?, ?)', [$id, $lid]);
             }
             db_run('DELETE FROM doctor_categories WHERE doctor_id = ?', [$id]);
             $sent = is_array($_POST['cat'] ?? null) ? $_POST['cat'] : [];
@@ -131,6 +138,8 @@ $body = '<p class="mb-4"><a href="/admin/echipa" class="inline-flex min-h-contro
     . '</div><div class="mt-5">' . text_area('bio', 'Despre medic', ['value' => $v['bio'], 'rows' => 5, 'optional' => true, 'hint' => 'Câteva fraze despre experiență și ce îi place să facă. Apare pe profilul medicului.']) . '</div>'
     . '<div class="mt-5 grid gap-5 md:grid-cols-2">' . text_field('sort_order', 'Ordinea pe site', ['type' => 'number', 'value' => $v['sort_order'], 'min' => 0, 'inputClass' => 'max-w-32'])
     . checkbox_field('public_visible', 'Apare pe site', ['checked' => $v['public_visible'] === '1', 'class' => 'md:mt-7']) . '</div></section>'
+    . admin_section_open('Unde lucrează', 'clinici', 'Medicul apare în calendarul clinicilor bifate.')
+    . '<div class="mt-3 flex flex-wrap gap-x-8">' . implode('', array_map(static fn ($lid, $n) => checkbox_field('locations[]', e($n), ['id' => "field-locations-{$lid}", 'value' => (string) $lid, 'checked' => in_array($lid, $workLocs, true)]), array_keys($clinicNames), $clinicNames)) . '</div></section>'
     . admin_section_open('Portretul', 'portret', 'O fotografie verticală, cu fața în treimea de sus. Fără portret, pe site apar inițialele.')
     . '<div class="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start">' . $portrait
     . '<div class="flex flex-col gap-2"><label for="foto" class="text-control font-medium">Portret nou (JPG, PNG sau WebP)</label>'

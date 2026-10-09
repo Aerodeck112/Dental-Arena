@@ -33,6 +33,12 @@
       if (e.key === "Escape") menu.open = false;
     });
   }
+  // The calendar's date field goes to the chosen day at once.
+  Array.prototype.forEach.call(document.querySelectorAll("[data-trimite-la-schimbare]"), function (input) {
+    input.addEventListener("change", function () {
+      if (input.form && input.value) input.form.submit();
+    });
+  });
   var focusMe = document.querySelector("[data-autofocus], [role=alert]");
   if (focusMe) focusMe.focus();
 })();

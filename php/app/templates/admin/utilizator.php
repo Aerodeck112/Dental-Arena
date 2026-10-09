@@ -18,6 +18,7 @@ $v = [
     'email' => $acc['email'] ?? '',
     'role' => $acc['role'] ?? 'receptie',
     'active' => (string) ($acc['active'] ?? 1),
+    'doctor_id' => (string) ($acc['doctor_id'] ?? ''),
     'locations' => $isNew ? [] : array_map('intval', array_column(db_all('SELECT location_id FROM user_locations WHERE user_id = ?', [$acc['id']]), 'location_id')),
 ];
 
@@ -27,6 +28,7 @@ if (is_post()) {
     $v['email'] = mb_strtolower(post('email'));
     $v['role'] = post('role');
     $v['active'] = post('active') === '1' ? '1' : '0';
+    $v['doctor_id'] = (string) (admin_int(post('doctor_id')) ?? '');
     $v['locations'] = array_values(array_filter(array_map('intval', is_array($_POST['locations'] ?? null) ? $_POST['locations'] : []), static fn ($id) => isset($clinicNames[$id])));
     $password = (string) ($_POST['password'] ?? '');
     if ($self) {
@@ -54,7 +56,8 @@ if (is_post()) {
     }
     if ($errors === []) {
         $id = db_tx(static function () use ($v, $isNew, $acc, $password) {
-            $row = ['name' => mb_substr($v['name'], 0, 120), 'email' => $v['email'], 'role' => $v['role'], 'active' => (int) $v['active']];
+            $row = ['name' => mb_substr($v['name'], 0, 120), 'email' => $v['email'], 'role' => $v['role'], 'active' => (int) $v['active'],
+                'doctor_id' => $v['role'] === 'medic' && $v['doctor_id'] !== '' && db_value('SELECT 1 FROM doctors WHERE id = ?', [(int) $v['doctor_id']]) ? (int) $v['doctor_id'] : null];
             if ($isNew) {
                 $id = db_insert('users', $row + ['password_hash' => password_hash($password, PASSWORD_DEFAULT), 'must_change_password' => 1, 'created_at' => now_sql()]);
             } else {
@@ -99,6 +102,7 @@ $body = '<p class="mb-4"><a href="/admin/utilizatori" class="inline-flex min-h-c
     . '<fieldset id="field-locations" tabindex="-1" class="flex flex-col gap-1"><legend class="mb-1.5 text-control font-medium">Clinica în care lucrează</legend>'
     . '<p class="-mt-1 mb-1 text-mic text-discret">Pentru recepție și medici. Administratorul vede ambele clinici.</p>'
     . '<div class="flex flex-wrap gap-x-8">' . $clinicBoxes . '</div>' . field_error('field-locations-error', $errors['locations'] ?? null) . '</fieldset>'
+    . select_field('doctor_id', 'Profilul de medic (pentru rolul Medic)', ['' => 'Niciunul'] + array_map(static fn ($n) => (string) $n, array_column(db_all('SELECT id, public_name FROM doctors ORDER BY sort_order'), 'public_name', 'id')), ['value' => $v['doctor_id'], 'hint' => 'Programările noi făcute de acest cont se pun implicit la acest medic.'])
     . ($self ? '' : checkbox_field('active', 'Contul este activ', ['checked' => $v['active'] === '1', 'description' => 'Un cont dezactivat nu mai poate intra în panou.']))
     . '</div></section>'
     . admin_section_open($isNew ? 'Parola de început' : 'Parolă nouă', 'parola', $isNew ? 'O spuneți persoanei; la prima intrare își alege una nouă.' : 'Completați doar dacă persoana și-a uitat parola. Va fi rugată să-și aleagă una nouă.')

@@ -18,7 +18,9 @@ php/
     media/             photos uploaded from the panel (created at runtime)
   app/                 → dentalarena/ on the server, NEXT TO public_html (not web-accessible)
     bootstrap.php      loads config.php, src/*.php, templates/components.php
-    config.php         written by the installer (/admin/instalare); never committed
+    config.php         written by the installer (/admin/instalare); never committed. Its `secret`
+                       is also the CNP encryption key: losing it makes stored CNPs unreadable
+    cron.php           CLI only (cPanel Cron Jobs, hourly): e-mail reminders + old-request purge
     data/*.json        BUILT: content.json (texts), seed.json, icons.json, art.json, images.json
     migrations/*.sql   applied in order by migrate()
     src/               helpers.php, db.php, content.php, images.php, seo.php, mail.php, auth.php,
@@ -62,6 +64,7 @@ literally (no string concatenation of partial class names), as in the Next.js co
 | blocks.php | `service_hero([...])`, `booking_band(...)`, `service_grid(...)`, `clinic_cards(...)`, `price_table($prices, $label, $class)` (returns string), `doctor_portrait`, `doctor_figure` (return strings), `comfort_note()` (string), `phone_link_full(...)` |
 | fields.php | `text_field`, `text_area`, `select_field`, `radio_group`, `checkbox_field`, `error_summary($errors)`, `success_panel`, `submit_button`, `input_classes` |
 | forms.php | `bot_fields()`, `submit_lead('programare'|'contact')`, `TIME_WINDOWS`, `COMFORT_LABELS`, `LEAD_STATUS`, `purge_old_leads()` |
+| admin/crm.php | `APPT_STATUS`, `APPT_NEXT`, `RECALL_STATUS`, `HISTORY_FLAGS`, `can_see_clinical`, `cnp_valid`, `cnp_encrypt`/`cnp_decrypt`/`cnp_hash`/`cnp_masked`, `patient_name`, `patient_scope_sql`, `find_or_create_patient`, `medical_alerts`, `alert_chips`, `doctors_at`, `current_clinic_id`, `appointment_conflicts`, `can_see_appointment`, `set_appointment_status`, `send_due_reminders` |
 | auth.php | `current_user`, `require_login($adminOnly)`, `is_admin`, `allowed_location_ids`, `attempt_login`, `logout`, `set_password`, `password_problem`, `audit`, `ROLES` |
 
 ## Local test environment
@@ -69,3 +72,18 @@ literally (no string concatenation of partial class names), as in the Next.js co
 Apache + PHP 8.1 + MariaDB in Docker (what a typical cPanel runs):
 the site at http://127.0.0.1:8081, panel at /admin (admin@dentalarena.ro / ParolaTest-2026),
 installed in test mode (e-mails go to `php/app/storage/logs/app.log`).
+
+## CRM (stage 2)
+
+`migrations/002_crm.sql` adds `doctor_locations`, `patients`, `medical_histories`, `appointments`,
+`patient_notes`, `recalls`, `users.doctor_id`, `leads.patient_id/appointment_id`. Access rules:
+
+- every query on patients/appointments goes through `patient_scope_sql()` / `can_see_appointment()`
+  (the user's clinics from `allowed_location_ids()`); another clinic's record is a 404;
+- the full anamnesis and clinical notes only for `can_see_clinical()` (admin, medic); reception
+  sees `medical_alerts()` only;
+- the CNP is stored AES-256-GCM encrypted (`cnp_enc`) with an HMAC (`cnp_hash`) for duplicates.
+
+Reminders: `send_due_reminders()` mails tomorrow's appointments between 10:00 and 21:00 (only those
+booked more than 18 h ahead), from `cron.php` and, as a fallback, from `maybe_send_reminders()` on
+panel visits (at most every 15 minutes).

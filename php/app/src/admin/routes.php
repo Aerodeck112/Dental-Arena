@@ -6,6 +6,7 @@
 declare(strict_types=1);
 
 require __DIR__ . '/lib.php';
+require __DIR__ . '/crm.php';
 require APP_DIR . '/templates/admin/layout.php';
 
 $path = request_path();
@@ -30,9 +31,15 @@ if ($path === '/admin/iesire') {
 }
 
 $user = require_login();
+maybe_send_reminders();
 
 $routes = [
     '#^/admin$#' => ['acasa', false],
+    '#^/admin/calendar$#' => ['calendar', false],
+    '#^/admin/programari/(noua|\d+)$#' => ['programare', false],
+    '#^/admin/pacienti$#' => ['pacienti', false],
+    '#^/admin/pacienti/(nou|\d+)$#' => ['pacient', false],
+    '#^/admin/rechemari$#' => ['rechemari', false],
     '#^/admin/cereri$#' => ['cereri', false],
     '#^/admin/cereri/(\d+)$#' => ['cerere', false],
     '#^/admin/servicii$#' => ['servicii', true],
