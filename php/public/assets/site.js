@@ -186,20 +186,27 @@
     });
   }
 
-  // ── Price search (/preturi) ─────────────────────────────────────────────────
+  // ── Price search (/preturi): every word must match the price or its group, accents ignored ──
+  Array.prototype.forEach.call(document.querySelectorAll("[data-doar-js]"), function (el) {
+    el.hidden = false;
+  });
   var search = document.querySelector("[data-cauta-pret]");
   if (search) {
     var status = document.getElementById(search.getAttribute("aria-describedby"));
+    var none = document.querySelector("[data-niciun-pret]");
     var fold = function (s) {
-      return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+      return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim();
     };
     search.addEventListener("input", function () {
-      var q = fold(search.value.trim());
+      var terms = fold(search.value).split(" ").filter(Boolean);
       var shown = 0;
       Array.prototype.forEach.call(document.querySelectorAll("[data-grup-pret]"), function (group) {
+        var g = fold(group.getAttribute("data-grup-pret"));
+        var groupHit = terms.every(function (t) { return g.indexOf(t) !== -1; });
         var any = false;
         Array.prototype.forEach.call(group.querySelectorAll("[data-pret]"), function (row) {
-          var hit = q === "" || fold(row.getAttribute("data-pret")).indexOf(q) !== -1 || fold(group.getAttribute("data-grup-pret")).indexOf(q) !== -1;
+          var r = fold(row.getAttribute("data-pret"));
+          var hit = groupHit || terms.every(function (t) { return r.indexOf(t) !== -1 || g.indexOf(t) !== -1; });
           row.hidden = !hit;
           if (hit) {
             any = true;
@@ -208,7 +215,8 @@
         });
         group.hidden = !any;
       });
-      if (status) status.textContent = q === "" ? "" : shown === 0 ? "Niciun preț găsit. Încercați alt cuvânt sau sunați-ne." : shown + (shown === 1 ? " preț găsit." : " prețuri găsite.");
+      if (none) none.hidden = !(terms.length && shown === 0);
+      if (status) status.textContent = !terms.length || shown === 0 ? "" : shown === 1 ? "Un preț găsit." : shown + " prețuri găsite.";
     });
   }
 

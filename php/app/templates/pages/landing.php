@@ -148,7 +148,7 @@ $body = capture(function () use ($page, $c, $index, $doctors, $reps, $link): voi
   </div>
 </section>
 
-<?php booking_band('Programați o consultație în Cristești', 'Alegeți online ora care vă convine sau sunați la clinica la care veniți. Vă răspundem noi.', booking_href(['clinica' => 'cristesti'])); ?>
+<?php booking_band('Programați o consultație în Cristești', 'Trimiteți-ne online ziua și ora care vă convin sau sunați la clinica din Cristești. Vă sunăm noi ca să confirmăm.', booking_href(['clinica' => 'cristesti'])); ?>
     <?php
 });
 

@@ -138,7 +138,10 @@ $body = capture(function () use ($home, $img, $childPrices, $sedation, $doctors,
     <div class="lg:col-span-6 lg:col-start-7">
       <h2 id="prima-vizita" class="<?= $h2 ?>"><?= e($home['visit']['title']) ?></h2>
       <ol class="mt-10 flex flex-col">
-        <?php foreach ($home['visit']['steps'] as $n => $s) { ?>
+        <?php
+        // The PHP site takes booking requests: the clinic calls back to confirm the time.
+        $home['visit']['steps'][0]['text'] = 'Trimiteți online o cerere de programare sau sunați la clinica la care veniți. Vă sunăm noi ca să stabilim ora.';
+        foreach ($home['visit']['steps'] as $n => $s) { ?>
         <li class="grid grid-cols-[3.5rem_1fr] gap-x-4 border-t border-linie py-6">
           <span aria-hidden="true" class="font-display text-[2.5rem] leading-none text-menta cifre"><?= $n + 1 ?></span>
           <div>

@@ -72,7 +72,7 @@ function service_hero(array $p, string $children = ''): void
 }
 
 /** The closing forest-green band: one sentence, online booking, both phones, the instrument tray. */
-function booking_band(string $title = 'Programați o consultație', string $lead = 'Alegeți online ora care vă convine sau sunați la clinica la care veniți. Vă răspundem noi.', string $href = '/programare'): void
+function booking_band(string $title = 'Programați o consultație', string $lead = 'Trimiteți-ne online ziua și ora care vă convin sau sunați la clinica la care veniți. Vă sunăm noi ca să confirmăm.', string $href = '/programare'): void
 {
     ?>
 <section aria-labelledby="programare-banda" class="px-3 pb-3 sm:px-4 sm:pb-4">

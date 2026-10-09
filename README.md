@@ -28,7 +28,19 @@ npm test
 npm run build
 ```
 
-## Instalare pe cPanel
+## Instalare pe cPanel fără Node.js (versiunea PHP)
+
+Pentru un hosting cPanel obișnuit (PHP + MySQL), site-ul public și un panou de administrare
+(cereri de programare, prețuri, fotografii, echipă, utilizatori pe clinici, datele firmei) sunt în `php/`:
+
+```bash
+npm run build:php:zip       # face deploy/dentalarena-php.zip
+```
+
+Pașii, inclusiv copia de test pe un subdomeniu: `docs/cpanel-php.md`. Detalii tehnice: `php/README.md`.
+Arhiva se face și automat pe GitHub (Actions → „Pachet cPanel PHP” → Artifacts).
+
+## Instalare pe cPanel cu Node.js
 
 ```bash
 npm run build:cpanel        # face deploy/dental-arena-cpanel.zip

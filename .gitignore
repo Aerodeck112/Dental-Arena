@@ -66,3 +66,4 @@ next-env.d.ts
 /php/public/media/
 /php/public/favicon.ico
 /php/public/apple-touch-icon.png
+/php/public/assets/*.min.js
