@@ -4,9 +4,8 @@ name: Mediu de test
 # ghcr.io/aerodeck112/dental-arena:test. If the repository has the secret RENDER_DEPLOY_HOOK (the
 # service's Deploy Hook in Render), Render then installs the new version by itself.
 
+# Only on demand: the test copy now runs on cPanel (docs/cpanel-php.md, „Copia de test”).
 on:
-  push:
-    branches: [main, claude/wizardly-galileo-5nwys4]
   workflow_dispatch:
 
 permissions:

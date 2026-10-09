@@ -53,3 +53,16 @@ next-env.d.ts
 
 # cPanel package (scripts/build-cpanel.sh)
 /deploy/
+
+# PHP version: files made by `npm run build:php`
+/php/.build/
+/php/app/data/
+/php/app/config.php
+/php/app/storage/
+/php/public/assets/site.css
+/php/public/assets/fonts/
+/php/public/images/
+/php/public/brand/
+/php/public/media/
+/php/public/favicon.ico
+/php/public/apple-touch-icon.png

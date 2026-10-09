@@ -17,6 +17,8 @@ const eslintConfig = defineConfig([
     "scripts/cpanel/**",
     "scripts/test-env/**",
     "src/generated/**",
+    // The PHP version: its browser scripts are plain ES5, served as they are.
+    "php/**",
   ]),
 ]);
 
