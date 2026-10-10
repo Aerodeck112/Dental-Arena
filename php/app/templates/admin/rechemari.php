@@ -29,7 +29,7 @@ if (is_post()) {
         default => null,
     };
     db_update('recalls', $row, 'id = :id', ['id' => $r['id']]);
-    audit('rechemare', "#{$r['id']} " . post('op'));
+    audit('rechemare', "#{$r['id']} " . post('op'), null, (int) $r['patient_id']);
     flash('Rechemarea a fost actualizată.');
     redirect(admin_url('/admin/rechemari', ['clinica' => $clinicId, 'toate' => query('toate')]));
 }

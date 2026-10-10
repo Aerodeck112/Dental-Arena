@@ -64,8 +64,11 @@ literally (no string concatenation of partial class names), as in the Next.js co
 | blocks.php | `service_hero([...])`, `booking_band(...)`, `service_grid(...)`, `clinic_cards(...)`, `price_table($prices, $label, $class)` (returns string), `doctor_portrait`, `doctor_figure` (return strings), `comfort_note()` (string), `phone_link_full(...)` |
 | fields.php | `text_field`, `text_area`, `select_field`, `radio_group`, `checkbox_field`, `error_summary($errors)`, `success_panel`, `submit_button`, `input_classes` |
 | forms.php | `bot_fields()`, `submit_lead('programare'|'contact')`, `TIME_WINDOWS`, `COMFORT_LABELS`, `LEAD_STATUS`, `purge_old_leads()` |
+| admin/billing.php | `PAYMENT_METHODS`, `next_sequence` (gap-free numbers, inside `db_tx`), `line_totals`, `invoice_totals`, `line_problems`, `payment_state`, `open_amount`, `lei`, `amount_2d`, `patient_balance`, `invoice_candidates`, `create_invoice`, `insert_payment`, `cancel_invoice`, `cancel_payment`, `payments_table`, `invoices_table`, `lei_in_words` |
+| admin/clinical.php | plans (`PLAN_STATUS`, `PLAN_TRANSITIONS`, `ITEM_TRANSITIONS`, `plan_totals`, `service_select`), odontogram (`TOOTH_KINDS`, `superseded_ids`, `odontogram_svg`), documents (`save_document`, `documents_dir`), consents (`CONSENT_TYPES`, `consent_text`), GDPR (`patient_export`, `anonymize_patient`), `patient_header` (the file's tabs), `print_page`, `seller_block`, `audit_label` |
+| admin/lib.php | `csv_download`, `csv_lei`, `admin_period`, `admin_url`, `admin_section_open`, … |
 | admin/crm.php | `APPT_STATUS`, `APPT_NEXT`, `RECALL_STATUS`, `HISTORY_FLAGS`, `can_see_clinical`, `cnp_valid`, `cnp_encrypt`/`cnp_decrypt`/`cnp_hash`/`cnp_masked`, `patient_name`, `patient_scope_sql`, `find_or_create_patient`, `medical_alerts`, `alert_chips`, `doctors_at`, `current_clinic_id`, `appointment_conflicts`, `can_see_appointment`, `set_appointment_status`, `send_due_reminders` |
-| auth.php | `current_user`, `require_login($adminOnly)`, `is_admin`, `allowed_location_ids`, `attempt_login`, `logout`, `set_password`, `password_problem`, `audit`, `ROLES` |
+| auth.php | `can($permission)` (`PERMISSIONS`: medical, plans.manage, billing, billing.cancel, documents.delete, reports.finance, gdpr, audit), `current_user`, `require_login($adminOnly)`, `is_admin`, `allowed_location_ids`, `attempt_login`, `logout`, `set_password`, `password_problem`, `audit`, `ROLES` |
 
 ## Local test environment
 
@@ -87,3 +90,18 @@ installed in test mode (e-mails go to `php/app/storage/logs/app.log`).
 Reminders: `send_due_reminders()` mails tomorrow's appointments between 10:00 and 21:00 (only those
 booked more than 18 h ahead), from `cron.php` and, as a fallback, from `maybe_send_reminders()` on
 panel visits (at most every 15 minutes).
+
+## Billing and the clinical file (stage 3)
+
+`migrations/003_billing_clinical.sql`: `number_sequences`, `invoices`, `invoice_items`, `payments`,
+`treatment_plans`, `treatment_plan_items`, `tooth_conditions`, `patient_documents`, `consents`,
+`data_requests`, `patients.anonymized_at`, `audit_log.patient_id`.
+
+- Money is integer bani everywhere; totals are computed in `billing.php` and stored. Invoice and
+  receipt numbers come from `next_sequence()` inside the issuing transaction (no gaps). Issued
+  invoices are cancelled, never deleted; cancelling detaches the payments (credit on account).
+- A tooth finding is never edited: a new one resolves the ones it supersedes (history stays).
+- Patient files are stored in `storage/documente/` (random names, MIME checked with finfo) and
+  served by `/admin/documente/{id}` after the patient-scope check.
+- Routes declare who may open them (`null`, `'admin'` or a permission) in `src/admin/routes.php`;
+  every page re-checks the patient or clinic scope.

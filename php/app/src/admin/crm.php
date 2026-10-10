@@ -51,8 +51,7 @@ const DURATIONS = [15 => '15 minute', 30 => '30 de minute', 45 => '45 de minute'
 
 function can_see_clinical(?array $u = null): bool
 {
-    $u ??= current_user();
-    return $u !== null && in_array($u['role'], ['admin', 'medic'], true);
+    return can('medical', $u);
 }
 
 // ── CNP (Romanian personal number): checked, stored encrypted, deduplicated by hash ─────
@@ -330,7 +329,7 @@ function set_appointment_status(int $id, string $status, array $user, ?string $r
         $row['cancel_reason'] = $reason !== null ? mb_substr($reason, 0, 255) : null;
     }
     db_update('appointments', $row, 'id = :id', ['id' => $id]);
-    audit('programare-' . $status, "#{$id}");
+    audit('programare-' . $status, "#{$id}", null, (int) db_value('SELECT patient_id FROM appointments WHERE id = ?', [$id]));
 }
 
 function appt_status_chip(string $status): string

@@ -70,7 +70,7 @@ $block = static function (array $a) use ($docs): string {
 if ($view === 'zi') {
     $rowsCount = (CAL_END_HOUR - CAL_START_HOUR) * 60 / CAL_SLOT_MIN;
     $cols = max(1, count($doctors));
-    $grid = '<div class="overflow-x-auto rounded-panou border border-linie bg-suprafata"><div class="grid min-w-[44rem]" style="grid-template-columns:4rem repeat(' . $cols . ',minmax(9rem,1fr));grid-template-rows:auto repeat(' . $rowsCount . ',1.6rem)">';
+    $grid = '<div class="relative overflow-x-auto rounded-panou border border-linie bg-suprafata"><div class="grid min-w-[44rem]" style="grid-template-columns:4rem repeat(' . $cols . ',minmax(9rem,1fr));grid-template-rows:auto repeat(' . $rowsCount . ',1.6rem)">';
     $grid .= '<div class="sticky top-0 border-b border-linie bg-suprafata" style="grid-row:1;grid-column:1"></div>';
     foreach ($doctors as $i => $dd) {
         $grid .= '<div class="border-b border-l border-linie bg-suprafata px-2 py-2 text-control font-semibold" style="grid-row:1;grid-column:' . ($i + 2) . '">' . e($dd['short']) . '</div>';

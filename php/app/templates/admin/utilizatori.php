@@ -20,7 +20,7 @@ foreach ($rows as $u) {
         . '<td class="px-3 py-2 text-mic">' . ((int) $u['active'] === 1 ? 'Activ' : 'Dezactivat') . '</td></tr>';
 }
 $body = admin_header('Utilizatori', 'Conturile echipei. Recepția și medicii văd doar cererile clinicilor bifate pe contul lor.', '<a href="/admin/utilizatori/nou" class="' . e(btn('primary')) . '">' . icon('plus', 18) . 'Cont nou</a>')
-    . '<div class="overflow-x-auto rounded-panou border border-linie bg-suprafata"><table class="w-full min-w-[40rem] border-collapse text-corp"><thead class="bg-fundal"><tr>'
+    . '<div class="relative overflow-x-auto rounded-panou border border-linie bg-suprafata"><table class="w-full min-w-[40rem] border-collapse text-corp"><thead class="bg-fundal"><tr>'
     . '<th scope="col" class="' . $th . '">Nume</th><th scope="col" class="' . $th . '">Rol</th><th scope="col" class="' . $th . '">Clinici</th><th scope="col" class="' . $th . '">Ultima intrare</th><th scope="col" class="' . $th . '">Stare</th>'
     . '</tr></thead><tbody>' . $tr . '</tbody></table></div>';
 admin_page('Utilizatori', $body, $user);

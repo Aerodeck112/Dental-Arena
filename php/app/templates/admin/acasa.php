@@ -72,6 +72,9 @@ $body = admin_header('Azi, ' . format_date(new DateTimeImmutable(), true), $clin
     . '<div class="flex flex-col gap-8 lg:col-span-4">'
     . admin_section_open('Cereri online noi', 'cereri-noi') . ($leadItems !== '' ? '<ul class="mt-2">' . $leadItems . '</ul>' : '<p class="mt-3 text-corp text-discret">Nicio cerere nouă.</p>')
     . '<a href="/admin/cereri" class="mt-3 inline-flex min-h-control items-center font-medium text-link underline underline-offset-4">Toate cererile</a></section>'
+    . ($clinicId !== null && can('billing', $user) ? admin_section_open('Încasat azi', 'incasat-azi')
+        . '<p class="mt-2 font-display text-[2rem] cifre">' . e(lei((int) db_value('SELECT COALESCE(SUM(amount), 0) FROM payments WHERE cancelled_at IS NULL AND location_id = ? AND paid_at >= ?', [$clinicId, "{$today} 00:00:00"]))) . '</p>'
+        . '<a href="/admin/incasari?clinica=' . $clinicId . '" class="mt-2 inline-flex min-h-control items-center font-medium text-link underline underline-offset-4">Jurnalul încasărilor</a></section>' : '')
     . admin_section_open('Rechemări', 'rechemari-azi') . '<p class="mt-2 text-corp"><span class="font-display text-[2rem] cifre">' . $recallsDue . '</span> pacienți de sunat pentru control în următoarele 7 zile.</p>'
     . '<a href="/admin/rechemari" class="mt-2 inline-flex min-h-control items-center font-medium text-link underline underline-offset-4">Lista de rechemări</a></section>'
     . '</div></div>';

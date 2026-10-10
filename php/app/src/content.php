@@ -97,6 +97,15 @@ const SETTING_DEFAULTS = [
     'company' => ['legalName' => '', 'cui' => '', 'regCom' => '', 'registeredAddress' => '', 'bank' => '', 'iban' => ''],
     'notify_email' => 'office@dentalarena.ro',
     'lead_retention_days' => 365,
+    'invoicing' => [
+        'invoiceSeries' => 'DA',
+        'receiptSeries' => 'DAC',
+        'vatRate' => 0,
+        'vatNote' => 'Scutit de TVA conform art. 292 din Codul fiscal.',
+        'paymentTermDays' => 0,
+    ],
+    // Texts of the consent forms printed from the patient's file (null = the default in clinical.php).
+    'consent_texts' => [],
 ];
 
 function setting(string $key): mixed

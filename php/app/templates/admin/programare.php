@@ -98,7 +98,7 @@ if (is_post()) {
             'created_at' => now_sql(),
             'updated_at' => now_sql(),
         ]);
-        audit('rechemare-noua', "#{$rid} pentru programarea #{$appt['id']}");
+        audit('rechemare-noua', "#{$rid} pentru programarea #{$appt['id']}", null, (int) $appt['patient_id']);
         flash("Rechemarea a fost pusă peste {$months} " . ($months === 1 ? 'lună' : 'luni') . '.');
         redirect("/admin/programari/{$appt['id']}");
     }
@@ -211,7 +211,7 @@ if (is_post()) {
             }
             return $id;
         });
-        audit($isNew ? 'programare-noua' : 'programare', "#{$id} {$startsAt}");
+        audit($isNew ? 'programare-noua' : 'programare', "#{$id} {$startsAt}", null, (int) db_value('SELECT patient_id FROM appointments WHERE id = ?', [$id]));
         flash($isNew ? 'Programarea a fost făcută.' : 'Programarea a fost salvată.');
         redirect($back ?? "/admin/programari/{$id}");
     }

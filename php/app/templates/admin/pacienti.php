@@ -45,7 +45,7 @@ $body = admin_header('Pacienți', $total . ($total === 1 ? ' pacient' : ' pacien
     . '<input id="cauta" type="search" name="q" value="' . e($q) . '" placeholder="Nume, telefon sau nr. fișă" autofocus class="' . e(input_classes('h-control')) . '">'
     . '<button type="submit" class="' . e(btn('primary')) . '">' . icon('search', 18) . 'Căutați</button></form>'
     . ($rows === [] ? '<p class="rounded-panou border border-dashed border-linie p-6 text-corp text-discret">Niciun pacient găsit.' . ($q !== '' ? ' <a href="/admin/pacienti/nou" class="text-link underline">Adăugați unul nou</a>.' : '') . '</p>'
-        : '<div class="overflow-x-auto rounded-panou border border-linie bg-suprafata"><table class="w-full min-w-[44rem] border-collapse text-corp"><thead class="bg-fundal"><tr>'
+        : '<div class="relative overflow-x-auto rounded-panou border border-linie bg-suprafata"><table class="w-full min-w-[44rem] border-collapse text-corp"><thead class="bg-fundal"><tr>'
         . '<th scope="col" class="' . $th . '">Fișa</th><th scope="col" class="' . $th . '">Nume</th><th scope="col" class="' . $th . '">Telefon</th><th scope="col" class="' . $th . '">Următoarea programare</th><th scope="col" class="' . $th . '">Ultima vizită</th>'
         . '</tr></thead><tbody>' . $tr . '</tbody></table></div>')
     . $nav;

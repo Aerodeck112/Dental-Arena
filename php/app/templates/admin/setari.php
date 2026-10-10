@@ -10,6 +10,13 @@ $notify = (string) setting('notify_email');
 $retention = (string) setting('lead_retention_days');
 $locations = db_all('SELECT * FROM locations ORDER BY sort_order, id');
 $errors = [];
+$inv = invoicing();
+$nextInvoice = (string) peek_sequence('factura:' . $inv['invoiceSeries']);
+$nextReceipt = (string) peek_sequence('chitanta:' . $inv['receiptSeries']);
+$consentTexts = [];
+foreach (array_keys(CONSENT_TYPES) as $t) {
+    $consentTexts[$t] = consent_text($t);
+}
 
 if (is_post()) {
     csrf_check();
@@ -30,6 +37,49 @@ if (is_post()) {
     $retention = post('lead_retention_days');
     if (!preg_match('/^\d+$/', $retention) || (int) $retention < 30 || (int) $retention > 3650) {
         $errors['lead_retention_days'] = 'Alegeți între 30 și 3650 de zile.';
+    }
+    foreach (['invoiceSeries', 'receiptSeries', 'vatNote'] as $k) {
+        $inv[$k] = trim(post("inv_{$k}"));
+    }
+    $inv['invoiceSeries'] = strtoupper($inv['invoiceSeries']);
+    $inv['receiptSeries'] = strtoupper($inv['receiptSeries']);
+    foreach (['invoiceSeries' => 'factură', 'receiptSeries' => 'chitanță'] as $k => $what) {
+        if (!preg_match('/^[A-Z]{1,8}$/', $inv[$k])) {
+            $errors["inv_{$k}"] = "Seria de {$what} are doar litere mari, de exemplu DA.";
+        }
+    }
+    $inv['vatRate'] = post('inv_vatRate');
+    if (!ctype_digit($inv['vatRate']) || (int) $inv['vatRate'] > 100) {
+        $errors['inv_vatRate'] = 'Cota TVA este între 0 și 100.';
+    }
+    $inv['vatRate'] = (int) $inv['vatRate'];
+    $inv['paymentTermDays'] = post('inv_paymentTermDays');
+    if (!ctype_digit($inv['paymentTermDays']) || (int) $inv['paymentTermDays'] > 365) {
+        $errors['inv_paymentTermDays'] = 'Termenul este între 0 și 365 de zile.';
+    }
+    $inv['paymentTermDays'] = (int) $inv['paymentTermDays'];
+    $inv['vatNote'] = mb_substr($inv['vatNote'], 0, 300);
+    $numbers = [];
+    foreach (['next_invoice' => ['factura:' . $inv['invoiceSeries'], 'Numărul facturii'], 'next_receipt' => ['chitanta:' . $inv['receiptSeries'], 'Numărul chitanței']] as $field => [$key, $label]) {
+        $want = post($field);
+        $current = peek_sequence($key);
+        if (!ctype_digit($want) || (int) $want < 1) {
+            $errors[$field] = "{$label}: scrieți un număr.";
+        } elseif ((int) $want < $current) {
+            $errors[$field] = "{$label} nu poate coborî sub {$current}: numerele sunt deja folosite.";
+        } else {
+            $numbers[$key] = (int) $want;
+        }
+    }
+    $nextInvoice = post('next_invoice');
+    $nextReceipt = post('next_receipt');
+    $consentChanged = false;
+    foreach (array_keys(CONSENT_TYPES) as $t) {
+        $text = str_replace("\r\n", "\n", trim(post("consent_{$t}")));
+        if ($text !== $consentTexts[$t]) {
+            $consentChanged = true;
+        }
+        $consentTexts[$t] = $text;
     }
     $locIn = [];
     foreach ($locations as $l) {
@@ -54,15 +104,27 @@ if (is_post()) {
         $locIn[$id] = $r;
     }
     if ($errors === []) {
-        db_tx(static function () use ($company, $notify, $retention, $locIn): void {
+        db_tx(static function () use ($company, $notify, $retention, $locIn, $inv, $numbers, $consentTexts, $consentChanged): void {
             setting_save('company', $company);
+            setting_save('invoicing', $inv);
+            foreach ($numbers as $key => $next) {
+                db_run('INSERT INTO number_sequences (k, v) VALUES (?, ?) ON DUPLICATE KEY UPDATE v = GREATEST(v, VALUES(v))', [$key, $next - 1]);
+            }
+            if ($consentChanged) {
+                $store = [];
+                foreach ($consentTexts as $k => $text) {
+                    $store[$k] = $text === '' || $text === CONSENT_DEFAULTS[$k] ? null : $text;
+                }
+                setting_save('consent_texts', $store);
+                setting_save('consent_version', date('Y-m-d'));
+            }
             setting_save('notify_email', $notify);
             setting_save('lead_retention_days', (int) $retention);
             foreach ($locIn as $id => $r) {
                 db_update('locations', $r, 'id = :id', ['id' => $id]);
             }
         });
-        audit('setari', 'datele firmei și ale clinicilor');
+        audit('setari', 'datele firmei, facturarea, acordurile și clinicile');
         flash('Setările au fost salvate. Sunt deja pe site.');
         redirect('/admin/setari');
     }
@@ -108,6 +170,19 @@ $body = admin_header('Setări', 'Datele firmei, unde ajung cererile și datele c
     . text_field('notify_email', 'E-mailul care primește cererile', ['type' => 'email', 'value' => $notify, 'required' => true, 'error' => $err('notify_email'), 'hint' => 'Folosit când clinica nu are e-mailul ei sau mesajul nu e pentru o clinică.'])
     . text_field('lead_retention_days', 'Câte zile păstrăm cererile închise', ['type' => 'number', 'value' => $retention, 'min' => 30, 'max' => 3650, 'error' => $err('lead_retention_days'), 'hint' => 'Apoi se șterg singure (GDPR). Recomandat: 365.'])
     . '</div></section>'
+    . admin_section_open('Facturare', 'facturare', 'Seriile și numerotarea facturilor și chitanțelor. Dacă ați emis deja facturi din alt program, continuați numerotarea de acolo.')
+    . '<div class="mt-4 grid gap-5 md:grid-cols-2">'
+    . text_field('inv_invoiceSeries', 'Seria facturilor', ['value' => $inv['invoiceSeries'], 'maxlength' => 8, 'error' => $err('inv_invoiceSeries')])
+    . text_field('next_invoice', 'Următorul număr de factură', ['value' => $nextInvoice, 'inputmode' => 'numeric', 'error' => $err('next_invoice')])
+    . text_field('inv_receiptSeries', 'Seria chitanțelor', ['value' => $inv['receiptSeries'], 'maxlength' => 8, 'error' => $err('inv_receiptSeries')])
+    . text_field('next_receipt', 'Următorul număr de chitanță', ['value' => $nextReceipt, 'inputmode' => 'numeric', 'error' => $err('next_receipt')])
+    . text_field('inv_vatRate', 'Cota TVA implicită (%)', ['value' => (string) $inv['vatRate'], 'inputmode' => 'numeric', 'error' => $err('inv_vatRate'), 'hint' => 'Serviciile stomatologice sunt de regulă scutite: 0.'])
+    . text_field('inv_paymentTermDays', 'Termen de plată (zile)', ['value' => (string) $inv['paymentTermDays'], 'inputmode' => 'numeric', 'error' => $err('inv_paymentTermDays'), 'hint' => '0 = fără scadență pe factură.'])
+    . text_field('inv_vatNote', 'Mențiunea despre TVA pe factură', ['value' => $inv['vatNote'], 'class' => 'md:col-span-2', 'hint' => 'Verificați formularea cu contabilul.'])
+    . '</div></section>'
+    . admin_section_open('Textele acordurilor', 'acorduri', 'Ce scrie pe formularele tipărite din fișa pacientului. {{pacient}}, {{firma}}, {{clinica}} și {{email}} se completează singure. Lăsați gol ca să reveniți la textul inițial.')
+    . '<div class="mt-4 flex flex-col gap-5">' . implode('', array_map(static fn ($t) => text_area("consent_{$t}", CONSENT_TYPES[$t], ['value' => $consentTexts[$t], 'rows' => 8]), array_keys(CONSENT_TYPES))) . '</div>'
+    . '<p class="mt-3 text-mic text-discret">Versiunea textelor: ' . e(consent_version()) . '. Se schimbă singură când modificați un text, iar fiecare acord semnat păstrează versiunea de atunci.</p></section>'
     . $clinicSections
     . '<div class="sticky bottom-0 -mx-4 border-t border-linie bg-fundal/95 px-4 py-3 backdrop-blur-sm md:mx-0 md:rounded-panou md:border"><button type="submit" class="' . e(btn('primary', 'l')) . '">Salvați setările</button></div>'
     . '</form>';

@@ -50,7 +50,7 @@ if (is_post()) {
             'INSERT INTO medical_histories (patient_id, ' . implode(', ', $cols) . ') VALUES (?, ' . implode(', ', array_fill(0, count($cols), '?')) . ') ON DUPLICATE KEY UPDATE ' . implode(', ', array_map(static fn ($c) => "{$c} = VALUES({$c})", $cols)),
             array_merge([$id], array_values($row)),
         );
-        audit('anamneza', "pacient #{$id}");
+        audit('anamneza', "pacient #{$id}", null, $id);
         flash('Anamneza a fost salvată.');
         redirect("/admin/pacienti/{$id}#anamneza");
     }
@@ -74,7 +74,7 @@ if (is_post()) {
     }
     if ($op === 'dezactiveaza' && $id && is_admin($user)) {
         db_update('patients', ['active' => 0, 'updated_at' => now_sql()], 'id = :id', ['id' => $id]);
-        audit('pacient-dezactivat', "#{$id}");
+        audit('pacient-dezactivat', "#{$id}", null, $id);
         flash('Fișa a fost scoasă din liste. Datele rămân în baza de date.');
         redirect('/admin/pacienti');
     }
@@ -140,11 +140,11 @@ if (is_post()) {
         $row['search_text'] = patient_search_text($row);
         if ($isNew) {
             $id = db_insert('patients', $row + ['file_number' => next_file_number(), 'created_by' => $user['id'], 'created_at' => now_sql()]);
-            audit('pacient-nou', "#{$id}");
+            audit('pacient-nou', "#{$id}", null, $id);
             flash('Fișa a fost creată.');
         } else {
             db_update('patients', $row, 'id = :id', ['id' => $id]);
-            audit('pacient', "#{$id}");
+            audit('pacient', "#{$id}", null, $id);
             flash('Datele au fost salvate.');
         }
         redirect("/admin/pacienti/{$id}");
@@ -237,13 +237,14 @@ foreach ($notes as $n) {
     $noteRows .= '<li class="border-t border-linie py-3 first:border-t-0"><p class="text-mic text-discret">' . e(format_datetime($n['created_at']) . ($n['author'] ? ' · ' . $n['author'] : '')) . ((int) $n['clinical'] === 1 ? ' · <span class="font-semibold text-actiune">clinică</span>' : '') . '</p><p class="mt-1 whitespace-pre-line text-corp">' . e($n['body']) . '</p></li>';
 }
 
-$age = $p['birth_date'] ? (new DateTimeImmutable($p['birth_date']))->diff(new DateTimeImmutable())->y : null;
-$lead = 'Fișa nr. ' . (int) $p['file_number'] . ($age !== null ? " · {$age} ani" : '') . ($p['phone'] !== '' ? ' · ' . format_phone($p['phone']) : '');
-$actions = '<a href="/admin/programari/noua?pacient=' . $id . '" class="' . e(btn('primary')) . '">' . icon('calendar-plus', 18) . 'Programare nouă</a>'
-    . ($p['phone'] !== '' ? '<a href="' . e(tel_href($p['phone'])) . '" class="' . e(btn('secondary')) . '">' . icon('phone', 18) . 'Sunați</a>' : '');
-$body = '<p class="mb-4"><a href="/admin/pacienti" class="inline-flex min-h-control items-center gap-1 text-link underline underline-offset-4">' . icon('chevron-left', 18) . 'Pacienți</a></p>'
-    . admin_header(patient_name($p), $lead, $actions)
-    . (($alerts !== [] || comfort_chip($p['comfort'], (bool) $p['prefers_sedation']) !== '') ? '<div class="-mt-4 mb-8 flex flex-wrap gap-2">' . alert_chips($alerts, 'text-corp') . comfort_chip($p['comfort'], (bool) $p['prefers_sedation']) . '</div>' : '')
+log_file_view($id);
+$balance = can('billing', $user) ? patient_balance($id) : null;
+$balanceNote = $balance !== null && $balance['balance'] !== 0
+    ? '<a href="/admin/pacienti/' . $id . '/financiar" class="' . e(cn('mb-6 flex items-center gap-3 rounded-panou p-4 text-corp', $balance['balance'] > 0 ? 'border border-carmin bg-carmin-pal' : 'bg-menta-pal')) . '">' . icon('wallet', 20)
+        . ($balance['balance'] > 0 ? 'Rest de plată: <strong class="cifre">' . e(lei($balance['balance'])) . '</strong>' : 'Avans în cont: <strong class="cifre">' . e(lei(-$balance['balance'])) . '</strong>') . '<span class="ml-auto text-link underline">Facturi și plăți</span></a>'
+    : '';
+$body = patient_header($p, $user, '')
+    . $balanceNote
     . '<div class="grid gap-8 lg:grid-cols-12">'
     . '<div class="flex flex-col gap-8 lg:col-span-7">'
     . admin_section_open('Anamneza', 'anamneza', $clinical ? 'Bolile, alergiile și medicamentele. Alergiile și afecțiunile bifate apar ca alertă la fiecare programare.' : '') . $history . '</section>'

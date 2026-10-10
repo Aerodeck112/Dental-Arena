@@ -5,19 +5,29 @@
  */
 declare(strict_types=1);
 
-/** The panel's menu: path, label, icon, administrators only. */
+/** The panel's menu: path, label, icon, who sees it (null = everyone, 'admin', or a permission). */
 const ADMIN_NAV = [
-    ['/admin', 'Azi', 'house', false],
-    ['/admin/calendar', 'Calendar', 'calendar', false],
-    ['/admin/pacienti', 'Pacienți', 'users', false],
-    ['/admin/cereri', 'Cereri online', 'inbox', false],
-    ['/admin/rechemari', 'Rechemări', 'phone-call', false],
-    ['/admin/servicii', 'Servicii și prețuri', 'tag', true],
-    ['/admin/fotografii', 'Fotografii site', 'image', true],
-    ['/admin/echipa', 'Echipa', 'user-round', true],
-    ['/admin/utilizatori', 'Utilizatori', 'shield', true],
-    ['/admin/setari', 'Setări', 'settings', true],
+    ['/admin', 'Azi', 'house', null],
+    ['/admin/calendar', 'Calendar', 'calendar', null],
+    ['/admin/pacienti', 'Pacienți', 'users', null],
+    ['/admin/cereri', 'Cereri online', 'inbox', null],
+    ['/admin/rechemari', 'Rechemări', 'phone-call', null],
+    ['/admin/facturi', 'Facturi', 'receipt', 'billing'],
+    ['/admin/incasari', 'Încasări', 'wallet', 'billing'],
+    ['/admin/rapoarte', 'Rapoarte', 'chart', null],
+    ['/admin/servicii', 'Servicii și prețuri', 'tag', 'admin'],
+    ['/admin/fotografii', 'Fotografii site', 'image', 'admin'],
+    ['/admin/echipa', 'Echipa', 'user-round', 'admin'],
+    ['/admin/utilizatori', 'Utilizatori', 'shield', 'admin'],
+    ['/admin/gdpr', 'Cereri GDPR', 'lock', 'gdpr'],
+    ['/admin/jurnal', 'Jurnal', 'history', 'audit'],
+    ['/admin/setari', 'Setări', 'settings', 'admin'],
 ];
+
+function admin_nav_allowed(?string $who, array $user): bool
+{
+    return $who === null || ($who === 'admin' ? is_admin($user) : can($who, $user));
+}
 
 function admin_page(string $title, string $body, ?array $user = null): void
 {
@@ -35,9 +45,14 @@ function admin_page(string $title, string $body, ?array $user = null): void
     $newCount = $user ? new_leads_count($user) : 0;
     $nav = '';
     if ($user) {
-        foreach (ADMIN_NAV as [$href, $label, $ico, $adminOnly]) {
-            if ($adminOnly && !is_admin($user)) {
+        $group = false;
+        foreach (ADMIN_NAV as [$href, $label, $ico, $who]) {
+            if (!admin_nav_allowed($who, $user)) {
                 continue;
+            }
+            if ($who === 'admin' && !$group) {
+                $group = true;
+                $nav .= '<li class="mt-4 mb-1 px-3 text-mic font-semibold text-discret" aria-hidden="true">Administrare</li>';
             }
             $on = $active($href);
             $badge = $href === '/admin/cereri' && $newCount > 0

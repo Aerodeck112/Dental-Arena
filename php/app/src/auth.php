@@ -7,6 +7,24 @@
 declare(strict_types=1);
 
 const ROLES = ['admin' => 'Administrator', 'receptie' => 'Recepție', 'medic' => 'Medic'];
+/** What each role may do beyond the clinics ticked on the account. */
+const PERMISSIONS = [
+    'medical' => ['admin', 'medic'],          // anamneza, odontograma, note clinice
+    'plans.manage' => ['admin', 'medic'],     // planuri de tratament (recepția le vede, pentru facturare)
+    'billing' => ['admin', 'receptie'],       // facturi și încasări
+    'billing.cancel' => ['admin'],
+    'documents.delete' => ['admin'],
+    'reports.finance' => ['admin'],
+    'gdpr' => ['admin'],
+    'audit' => ['admin'],
+];
+
+function can(string $permission, ?array $user = null): bool
+{
+    $user ??= current_user();
+    return $user !== null && in_array($user['role'], PERMISSIONS[$permission] ?? ['admin'], true);
+}
+
 const LOGIN_MAX_ATTEMPTS = 10;
 const LOGIN_WINDOW_MINUTES = 15;
 
@@ -131,10 +149,14 @@ function password_problem(string $password): ?string
     return null;
 }
 
-function audit(string $action, string $detail = '', ?int $userId = null): void
+function audit(string $action, string $detail = '', ?int $userId = null, ?int $patientId = null): void
 {
     try {
-        db_insert('audit_log', ['user_id' => $userId ?? (current_user()['id'] ?? null), 'action' => $action, 'detail' => mb_substr($detail, 0, 2000), 'created_at' => now_sql()]);
+        $row = ['user_id' => $userId ?? (current_user()['id'] ?? null), 'action' => $action, 'detail' => mb_substr($detail, 0, 2000), 'created_at' => now_sql()];
+        if ($patientId !== null) {
+            $row['patient_id'] = $patientId;
+        }
+        db_insert('audit_log', $row);
     } catch (Throwable $e) {
         app_log('warning', 'audit: ' . $e->getMessage());
     }

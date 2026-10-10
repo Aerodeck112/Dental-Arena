@@ -13,6 +13,8 @@ const ADMIN_ICONS = [
     'tag' => '<path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/>',
     'image' => '<rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>',
     'shield' => '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+    'chart' => '<path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>',
+    'history' => '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
     'user-round' => '<circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/>',
 ];
 
@@ -171,4 +173,42 @@ function admin_section_open(string $title, string $id = '', string $lead = ''): 
 function admin_mailto(string $email): ?string
 {
     return filter_var($email, FILTER_VALIDATE_EMAIL) ? 'mailto:' . rawurlencode($email) : null;
+}
+
+/**
+ * Sends a table as CSV for Excel (UTF-8 with BOM, „;” between columns, as Excel expects in
+ * Romania) and stops. Amounts should already be formatted („1250,00”).
+ */
+function csv_download(string $filename, array $headers, array $rows): never
+{
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="' . preg_replace('/[^a-z0-9._-]+/i', '-', $filename) . '"');
+    header('Cache-Control: no-store');
+    $out = fopen('php://output', 'w');
+    fwrite($out, "\xEF\xBB\xBF");
+    fputcsv($out, $headers, ';');
+    foreach ($rows as $r) {
+        // A cell starting with = + - @ would run as a formula in Excel.
+        fputcsv($out, array_map(static fn ($v) => is_string($v) && preg_match('/^[=+\-@\t\r]/', $v) ? "'" . $v : $v, $r), ';');
+    }
+    fclose($out);
+    exit;
+}
+
+/** „1250,50” for CSV cells (no thousands separator, comma decimals). */
+function csv_lei(int $bani): string
+{
+    return number_format($bani / 100, 2, ',', '');
+}
+
+/** A period from ?de=YYYY-MM-DD&pana=YYYY-MM-DD (inclusive), with defaults; returns [from, to, toExclusive]. */
+function admin_period(string $defaultFrom, string $defaultTo): array
+{
+    $ok = static fn (string $d) => DateTimeImmutable::createFromFormat('!Y-m-d', $d) !== false ? $d : null;
+    $from = $ok(query('de')) ?? $defaultFrom;
+    $to = $ok(query('pana')) ?? $defaultTo;
+    if ($to < $from) {
+        [$from, $to] = [$to, $from];
+    }
+    return [$from, $to, date('Y-m-d', strtotime($to . ' +1 day'))];
 }

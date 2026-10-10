@@ -77,6 +77,9 @@ Arhiva `dentalarena-php.zip` conține:
      coloana lui în calendarul clinicii);
    - **Utilizatori**: conturile pentru recepție și medici, cu bifa Cristești și/sau Luduș. La un cont
      de medic alegeți și **Medicul** din echipă căruia îi aparține contul;
+   - **Setări → Facturare**: seria facturilor și a chitanțelor și numărul de la care continuați (dacă
+     ați emis deja facturi din alt program), mențiunea despre TVA (verificați-o cu contabilul);
+   - **Setări → Textele acordurilor**: citiți formularele de consimțământ și adaptați-le;
    - **Cron Jobs** pentru reamintiri (vedeți mai jos).
 8. **Google:** în Google Search Console adăugați dentalarena.ro și trimiteți `https://dentalarena.ro/sitemap.xml`.
    Adresele vechi ale paginilor sunt aceleași, deci Google le găsește imediat.
@@ -111,6 +114,39 @@ Arhiva `dentalarena-php.zip` conține:
 - **CNP-ul** se păstrează criptat în baza de date. Cheia de criptare este rândul `secret` din
   `dentalarena/config.php`: **dacă pierdeți fișierul `config.php`, CNP-urile salvate nu mai pot fi
   citite.** Păstrați o copie a lui (vedeți **Copii de siguranță**).
+
+## Facturi, plăți, planuri, documente (etapa 3)
+
+- **Planuri de tratament** (fișa pacientului → *Planuri de tratament*): medicul adaugă lucrările din
+  lista de prețuri, pe dinți și pe faze, tipărește planul cu devizul pentru pacient, îl marchează
+  „acceptat”, apoi bifează fiecare lucrare „Efectuat”.
+- **Odontograma** (doar medici și administratori): apăsați pe un dinte, notați ce ați găsit (carie,
+  obturație, coroană, extracție etc., pe suprafețe) și, dacă e cazul, „Adăugați în plan”.
+- **Facturi** (administratori și recepție): din fișa pacientului → *Facturi și plăți* → **Factură
+  nouă**. Lucrările efectuate din plan apar bifate; puteți adăuga și alte servicii. Încasarea se poate
+  face pe loc (numerar, card, transfer). La numerar se dă **chitanță** cu număr. Factura și chitanța
+  se tipăresc sau se salvează ca PDF din browser.
+- Numerele de factură și de chitanță sunt **consecutive, fără goluri**. O factură emisă nu se șterge:
+  un administrator o poate **anula** (cu motiv); plățile ei rămân în contul pacientului, ca avans.
+- **Încasări**: jurnalul zilei (sau al unei perioade), pe metode de plată, cu export pentru contabil
+  (Excel / CSV). Și lista facturilor are export.
+- **Rapoarte**: facturat și încasat, venit pe medic și pe categorii, încasări pe metode, programări și
+  neprezentări pe medic, cererile de pe site. Recepția și medicii văd doar partea de programări
+  (medicul vede și producția lui).
+- **Documente și acorduri**: radiografii, fotografii, PDF-uri (păstrate în `dentalarena/storage/documente`,
+  în afara site-ului); formularele de consimțământ se tipăresc completate cu numele pacientului, iar
+  după semnare se înregistrează (cu copia scanată, opțional).
+- **GDPR** (administratori): din fișă → *GDPR* descărcați toate datele pacientului (dreptul de
+  acces) sau anonimizați fișa (dreptul la ștergere; datele medicale și facturile rămân, cum cere
+  legea). **Cereri GDPR** din meniu ține registrul cererilor, cu termenul de 30 de zile.
+- **Jurnal** (administratori): cine ce a făcut în panou, inclusiv cine a deschis fiecare fișă.
+
+> **Important despre facturi:** panoul emite facturi și chitanțe cu numerotare proprie. Trimiterea în
+> **e-Factura (SPV ANAF)** și, dacă e cazul, bonul fiscal din casa de marcat nu se fac din panou.
+> Stabiliți cu contabilul cum folosiți facturile din panou (de exemplu, exportul CSV lunar).
+
+Documentele încărcate pot avea cel mult cât permite serverul: dacă o radiografie nu se încarcă, măriți
+în cPanel → **MultiPHP INI Editor** valorile `upload_max_filesize` și `post_max_size` (de exemplu 25M).
 
 ## Reamintiri pe e-mail (Cron Jobs)
 
@@ -150,6 +186,7 @@ Implicit site-ul trimite prin serverul cPanel. Pentru o livrare mai bună, trimi
 ## Copii de siguranță
 
 cPanel → **Backup**: descărcați regulat **MySQL Database** (baza site-ului) și **Home Directory**.
+Copia **Home Directory** cuprinde și documentele pacienților (`dentalarena/storage/documente`).
 Descărcați și fișierul `dentalarena/config.php` (File Manager → **Download**) și păstrați-l în
 siguranță: conține parola bazei de date și cheia cu care sunt criptate CNP-urile. Fără el, CNP-urile
 din copia bazei de date nu mai pot fi citite.

@@ -7,6 +7,8 @@ declare(strict_types=1);
 
 require __DIR__ . '/lib.php';
 require __DIR__ . '/crm.php';
+require __DIR__ . '/billing.php';
+require __DIR__ . '/clinical.php';
 require APP_DIR . '/templates/admin/layout.php';
 
 $path = request_path();
@@ -33,31 +35,52 @@ if ($path === '/admin/iesire') {
 $user = require_login();
 maybe_send_reminders();
 
+// Path → page and who may open it (null = everyone signed in, 'admin', or a permission).
 $routes = [
-    '#^/admin$#' => ['acasa', false],
-    '#^/admin/calendar$#' => ['calendar', false],
-    '#^/admin/programari/(noua|\d+)$#' => ['programare', false],
-    '#^/admin/pacienti$#' => ['pacienti', false],
-    '#^/admin/pacienti/(nou|\d+)$#' => ['pacient', false],
-    '#^/admin/rechemari$#' => ['rechemari', false],
-    '#^/admin/cereri$#' => ['cereri', false],
-    '#^/admin/cereri/(\d+)$#' => ['cerere', false],
-    '#^/admin/servicii$#' => ['servicii', true],
-    '#^/admin/servicii/([a-z0-9-]+)$#' => ['servicii-pagina', true],
-    '#^/admin/fotografii$#' => ['fotografii', true],
-    '#^/admin/echipa$#' => ['echipa', true],
-    '#^/admin/echipa/(nou|\d+)$#' => ['medic', true],
-    '#^/admin/utilizatori$#' => ['utilizatori', true],
-    '#^/admin/utilizatori/(nou|\d+)$#' => ['utilizator', true],
-    '#^/admin/setari$#' => ['setari', true],
-    '#^/admin/cont$#' => ['cont', false],
+    '#^/admin$#' => ['acasa', null],
+    '#^/admin/calendar$#' => ['calendar', null],
+    '#^/admin/programari/(noua|\d+)$#' => ['programare', null],
+    '#^/admin/pacienti$#' => ['pacienti', null],
+    '#^/admin/pacienti/(nou|\d+)$#' => ['pacient', null],
+    '#^/admin/pacienti/(\d+)/odontograma$#' => ['pacient-odontograma', 'medical'],
+    '#^/admin/pacienti/(\d+)/planuri$#' => ['pacient-planuri', null],
+    '#^/admin/pacienti/(\d+)/planuri/(nou|\d+)$#' => ['plan', null],
+    '#^/admin/pacienti/(\d+)/planuri/(\d+)/tipar$#' => ['plan-tipar', null],
+    '#^/admin/pacienti/(\d+)/financiar$#' => ['pacient-financiar', 'billing'],
+    '#^/admin/pacienti/(\d+)/documente$#' => ['pacient-documente', null],
+    '#^/admin/pacienti/(\d+)/acord/([a-z]+)$#' => ['acord-tipar', null],
+    '#^/admin/pacienti/(\d+)/gdpr$#' => ['pacient-gdpr', 'gdpr'],
+    '#^/admin/documente/(\d+)$#' => ['document', null],
+    '#^/admin/rechemari$#' => ['rechemari', null],
+    '#^/admin/cereri$#' => ['cereri', null],
+    '#^/admin/cereri/(\d+)$#' => ['cerere', null],
+    '#^/admin/facturi$#' => ['facturi', 'billing'],
+    '#^/admin/facturi/noua$#' => ['factura-noua', 'billing'],
+    '#^/admin/facturi/(\d+)$#' => ['factura', 'billing'],
+    '#^/admin/facturi/(\d+)/tipar$#' => ['factura-tipar', 'billing'],
+    '#^/admin/incasari$#' => ['incasari', 'billing'],
+    '#^/admin/incasari/(\d+)/chitanta$#' => ['chitanta', 'billing'],
+    '#^/admin/rapoarte$#' => ['rapoarte', null],
+    '#^/admin/gdpr$#' => ['gdpr', 'gdpr'],
+    '#^/admin/jurnal$#' => ['jurnal', 'audit'],
+    '#^/admin/servicii$#' => ['servicii', 'admin'],
+    '#^/admin/servicii/([a-z0-9-]+)$#' => ['servicii-pagina', 'admin'],
+    '#^/admin/fotografii$#' => ['fotografii', 'admin'],
+    '#^/admin/echipa$#' => ['echipa', 'admin'],
+    '#^/admin/echipa/(nou|\d+)$#' => ['medic', 'admin'],
+    '#^/admin/utilizatori$#' => ['utilizatori', 'admin'],
+    '#^/admin/utilizatori/(nou|\d+)$#' => ['utilizator', 'admin'],
+    '#^/admin/setari$#' => ['setari', 'admin'],
+    '#^/admin/cont$#' => ['cont', null],
 ];
-foreach ($routes as $re => [$name, $adminOnly]) {
+foreach ($routes as $re => [$name, $who]) {
     if (preg_match($re, $path, $m)) {
-        if ($adminOnly) {
+        if ($who === 'admin') {
             $user = require_login(true);
+        } elseif (!admin_nav_allowed($who, $user)) {
+            admin_not_found($user);
         }
-        $page($name, ['user' => $user, 'param' => $m[1] ?? null]);
+        $page($name, ['user' => $user, 'param' => $m[1] ?? null, 'param2' => $m[2] ?? null]);
     }
 }
 admin_not_found($user);
