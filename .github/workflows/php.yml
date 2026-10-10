@@ -1,0 +1,32 @@
+name: Pachet cPanel PHP
+
+# Builds deploy/dentalarena-php.zip (docs/cpanel-php.md): the PHP version of the site and panel
+# for cPanel hosting without Node.js. Download it from the run page, section "Artifacts".
+on:
+  push:
+    branches: [main, claude/wizardly-galileo-5nwys4]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.1"
+          extensions: pdo_mysql, mbstring, gd
+          tools: none
+      - run: npm ci
+      - name: PHP syntax (8.1)
+        run: find php -name "*.php" -print0 | xargs -0 -n1 php -l > /dev/null
+      - run: npm run build:php:zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dentalarena-php
+          path: deploy/dentalarena-php.zip
+          retention-days: 30

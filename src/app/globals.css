@@ -1,0 +1,489 @@
+@import "tailwindcss";
+
+/*
+ * Dental Arena design tokens (docs/design-system.md §3–§5).
+ * This is the only file in the project that may contain raw hex values.
+ * Components use the role utilities generated below (bg-suprafata, text-discret, …).
+ */
+
+/* 1. Role values. Components never use raw hex. ------------------------------------- */
+:root {
+  color-scheme: light;
+  --da-fundal: #F4F7F5;
+  --da-suprafata: #FFFFFF;
+  --da-adancit: #EEF2F0;
+  --da-cerneala: #252E2C;
+  --da-discret: #5C6765;
+  --da-actiune: #1F6B4C;
+  --da-actiune-apasat: #185A3F;
+  --da-pe-actiune: #FFFFFF;
+  --da-link: #1F6B4C;
+  --da-focus: #1F6B4C;
+  --da-menta: #7DC9A1;
+  --da-pe-menta: #252E2C;
+  --da-menta-pal: #E4F3EA;
+  --da-linie: #D3DDD9;
+  --da-linie-control: #7E8C88;
+  --da-mustar: #E0AC2B;
+  --da-mustar-pal: #FBEFC9;
+  --da-mustar-text: #7A5600;
+  --da-carmin: #B42318;
+  --da-carmin-pal: #FBE9E7;
+  --da-subsol: #5C6765;
+  --da-pe-subsol: #FFFFFF;
+  --da-umbra: 0 1px 0 rgb(37 46 44 / .06), 0 16px 40px -16px rgb(37 46 44 / .30);
+  /* Brand primitives for the logo (§3.1, §9.4). The wordmark turns white in dark mode. */
+  --da-logo-marca: #7DC9A1;
+  --da-logo-text: #5C6765;
+  --da-logo-invers: #FFFFFF;
+}
+
+/* Dark values are declared twice: once for an explicit choice, once for the system preference. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --da-fundal: #1B2422;
+  --da-suprafata: #232D2B;
+  --da-adancit: #2C3734;
+  --da-cerneala: #E6EDEA;
+  --da-discret: #A6B3AF;
+  --da-actiune: #7DC9A1;
+  --da-actiune-apasat: #96D6B4;
+  --da-pe-actiune: #13241D;
+  --da-link: #8FD6B1;
+  --da-focus: #8FD6B1;
+  --da-menta: #7DC9A1;
+  --da-pe-menta: #13241D;
+  --da-menta-pal: #1F3B2F;
+  --da-linie: #35423F;
+  --da-linie-control: #7C8C87;
+  --da-mustar: #E0AC2B;
+  --da-mustar-pal: #3B321A;
+  --da-mustar-text: #F2C862;
+  --da-carmin: #F0877D;
+  --da-carmin-pal: #3F2522;
+  --da-subsol: #232D2B;
+  --da-pe-subsol: #E6EDEA;
+  --da-umbra: 0 1px 0 rgb(0 0 0 / .3), 0 16px 40px -16px rgb(0 0 0 / .7);
+  --da-logo-text: #FFFFFF;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --da-fundal: #1B2422;
+    --da-suprafata: #232D2B;
+    --da-adancit: #2C3734;
+    --da-cerneala: #E6EDEA;
+    --da-discret: #A6B3AF;
+    --da-actiune: #7DC9A1;
+    --da-actiune-apasat: #96D6B4;
+    --da-pe-actiune: #13241D;
+    --da-link: #8FD6B1;
+    --da-focus: #8FD6B1;
+    --da-menta: #7DC9A1;
+    --da-pe-menta: #13241D;
+    --da-menta-pal: #1F3B2F;
+    --da-linie: #35423F;
+    --da-linie-control: #7C8C87;
+    --da-mustar: #E0AC2B;
+    --da-mustar-pal: #3B321A;
+    --da-mustar-text: #F2C862;
+    --da-carmin: #F0877D;
+    --da-carmin-pal: #3F2522;
+    --da-subsol: #232D2B;
+    --da-pe-subsol: #E6EDEA;
+    --da-umbra: 0 1px 0 rgb(0 0 0 / .3), 0 16px 40px -16px rgb(0 0 0 / .7);
+    --da-logo-text: #FFFFFF;
+  }
+}
+
+/* Tailwind's dark: variant follows the same rule as the tokens: an explicit data-theme wins,
+   otherwise the system preference. Prefer tokens; this exists for the rare one-off. */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *) {
+      @slot;
+    }
+  }
+}
+
+/* 2. Colour and font utilities. These are "inline" because they reference runtime variables. */
+@theme inline {
+  --color-*: initial; /* drop Tailwind's default palette: no off-brand colours */
+  --color-white: #FFFFFF;
+  --color-fundal: var(--da-fundal);
+  --color-suprafata: var(--da-suprafata);
+  --color-adancit: var(--da-adancit);
+  --color-cerneala: var(--da-cerneala);
+  --color-discret: var(--da-discret);
+  --color-actiune: var(--da-actiune);
+  --color-actiune-apasat: var(--da-actiune-apasat);
+  --color-pe-actiune: var(--da-pe-actiune);
+  --color-link: var(--da-link);
+  --color-focus: var(--da-focus);
+  --color-menta: var(--da-menta);
+  --color-pe-menta: var(--da-pe-menta);
+  --color-menta-pal: var(--da-menta-pal);
+  --color-linie: var(--da-linie);
+  --color-linie-control: var(--da-linie-control);
+  --color-mustar: var(--da-mustar);
+  --color-mustar-pal: var(--da-mustar-pal);
+  --color-mustar-text: var(--da-mustar-text);
+  --color-carmin: var(--da-carmin);
+  --color-carmin-pal: var(--da-carmin-pal);
+  --color-subsol: var(--da-subsol);
+  --color-pe-subsol: var(--da-pe-subsol);
+  /* Public site only: the deep forest green of the booking band (brand green, darkened). */
+  --color-padure: #123D2E;
+  --color-padure-text: #CFE9DB;
+  --shadow-*: initial;
+  --shadow-float: var(--da-umbra);
+  --font-*: initial;
+  --font-display: var(--font-forum), "Times New Roman", serif;
+  --font-sans: var(--font-redhat), system-ui, sans-serif;
+}
+
+/* 3. Size, space and shape tokens. NOT inline, so that [data-density] can override them.
+      "static" keeps every variable in the output, because base rules read them directly. */
+@theme static {
+  --text-*: initial;
+  /* Public site: the hero headline, set large over the photograph. */
+  --text-mega: clamp(3.25rem, 1.2rem + 6.4vw, 7.25rem);
+  --text-mega--line-height: 0.98;
+  --text-mega--letter-spacing: -0.01em;
+  --text-hero: clamp(3rem, 1.9rem + 3.6vw, 4.5rem);
+  --text-hero--line-height: 1.08;
+  --text-h1: clamp(2.25rem, 1.6rem + 2.6vw, 3.75rem);
+  --text-h1--line-height: 1.1;
+  --text-h2: clamp(1.75rem, 1.55rem + 0.8vw, 2.25rem);
+  --text-h2--line-height: 1.17;
+  --text-nume: 1.5rem;
+  --text-nume--line-height: 1.25;
+  --text-h3: 1.3125rem;
+  --text-h3--line-height: 1.333;
+  --text-lead: clamp(1.1875rem, 1.13rem + 0.25vw, 1.3125rem);
+  --text-lead--line-height: 1.57;
+  --text-corp: 1.125rem;
+  --text-corp--line-height: 1.6;
+  --text-control: 1.0625rem;
+  --text-control--line-height: 1.41;
+  --text-mic: 1rem;
+  --text-mic--line-height: 1.5;
+  --text-legal: .875rem;
+  --text-legal--line-height: 1.43;
+  --text-micro: .75rem;
+  --text-micro--line-height: 1.33;
+
+  --spacing-sectiune: clamp(4rem, 2.4rem + 6.4vw, 8rem);
+  --spacing-margine: clamp(1.25rem, -0.1rem + 5.6vw, 5rem);
+  --spacing-gutter: 1.5rem;
+  --spacing-control: 3rem;     /* M: 48px on the site */
+  --spacing-control-s: 3rem;   /* S: the site never goes below 48px */
+  --spacing-control-l: 3.5rem; /* L: 56px, also slots, choice buttons and the sticky bar */
+  --spacing-rand: 2.75rem;     /* CRM table row (44px outside compact) */
+  --container-continut: 80rem;
+
+  --radius-*: initial;
+  --radius-control: 6px;
+  --radius-panou: 12px;
+  --radius-foto: 2px;
+  --radius-bloc: 4px;
+  --radius-chip: 9999px;
+  /* Public site: photographs and large panels are framed with soft, generous corners. */
+  --radius-mare: 28px;
+  --radius-mediu: 18px;
+
+  --ease-filet: cubic-bezier(.2, .7, .2, 1);
+}
+
+/* 4. CRM density (set on the (crm) route-group layout). The same components shrink without forks.
+      "confortabil" is the reception-tablet setting: CRM type, 44px table rows. */
+[data-density="compact"],
+[data-density="confortabil"] {
+  --text-h1: 1.75rem;
+  --text-h1--line-height: 1.143;
+  --text-h3: 1rem;
+  --text-h3--line-height: 1.375;
+  --text-corp: .875rem;
+  --text-corp--line-height: 1.43;
+  --text-control: .875rem;
+  --text-control--line-height: 1.43;
+  --text-mic: .8125rem;
+  --text-mic--line-height: 1.385;
+  --spacing-control: 2.5rem;
+  --spacing-control-s: 2rem;
+  --spacing-control-l: 3rem;
+  --spacing-gutter: 1rem;
+  --spacing-rand: 2.25rem;
+  --radius-panou: 8px;
+}
+[data-density="confortabil"] {
+  --spacing-rand: 2.75rem;
+}
+/* Site sizes inside a CRM page (previews, the component gallery). */
+[data-density="site"] {
+  --text-h1: clamp(2.25rem, 1.6rem + 2.6vw, 3.75rem);
+  --text-h1--line-height: 1.1;
+  --text-h3: 1.3125rem;
+  --text-h3--line-height: 1.333;
+  --text-corp: 1.125rem;
+  --text-corp--line-height: 1.6;
+  --text-control: 1.0625rem;
+  --text-control--line-height: 1.41;
+  --text-mic: 1rem;
+  --text-mic--line-height: 1.5;
+  --spacing-control: 3rem;
+  --spacing-control-s: 3rem;
+  --spacing-control-l: 3.5rem;
+  --spacing-gutter: 1.5rem;
+  --spacing-rand: 2.75rem;
+  --radius-panou: 12px;
+}
+[data-density] {
+  font-size: var(--text-corp);
+  line-height: var(--text-corp--line-height);
+}
+
+/* 5. Base rules. They read the --da-* variables directly: "inline" theme variables are not
+      guaranteed to be emitted. */
+@layer base {
+  html {
+    font-synthesis: none;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    scroll-padding-top: 6rem;    /* focus is never hidden under the sticky header */
+    scroll-padding-bottom: 5rem; /* …or under the mobile sticky bar */
+  }
+  body {
+    background: var(--da-fundal);
+    color: var(--da-cerneala);
+    font-family: var(--font-redhat), system-ui, sans-serif;
+    font-size: var(--text-corp);
+    line-height: var(--text-corp--line-height);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Kerning and ligatures, without the hinted (whole-pixel) glyph advances that Chromium on
+       Linux applies otherwise: Red Hat Text 500 at 13–14px showed gaps such as „Telef on”. */
+    text-rendering: geometricPrecision;
+  }
+  /* Browsers reset form controls to text-rendering: auto; keep the body's setting. */
+  button, input, select, textarea {
+    text-rendering: inherit;
+  }
+  h1, h2, h3, h4 {
+    text-wrap: balance;
+    overflow-wrap: break-word;
+  }
+  p, li, dd, figcaption {
+    text-wrap: pretty;
+    overflow-wrap: break-word;
+  }
+  /* Hyphenate running text on phones only; headings never. */
+  @media (width < 40rem) {
+    p, li, dd {
+      hyphens: auto;
+    }
+  }
+  ::selection {
+    background: var(--da-menta-pal);
+    color: var(--da-cerneala);
+  }
+  :focus-visible {
+    outline: 2px solid var(--da-focus);
+    outline-offset: 2px;
+  }
+  /* Footer: the ring is pe-subsol (§11.2). */
+  .focus-subsol :focus-visible,
+  .focus-subsol:focus-visible {
+    outline-color: var(--da-pe-subsol);
+  }
+  [hidden]:where(:not([hidden="until-found"])) {
+    display: none !important;
+  }
+  dialog {
+    color: inherit;
+  }
+  summary {
+    cursor: pointer;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* 6. Helpers. ------------------------------------------------------------------------ */
+
+/* Prices, times, dates, phone numbers and CRM tables (§4.3 rule 5). */
+@utility cifre {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+/* A phone number never wraps (§4.3 rule 6). */
+@utility telefon {
+  font-variant-numeric: tabular-nums lining-nums;
+  white-space: nowrap;
+}
+/* Width of running text. */
+@utility masura {
+  max-width: 64ch;
+}
+@utility masura-lead {
+  max-width: 52ch;
+}
+/* The 1px translate while a button is pressed (§8). */
+@utility apasat {
+  &:active:not(:disabled):not([aria-disabled="true"]) {
+    transform: translateY(1px);
+  }
+}
+
+/* 7. Motion (§8). Everything is triggered by a person; prefers-reduced-motion zeroes it all. */
+@keyframes da-crown-draw {
+  from { stroke-dashoffset: 1; fill-opacity: 0; }
+  70% { stroke-dashoffset: 0; fill-opacity: 0; }
+  to { stroke-dashoffset: 0; fill-opacity: 1; }
+}
+@keyframes da-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes da-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes da-slide-in-right {
+  from { transform: translateX(24px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes da-flash-menta {
+  from { background-color: var(--da-menta-pal); }
+  to { background-color: transparent; }
+}
+@keyframes da-band-load {
+  0%, 15% { fill: transparent; }
+  35%, 70% { fill: var(--da-menta); }
+  100% { fill: transparent; }
+}
+@keyframes da-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Line drawings (DentalArt): the hairline keeps its weight at every size. */
+.desen * {
+  vector-effect: non-scaling-stroke;
+}
+
+/* The crown draws onto the filled screw (booking confirmation). Paths carry pathLength="1". */
+@utility da-crown-draw {
+  stroke-dasharray: 1;
+  animation: da-crown-draw 1000ms var(--ease-filet) both;
+}
+/* The confirmation text arrives 120ms after the crown is drawn. */
+@utility da-crown-text {
+  animation: da-fade-in 160ms var(--ease-filet) 820ms both;
+}
+/* Slow availability: the bands fill in sequence (the only loading indicator, §8). */
+@utility da-band-loading {
+  animation: da-band-load 1600ms var(--ease-filet) infinite both;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+/* A booking-summary row that just received a value. */
+@utility da-flash {
+  animation: da-flash-menta 600ms var(--ease-filet) both;
+}
+/* Menus, sheets, dialogs: a 200ms rise. */
+@utility da-rise {
+  animation: da-rise 200ms var(--ease-filet) both;
+}
+@utility da-fade {
+  animation: da-fade-in 150ms var(--ease-filet) both;
+}
+/* CRM drawer: 180ms in from the right. */
+@utility da-drawer {
+  animation: da-slide-in-right 180ms var(--ease-filet) both;
+}
+@utility da-spin {
+  animation: da-spin 900ms linear infinite;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+/* Native <dialog> backdrop for Dialog and Drawer. */
+dialog.da-overlay::backdrop {
+  background: rgb(19 36 29 / .45);
+}
+:root[data-theme="dark"] dialog.da-overlay::backdrop {
+  background: rgb(0 0 0 / .6);
+}
+
+/* 8. Print (deviz, receipts, patient summaries): always the light palette, no chrome. --- */
+@media print {
+  :root,
+  :root[data-theme="dark"],
+  :root:not([data-theme="light"]) {
+    color-scheme: light;
+    --da-fundal: #FFFFFF;
+    --da-suprafata: #FFFFFF;
+    --da-adancit: #EEF2F0;
+    --da-cerneala: #252E2C;
+    --da-discret: #5C6765;
+    --da-actiune: #1F6B4C;
+    --da-actiune-apasat: #185A3F;
+    --da-pe-actiune: #FFFFFF;
+    --da-link: #1F6B4C;
+    --da-focus: #1F6B4C;
+    --da-menta: #7DC9A1;
+    --da-pe-menta: #252E2C;
+    --da-menta-pal: #E4F3EA;
+    --da-linie: #D3DDD9;
+    --da-linie-control: #7E8C88;
+    --da-mustar: #E0AC2B;
+    --da-mustar-pal: #FBEFC9;
+    --da-mustar-text: #7A5600;
+    --da-carmin: #B42318;
+    --da-carmin-pal: #FBE9E7;
+    --da-subsol: #FFFFFF;
+    --da-pe-subsol: #252E2C;
+    --da-umbra: none;
+    --da-logo-text: #5C6765;
+  }
+  @page {
+    size: A4;
+    margin: 16mm 14mm;
+  }
+  html {
+    font-size: 11pt;
+  }
+  body {
+    background: #FFFFFF;
+  }
+  [data-print="ascuns"],
+  dialog:not([open]) {
+    display: none !important;
+  }
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+  table, figure, img, [data-print="intreg"] {
+    break-inside: avoid;
+  }
+  h1, h2, h3 {
+    break-after: avoid;
+  }
+}

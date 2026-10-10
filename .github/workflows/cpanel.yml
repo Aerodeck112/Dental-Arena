@@ -1,0 +1,28 @@
+name: Pachet cPanel
+
+# Builds deploy/dental-arena-cpanel.zip (see docs/cpanel.md) on every push to the main branches
+# and on demand. Download it from the run page, section "Artifacts".
+on:
+  push:
+    branches: [main, claude/wizardly-galileo-5nwys4]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build:cpanel
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dental-arena-cpanel
+          path: deploy/dental-arena-cpanel.zip
+          retention-days: 30
