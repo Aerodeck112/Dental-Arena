@@ -5,7 +5,7 @@
  */
 declare(strict_types=1);
 
-/** The panel's menu: path, label, icon, who sees it (null = everyone, 'admin', or a permission). */
+/** The panel's menu: path, label, icon, who sees it (null = everyone, 'admin', 'config', or a permission). */
 const ADMIN_NAV = [
     ['/admin', 'Azi', 'house', null],
     ['/admin/calendar', 'Calendar', 'calendar', null],
@@ -22,15 +22,20 @@ const ADMIN_NAV = [
     ['/admin/servicii', 'Servicii și prețuri', 'tag', 'admin'],
     ['/admin/fotografii', 'Fotografii site', 'image', 'admin'],
     ['/admin/echipa', 'Echipa', 'user-round', 'admin'],
-    ['/admin/utilizatori', 'Utilizatori', 'shield', 'admin'],
+    ['/admin/utilizatori', 'Utilizatori', 'shield', 'config'],
     ['/admin/gdpr', 'Cereri GDPR', 'lock', 'gdpr'],
     ['/admin/jurnal', 'Jurnal', 'history', 'audit'],
-    ['/admin/setari', 'Setări', 'settings', 'admin'],
+    ['/admin/setari', 'Setări', 'settings', 'config'],
 ];
 
 function admin_nav_allowed(?string $who, array $user): bool
 {
-    return $who === null || ($who === 'admin' ? is_admin($user) : can($who, $user));
+    return match ($who) {
+        null => true,
+        'admin' => is_admin($user),
+        'config' => can_configure($user),
+        default => can($who, $user),
+    };
 }
 
 function admin_page(string $title, string $body, ?array $user = null): void

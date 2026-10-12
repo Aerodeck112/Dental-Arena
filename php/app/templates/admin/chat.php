@@ -39,8 +39,8 @@ $nav = $pages > 1 ? '<nav aria-label="Pagini" class="mt-6 flex items-center gap-
     . ($pagina < $pages ? '<a href="' . e(admin_url('/admin/chat', ['stare' => $filter, 'pagina' => $pagina + 1])) . '" class="' . e(btn('secondary', 's')) . '">Înainte' . icon('chevron-right', 16) . '</a>' : '') . '</nav>' : '';
 
 $tile = static fn (string $label, string $value) => '<div class="rounded-panou border border-linie bg-suprafata p-4"><p class="text-mic text-discret">' . e($label) . '</p><p class="mt-1 font-display text-[2rem] leading-none cifre">' . e($value) . '</p></div>';
-$body = admin_header('Chat pe site', 'Ce au întrebat vizitatorii și ce s-a întâmplat: cereri pentru recepție și programări făcute direct.', is_admin($user) ? '<a href="/admin/setari/chat" class="' . e(btn('secondary')) . '">' . icon('settings', 18) . 'Setări</a>' : '')
-    . (!chat_settings()['enabled'] ? '<p class="mb-6 rounded-panou border border-mustar bg-mustar-pal p-4 text-corp">Chatul este oprit pe site.' . (is_admin($user) ? ' Îl porniți din <a class="text-link underline" href="/admin/setari/chat">Setări → Chatul de pe site</a>.' : '') . '</p>' : '')
+$body = admin_header('Chat pe site', 'Ce au întrebat vizitatorii și ce s-a întâmplat: cereri pentru recepție și programări făcute direct.', can_configure($user) ? '<a href="/admin/setari/chat" class="' . e(btn('secondary')) . '">' . icon('settings', 18) . 'Setări</a>' : '')
+    . (!chat_settings()['enabled'] ? '<p class="mb-6 rounded-panou border border-mustar bg-mustar-pal p-4 text-corp">Chatul este oprit pe site.' . (can_configure($user) ? ' Îl porniți din <a class="text-link underline" href="/admin/setari/chat">Setări → Chatul de pe site</a>.' : '') . '</p>' : '')
     . '<div class="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">' . $tile('Conversații, 30 de zile', (string) (int) $stats['n']) . $tile('Programări directe', (string) (int) $stats['booked']) . $tile('Cereri pentru recepție', (string) (int) $stats['requests'])
     . $tile('Tokeni (intrare / ieșire)', number_format((int) $stats['tin'], 0, ',', '.') . ' / ' . number_format((int) $stats['tout'], 0, ',', '.')) . '</div>'
     . $tabs

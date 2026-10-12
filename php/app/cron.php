@@ -23,6 +23,8 @@ if (!INSTALLED) {
 }
 require __DIR__ . '/src/admin/lib.php';
 require __DIR__ . '/src/admin/crm.php';
+require __DIR__ . '/src/admin/billing.php';
+require __DIR__ . '/src/admin/clinical.php';
 
 $queued = send_due_reminders();
 run_daily_jobs();

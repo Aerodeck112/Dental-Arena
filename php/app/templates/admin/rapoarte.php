@@ -14,6 +14,7 @@ $clinic = admin_int(query('clinica'));
 $clinicIds = $clinic !== null && in_array($clinic, $allowed, true) ? [$clinic] : $allowed;
 $finance = can('reports.finance', $user);
 $ownDoctor = $user['role'] === 'medic' && $user['doctor_id'] ? (int) $user['doctor_id'] : null;
+$production = $ownDoctor !== null && finance_on();
 $docs = doctor_short_names();
 $in = $clinicIds === [] ? '0' : implode(',', array_map('intval', $clinicIds));
 $period = ["{$from} 00:00:00", "{$toEx} 00:00:00"];
@@ -46,7 +47,7 @@ $catTable = [];
 $methodTable = [];
 $monthTable = [];
 $sums = ['invoiced' => 0, 'paid' => 0];
-if ($finance || $ownDoctor) {
+if ($finance || $production) {
     $docRows = db_all("SELECT ii.doctor_id, COUNT(DISTINCT v.id) AS facturi, COUNT(*) AS linii, SUM(ii.total) AS venit FROM invoice_items ii JOIN invoices v ON v.id = ii.invoice_id
         WHERE v.status = 'emisa' AND v.location_id IN ({$in}) AND v.issued_at >= ? AND v.issued_at < ?" . ($ownDoctor && !$finance ? ' AND ii.doctor_id = ' . $ownDoctor : '') . ' GROUP BY ii.doctor_id ORDER BY venit DESC', $period);
     $docTable = array_map(static fn ($r) => [$docs[(int) $r['doctor_id']] ?? 'Fără medic', (int) $r['facturi'], (int) $r['linii'], (int) $r['venit']], $docRows);
@@ -164,7 +165,7 @@ $sections = [];
 if ($finance) {
     $sections[] = admin_section_open('Facturat pe luni', 'lunar', 'Ultimele 12 luni, indiferent de perioada aleasă.') . $chart . $table('lunar', ['Luna', 'Facturi', 'Facturat', 'Încasat'], array_map(static fn ($r) => [RO_MONTHS[(int) substr($r[0], 5, 2) - 1] . ' ' . substr($r[0], 0, 4), $r[1], $r[2], $r[3]], $monthTable), [2, 3], '') . '</section>';
 }
-if ($finance || $ownDoctor) {
+if ($finance || $production) {
     $sections[] = admin_section_open($finance ? 'Venit facturat pe medic' : 'Producția mea', 'medici', 'Din liniile facturilor emise în perioadă (fără cele anulate).') . $table('medici', ['Medic', 'Facturi', 'Servicii facturate', 'Venit facturat'], $docTable, [3], 'Nicio factură în perioadă.') . '</section>';
 }
 if ($finance) {

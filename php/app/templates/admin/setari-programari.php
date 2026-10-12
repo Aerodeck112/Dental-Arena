@@ -8,6 +8,7 @@
 declare(strict_types=1);
 
 $s = booking_settings();
+$before = $s;
 $errors = [];
 $steps = [5 => '5 minute', 10 => '10 minute', 15 => '15 minute', 20 => '20 de minute', 30 => '30 de minute'];
 $notices = [0 => 'oricând, chiar și imediat', 30 => 'cu 30 de minute', 60 => 'cu o oră', 120 => 'cu 2 ore', 180 => 'cu 3 ore', 240 => 'cu 4 ore', 720 => 'cu 12 ore', 1440 => 'cu o zi'];
@@ -36,7 +37,7 @@ if (is_post()) {
     }
     if ($errors === []) {
         setting_save('programare_online', $s);
-        audit('setari-programari', ($s['enabled'] ? 'pornite' : 'oprite') . ", din {$s['step_minutes']} în {$s['step_minutes']} minute, {$s['days_ahead']} zile înainte");
+        audit('setari-programari', changes_text($before, $s, ['enabled' => 'programare online pe site', 'step_minutes' => 'orele din (minute)', 'notice_minutes' => 'cel mai devreme (minute)', 'days_ahead' => 'zile înainte', 'buffer_minutes' => 'pauză între programări (minute)', 'default_minutes' => 'durata implicită', 'cancel_hours' => 'anulare din link (ore înainte)', 'morning_until' => 'dimineața până la']));
         flash('Setările programărilor online au fost salvate.');
         redirect('/admin/setari/programari');
     }

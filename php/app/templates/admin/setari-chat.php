@@ -7,6 +7,7 @@
 declare(strict_types=1);
 
 $s = chat_settings();
+$before = $s;
 $ai = ai_settings();
 $errors = [];
 $smsLive = messaging_live() && messaging()['smslink_id'] !== '' && messaging()['smslink_pass'] !== '';
@@ -25,7 +26,7 @@ if (is_post()) {
     }
     if ($errors === []) {
         setting_save('chat', $s);
-        audit('setari-chat', $s['enabled'] ? 'pornit, ' . $s['mode'] : 'oprit');
+        audit('setari-chat', changes_text($before, $s, ['enabled' => 'chat pornit', 'model' => 'modelul', 'mode' => 'programările din chat', 'daily_limit' => 'conversații pe zi', 'retention_days' => 'păstrate (zile)']));
         flash('Setările chatului au fost salvate.');
         redirect('/admin/setari/chat');
     }

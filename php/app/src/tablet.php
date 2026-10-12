@@ -65,7 +65,7 @@ if ($device === null) {
     $body = '<div class="m-auto max-w-[36rem] text-center">'
         . '<span class="mx-auto flex size-20 items-center justify-center rounded-full bg-mustar-pal text-mustar-text">' . admin_icon('tablet', 36) . '</span>'
         . '<h1 class="mt-6 font-display text-h1">Tableta nu este asociată</h1>'
-        . '<p class="mt-4 text-lead text-discret">Pe această tabletă, un administrator intră în panou, la <strong class="text-cerneala">Setări → Tablete de semnare</strong>, și apasă „Asociați această tabletă”. După asta, pagina se deschide aici fără cont.</p>'
+        . '<p class="mt-4 text-lead text-discret">Pe această tabletă, suportul tehnic (VITIM) intră în panou, la <strong class="text-cerneala">Setări → Tablete de semnare</strong>, și apasă „Asociați această tabletă”. După asta, pagina se deschide aici fără cont.</p>'
         . '<p class="mt-8"><a href="/admin/tablete" class="' . e(btn('primary', 'l')) . '">Intrați în panou</a></p></div>';
     http_response_code(403);
     kiosk_page('Tableta nu este asociată', $body, null, 0);

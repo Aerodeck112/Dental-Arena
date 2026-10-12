@@ -697,6 +697,49 @@ const AUDIT_LABELS = [
     'actualizare-revenire' => 'Site-ul pus înapoi la o versiune de dinainte',
 ];
 
+/** What VITIM does that the administrator is told about: everything but looking and printing. */
+const TECH_QUIET_ACTIONS = ['autentificare', 'iesire', 'fisa-deschisa', 'factura-tiparita', 'chitanta-tiparita', 'acord-tiparit', 'plan-tiparit'];
+
+/** The technical account's changes after an audit id, newest first. */
+function tech_changes(int $afterId = 0, int $limit = 50): array
+{
+    $quiet = "'" . implode("','", TECH_QUIET_ACTIONS) . "'";
+    return db_all(
+        "SELECT a.id, a.action, a.detail, a.created_at, u.name FROM audit_log a JOIN users u ON u.id = a.user_id
+         WHERE u.role = 'tehnic' AND a.id > ? AND a.action NOT IN ({$quiet}) ORDER BY a.id DESC LIMIT " . max(1, $limit),
+        [$afterId],
+    );
+}
+
+function tech_change_line(array $c): string
+{
+    $detail = trim((string) $c['detail']);
+    return date('d.m H:i', strtotime($c['created_at'])) . ' · ' . audit_label($c['action']) . ($detail !== '' ? ': ' . mb_strimwidth($detail, 0, 200, '…') : '');
+}
+
+/**
+ * The administrators get one e-mail with what VITIM changed, once VITIM has been quiet for ten
+ * minutes (one summary for a whole session of work, not one per click).
+ */
+function send_tech_digest(?DateTimeImmutable $now = null): int
+{
+    $now ??= new DateTimeImmutable();
+    $rows = tech_changes((int) setting('vitim_rezumat_pana'), 200);
+    if ($rows === [] || strtotime($rows[0]['created_at']) > $now->getTimestamp() - 600) {
+        return 0;
+    }
+    $lines = implode("\n", array_map(static fn ($c) => '- ' . tech_change_line($c), array_reverse($rows)));
+    $body = "Bună ziua,\n\nSuportul tehnic (VITIM) a făcut aceste modificări în panoul Dental Arena:\n\n{$lines}\n\nLe vedeți și pe pagina Azi din panou: " . absolute_url('/admin') . "\n";
+    $n = 0;
+    foreach (db_all("SELECT * FROM users WHERE role = 'admin' AND active = 1") as $u) {
+        if (filter_var($u['email'], FILTER_VALIDATE_EMAIL)) {
+            $n += (int) (bool) queue_message(['event' => 'staff-configurare', 'user_id' => (int) $u['id'], 'channel' => 'email', 'to_address' => $u['email'], 'subject' => 'Dental Arena: ce a configurat VITIM', 'body' => $body]);
+        }
+    }
+    setting_save('vitim_rezumat_pana', (int) $rows[0]['id']);
+    return $n;
+}
+
 function audit_label(string $action): string
 {
     if (isset(AUDIT_LABELS[$action])) {

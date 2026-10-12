@@ -183,6 +183,16 @@ breaks, time off, holidays online only; slot id `YmdHi-loc-doc-minutes`), `slot_
 `link-programare.php`; admin `absente.php`, `setari-programari.php`. `patient_by_phone_name()` in
 crm.php: same phone and a name in common.
 
+## The technical account and the money part (migration 008)
+
+Role `tehnic` (ROLES): `is_admin()` is true for it too; `is_tech()`, `can_configure()` (VITIM, or an
+administrator while no active `tehnic` account exists) guards the routes and menu entries marked
+`'config'` (settings, accounts, tablets, updates). `can()` always allows `tehnic` and refuses
+`FINANCE_PERMISSIONS` while `finance_on()` (setting `modul_financiar`, Setări → Module) is false.
+VITIM's changes: `tech_changes()`, `tech_change_line()`, `send_tech_digest()` (clinical.php, from
+`run_daily_jobs` once VITIM has been quiet 10 minutes, marker setting `vitim_rezumat_pana`), the card on
+„Azi” (`users.changes_seen_id`). Settings pages audit `changes_text($old, $new, $labels)`.
+
 ## Updating from the panel
 
 `src/admin/update.php` + `/admin/actualizare` (administrators). The package from

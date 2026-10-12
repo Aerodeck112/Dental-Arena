@@ -327,6 +327,27 @@ nu găsește o oră apasă „Prefer să mă sunați” și lasă o cerere.
 - Un telefon folosit de mai mulți din familie: fișa se refolosește doar dacă se potrivește și numele;
   altfel se face fișă nouă. Programarea pentru un copil face fișa copilului, cu părintele trecut.
 
+## Contul VITIM (suport tehnic) și partea financiară
+
+Panoul are patru roluri: **Suport tehnic (VITIM)**, Administrator, Recepție, Medic.
+
+- **VITIM** configurează: Setări (firma, clinicile, mesaje SMS/WhatsApp/e-mail, asistentul AI,
+  chatul, programările online, tabletele, actualizările) și Utilizatori. Vede și tot restul.
+- **Administratorul** vede tot ce ține de clinică (pacienți, calendar, rapoarte, prețuri, echipa,
+  fotografii, marketing, GDPR, jurnal), dar nu mai vede Setări și Utilizatori cât timp există un cont
+  VITIM activ. Fără cont VITIM, administratorul le are pe toate (ca la instalare).
+- Ca să treceți contul existent pe rolul nou: Utilizatori → contul VITIM → Rolul: **Suport tehnic
+  (VITIM)** → Salvați. Din acel moment, Setările și Utilizatorii le vede doar VITIM.
+- **Ce a schimbat VITIM ajunge la administrator**: pe pagina **Azi** apare un chenar cu fiecare
+  modificare (ce valoare era și ce a devenit), până apasă „Am văzut”; după 10 minute fără alte
+  modificări, administratorul primește și un e-mail cu rezumatul (unul pe sesiune de lucru, nu unul pe
+  fiecare clic). Totul rămâne și în Jurnal.
+
+**Partea financiară** (facturi, încasări, sold pacient, venituri în rapoarte) este **oprită** până la
+etapa 2, după perioada de probă. O pornește VITIM din Setări → Module → „Partea financiară”. Oprită,
+nimeni din clinică nu vede Facturi, Încasări, fila „Facturi și plăți” din fișă sau veniturile din
+Rapoarte; ce s-a emis deja rămâne în baza de date.
+
 ## Reamintiri pe e-mail (Cron Jobs)
 
 Pacienții primesc reamintirea în ziua dinaintea programării (între orele 10 și 21), pe SMS/WhatsApp

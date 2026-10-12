@@ -2,11 +2,18 @@
 /**
  * /admin („Azi”): the day at one clinic: the appointments in order, each with its next step
  * (Confirmat, A sosit, Începe tratamentul, Finalizat), the patient's alerts, the new requests
- * from the site and the recalls due.
+ * from the site and the recalls due. An administrator also sees what VITIM (the technical
+ * account) changed since they last looked.
  */
 declare(strict_types=1);
 
 purge_old_leads();
+if ($user['role'] === 'admin' && is_post() && post('op') === 'vitim-vazut') {
+    csrf_check();
+    db_update('users', ['changes_seen_id' => max((int) $user['changes_seen_id'], (int) post('pana'))], 'id = :id', ['id' => $user['id']]);
+    redirect('/admin');
+}
+$techNews = $user['role'] === 'admin' ? tech_changes((int) $user['changes_seen_id'], 15) : [];
 $names = admin_clinic_names();
 $allowed = array_values(array_filter(allowed_location_ids($user), static fn ($id) => isset($names[$id])));
 $clinicId = current_clinic_id($user);
@@ -64,7 +71,17 @@ foreach ($newLeads as $l) {
 }
 
 $summary = count($active) . (count($active) === 1 ? ' programare' : ' programări') . ', ' . count($newLeads) . (count($newLeads) === 1 ? ' cerere nouă' : ' cereri noi') . ', ' . $recallsDue . ' de rechemat săptămâna aceasta.';
+$techCard = '';
+if ($techNews !== []) {
+    $techCard = '<section aria-labelledby="vitim" class="mb-8 rounded-panou border-2 border-mustar bg-mustar-pal p-5">'
+        . '<h2 id="vitim" class="flex items-center gap-2 text-h3 font-semibold">' . icon('settings', 20) . 'Suportul tehnic (VITIM) a făcut modificări</h2>'
+        . '<ul class="mt-3 flex flex-col gap-1 text-corp">' . implode('', array_map(static fn ($c) => '<li>' . e(tech_change_line($c)) . '</li>', $techNews)) . '</ul>'
+        . (count($techNews) === 15 ? '<p class="mt-2 text-mic">Și altele, mai vechi, în <a class="text-link underline" href="/admin/jurnal">Jurnal</a>.</p>' : '')
+        . '<form method="post" class="mt-4">' . csrf_field() . '<input type="hidden" name="op" value="vitim-vazut"><input type="hidden" name="pana" value="' . (int) $techNews[0]['id'] . '">'
+        . '<button type="submit" class="' . e(btn('secondary', 's')) . '">' . icon('check', 16) . 'Am văzut</button></form></section>';
+}
 $body = admin_header('Azi, ' . format_date(new DateTimeImmutable(), true), $clinicId !== null ? ($names[$clinicId] ?? '') . ': ' . $summary : 'Contul nu are nicio clinică bifată.', $switch . '<a href="/admin/programari/noua' . ($clinicId ? '?clinica=' . $clinicId : '') . '" class="' . e(btn('primary')) . '">' . icon('plus', 18) . 'Programare nouă</a>')
+    . $techCard
     . '<div class="grid gap-8 lg:grid-cols-12">'
     . '<div class="lg:col-span-8">' . admin_section_open('Programările de azi', 'azi')
     . ($rows !== '' ? '<ul class="mt-2">' . $rows . '</ul>' : '<p class="mt-4 text-corp text-discret">Nicio programare azi. <a href="/admin/calendar" class="text-link underline">Deschideți calendarul</a>.</p>')

@@ -71,9 +71,9 @@ $filters = '<form method="get" class="mt-4 flex flex-wrap items-end gap-3">'
     . select_field('canal', 'Canal', ['' => 'Toate'] + MSG_CHANNELS, ['value' => $channel])
     . select_field('stare', 'Stare', ['' => 'Toate'] + MSG_STATUS, ['value' => $status])
     . '<button type="submit" class="' . e(btn('secondary')) . '">' . icon('filter', 18) . 'Filtrați</button></form>';
-$mode = messaging_live() ? '' : '<p class="mb-6 flex items-start gap-3 rounded-panou border border-mustar bg-mustar-pal p-4 text-corp">' . icon('info', 20, 'mt-0.5') . '<span>Mod de probă: mesajele nu pleacă, apar doar aici ca „Probă”.' . (is_admin($user) ? ' Trimiterea reală se pornește din <a class="text-link underline" href="/admin/setari/mesaje">Setări → Mesaje</a>.' : '') . '</span></p>';
+$mode = messaging_live() ? '' : '<p class="mb-6 flex items-start gap-3 rounded-panou border border-mustar bg-mustar-pal p-4 text-corp">' . icon('info', 20, 'mt-0.5') . '<span>Mod de probă: mesajele nu pleacă, apar doar aici ca „Probă”.' . (can_configure($user) ? ' Trimiterea reală se pornește din <a class="text-link underline" href="/admin/setari/mesaje">Setări → Mesaje</a>.' : '') . '</span></p>';
 
-$body = admin_header('Mesaje', 'Azi: ' . (int) $today['sent'] . ' trimise, ' . (int) $today['waiting'] . ' în așteptare, ' . (int) $today['failed'] . ' eșuate' . ((int) $today['test'] > 0 ? ', ' . (int) $today['test'] . ' de probă' : '') . '.', is_admin($user) ? '<a href="/admin/setari/mesaje" class="' . e(btn('secondary')) . '">' . icon('settings', 18) . 'Setări mesaje</a>' : '')
+$body = admin_header('Mesaje', 'Azi: ' . (int) $today['sent'] . ' trimise, ' . (int) $today['waiting'] . ' în așteptare, ' . (int) $today['failed'] . ' eșuate' . ((int) $today['test'] > 0 ? ', ' . (int) $today['test'] . ' de probă' : '') . '.', can_configure($user) ? '<a href="/admin/setari/mesaje" class="' . e(btn('secondary')) . '">' . icon('settings', 18) . 'Setări mesaje</a>' : '')
     . $mode
     . '<div class="flex flex-col gap-8">'
     . admin_section_open('WhatsApp: mesajele pacienților', 'whatsapp', 'Răspundeți din fișa pacientului, fila Mesaje.') . ($threadList !== '' ? '<ul class="mt-2">' . $threadList . '</ul>' : '<p class="mt-3 text-corp text-discret">Niciun mesaj primit.</p>') . '</section>'

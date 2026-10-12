@@ -852,6 +852,11 @@ function run_daily_jobs(?DateTimeImmutable $now = null): void
     // The doctors' programme of the day, each at the hour set for them (Echipa → medic).
     send_agendas($now);
 
+    // What VITIM configured, to the administrators (src/admin/clinical.php).
+    if (function_exists('send_tech_digest')) {
+        send_tech_digest($now);
+    }
+
     // Birthdays (marketing: only with consent).
     daily_job('zi-nastere', 10, $now, static function () use ($now): void {
         foreach (db_all("SELECT * FROM patients WHERE active = 1 AND anonymized_at IS NULL AND birth_date IS NOT NULL AND MONTH(birth_date) = ? AND DAY(birth_date) = ?", [(int) $now->format('n'), (int) $now->format('j')]) as $p) {

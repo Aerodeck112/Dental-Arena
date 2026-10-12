@@ -40,7 +40,8 @@ $user = require_login();
 maybe_send_reminders();
 send_queue_after_response();
 
-// Path → page and who may open it (null = everyone signed in, 'admin', or a permission).
+// Path → page and who may open it (null = everyone signed in, 'admin', 'config' = settings and
+// accounts, see can_configure(), or a permission).
 $routes = [
     '#^/admin$#' => ['acasa', null],
     '#^/admin/calendar$#' => ['calendar', null],
@@ -60,17 +61,17 @@ $routes = [
     '#^/admin/mesaje$#' => ['mesaje', null],
     '#^/admin/marketing$#' => ['marketing', 'admin'],
     '#^/admin/marketing/(noua|\d+)$#' => ['campanie', 'admin'],
-    '#^/admin/setari/mesaje$#' => ['setari-mesaje', 'admin'],
-    '#^/admin/setari/ai$#' => ['setari-ai', 'admin'],
-    '#^/admin/tablete$#' => ['tablete', 'admin'],
-    '#^/admin/actualizare$#' => ['actualizare', 'admin'],
-    '#^/admin/setari/chat$#' => ['setari-chat', 'admin'],
+    '#^/admin/setari/mesaje$#' => ['setari-mesaje', 'config'],
+    '#^/admin/setari/ai$#' => ['setari-ai', 'config'],
+    '#^/admin/tablete$#' => ['tablete', 'config'],
+    '#^/admin/actualizare$#' => ['actualizare', 'config'],
+    '#^/admin/setari/chat$#' => ['setari-chat', 'config'],
     '#^/admin/chat$#' => ['chat', null],
     '#^/admin/chat/(\d+)$#' => ['chat-conversatie', null],
     '#^/admin/documente/(\d+)$#' => ['document', null],
     '#^/admin/rechemari$#' => ['rechemari', null],
     '#^/admin/absente$#' => ['absente', null],
-    '#^/admin/setari/programari$#' => ['setari-programari', 'admin'],
+    '#^/admin/setari/programari$#' => ['setari-programari', 'config'],
     '#^/admin/cereri$#' => ['cereri', null],
     '#^/admin/cereri/(\d+)$#' => ['cerere', null],
     '#^/admin/facturi$#' => ['facturi', 'billing'],
@@ -87,9 +88,9 @@ $routes = [
     '#^/admin/fotografii$#' => ['fotografii', 'admin'],
     '#^/admin/echipa$#' => ['echipa', 'admin'],
     '#^/admin/echipa/(nou|\d+)$#' => ['medic', 'admin'],
-    '#^/admin/utilizatori$#' => ['utilizatori', 'admin'],
-    '#^/admin/utilizatori/(nou|\d+)$#' => ['utilizator', 'admin'],
-    '#^/admin/setari$#' => ['setari', 'admin'],
+    '#^/admin/utilizatori$#' => ['utilizatori', 'config'],
+    '#^/admin/utilizatori/(nou|\d+)$#' => ['utilizator', 'config'],
+    '#^/admin/setari$#' => ['setari', 'config'],
     '#^/admin/cont$#' => ['cont', null],
 ];
 foreach ($routes as $re => [$name, $who]) {

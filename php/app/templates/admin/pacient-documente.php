@@ -151,7 +151,7 @@ if ($session !== null) {
         . checkbox_field('with_marketing', 'Acordul pentru oferte', ['checked' => ((int) $p['marketing_sms'] + (int) $p['marketing_whatsapp'] + (int) $p['marketing_email']) === 0, 'description' => 'SMS, WhatsApp, e-mail; opțional pentru pacient.'])
         . '</fieldset></div>'
         . '<div class="flex flex-wrap items-center gap-4"><button type="submit" class="' . e(btn('primary')) . '">' . admin_icon('tablet', 18) . 'Dați un cod pentru tabletă</button>'
-        . ($hasTablet ? '' : '<span class="text-mic text-mustar-text">Nicio tabletă asociată încă: <a class="underline" href="/admin/tablete">Setări → Tablete</a>.</span>') . '</div></form>';
+        . ($hasTablet ? '' : '<span class="text-mic text-mustar-text">Nicio tabletă asociată încă' . (can_configure($user) ? ': <a class="underline" href="/admin/tablete">Setări → Tablete</a>.' : '; o asociază suportul tehnic (VITIM).') . '</span>') . '</div></form>';
 } else {
     $tablet = '';
 }

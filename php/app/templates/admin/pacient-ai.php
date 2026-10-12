@@ -117,7 +117,7 @@ if (is_post() && $p['anonymized_at'] === null) {
 }
 
 $ready = ai_ready();
-$intro = $ready ? '' : '<p class="mb-6 flex items-start gap-3 rounded-panou border border-mustar bg-mustar-pal p-4 text-corp">' . icon('info', 20, 'mt-0.5') . '<span>Asistentul AI nu este pornit încă.' . (is_admin($user) ? ' Porniți-l din <a class="text-link underline" href="/admin/setari/ai">Setări → Asistentul AI</a> (cheia API Anthropic).' : ' Un administrator îl pornește din Setări.') . '</span></p>';
+$intro = $ready ? '' : '<p class="mb-6 flex items-start gap-3 rounded-panou border border-mustar bg-mustar-pal p-4 text-corp">' . icon('info', 20, 'mt-0.5') . '<span>Asistentul AI nu este pornit încă.' . (can_configure($user) ? ' Porniți-l din <a class="text-link underline" href="/admin/setari/ai">Setări → Asistentul AI</a> (cheia API Anthropic).' : ' Îl pornește suportul tehnic (VITIM) din Setări.') . '</span></p>';
 
 // The dictation form.
 $dictation = admin_section_open('Consultația', 'dictare', 'Apăsați „Dictați” și vorbiți (sau lăsați telefonul/calculatorul să asculte discuția cu pacientul). Puteți și scrie sau lipi text. Numele pacientului și numerele de telefon/CNP nu pleacă la AI.')

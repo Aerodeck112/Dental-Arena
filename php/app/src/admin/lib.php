@@ -230,12 +230,31 @@ function unread_messages_count(array $user): int
     }
 }
 
+/**
+ * What a settings form changed, for the audit (and so for the administrator's summary of what
+ * VITIM did): „pauză între programări: 0 → 5”. Only the labelled keys; never secrets.
+ */
+function changes_text(array $old, array $new, array $labels): string
+{
+    $show = static fn ($v) => is_bool($v) ? ($v ? 'da' : 'nu') : (is_array($v) ? implode(', ', $v) : ((string) $v === '' ? '(gol)' : mb_strimwidth((string) $v, 0, 60, '…')));
+    $out = [];
+    foreach ($labels as $k => $label) {
+        $a = $old[$k] ?? null;
+        $b = $new[$k] ?? null;
+        if ($show($a) !== $show($b)) {
+            $out[] = "{$label}: {$show($a)} → {$show($b)}";
+        }
+    }
+    return $out === [] ? 'nicio schimbare' : implode('; ', $out);
+}
+
 function message_event_label(string $event): string
 {
     return PATIENT_EVENTS[$event]['label'] ?? STAFF_EVENTS[$event]['label'] ?? match ($event) {
         'manual' => 'Mesaj din panou',
         'raspuns' => 'Mesaj de la pacient',
         'campanie' => 'Campanie',
+        'staff-configurare' => 'Ce a configurat VITIM',
         default => $event,
     };
 }

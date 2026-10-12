@@ -1,12 +1,13 @@
 <?php
 /**
- * The panel's accounts. Three roles: administrator (everything), recepție and medic (the requests
- * of the clinics ticked on their account, and their own password). Passwords are stored with
+ * The panel's accounts. Four roles: suport tehnic (VITIM, the IT who configures: everything, with
+ * the settings and the accounts), administrator (everything else; the settings and the accounts too
+ * while there is no technical account), recepție and medic (the clinics ticked on their account). Passwords are stored with
  * password_hash; ten wrong passwords in 15 minutes lock the login for that address and network.
  */
 declare(strict_types=1);
 
-const ROLES = ['admin' => 'Administrator', 'receptie' => 'Recepție', 'medic' => 'Medic'];
+const ROLES = ['admin' => 'Administrator', 'receptie' => 'Recepție', 'medic' => 'Medic', 'tehnic' => 'Suport tehnic (VITIM)'];
 /** What each role may do beyond the clinics ticked on the account. */
 const PERMISSIONS = [
     'medical' => ['admin', 'medic'],          // anamneza, odontograma, note clinice
@@ -19,10 +20,21 @@ const PERMISSIONS = [
     'audit' => ['admin'],
 ];
 
+/** The money part (invoices, payments, balances) waits for stage 2: off until VITIM turns it on. */
+const FINANCE_PERMISSIONS = ['billing', 'billing.cancel', 'reports.finance'];
+
 function can(string $permission, ?array $user = null): bool
 {
     $user ??= current_user();
-    return $user !== null && in_array($user['role'], PERMISSIONS[$permission] ?? ['admin'], true);
+    if ($user === null || (in_array($permission, FINANCE_PERMISSIONS, true) && !finance_on())) {
+        return false;
+    }
+    return $user['role'] === 'tehnic' || in_array($user['role'], PERMISSIONS[$permission] ?? ['admin'], true);
+}
+
+function finance_on(): bool
+{
+    return (bool) setting('modul_financiar');
 }
 
 const LOGIN_MAX_ATTEMPTS = 10;
@@ -50,10 +62,30 @@ function current_user(): ?array
     return $user;
 }
 
+/** An administrator, or the technical account (which sees everything an administrator sees). */
 function is_admin(?array $u = null): bool
 {
     $u ??= current_user();
-    return $u !== null && $u['role'] === 'admin';
+    return $u !== null && in_array($u['role'], ['admin', 'tehnic'], true);
+}
+
+function is_tech(?array $u = null): bool
+{
+    $u ??= current_user();
+    return $u !== null && $u['role'] === 'tehnic';
+}
+
+function tech_account_exists(): bool
+{
+    static $yes = null;
+    return $yes ??= (bool) db_value("SELECT 1 FROM users WHERE role = 'tehnic' AND active = 1 LIMIT 1");
+}
+
+/** Settings, accounts, tablets, updates: VITIM's; the administrator's only while VITIM has no account. */
+function can_configure(?array $u = null): bool
+{
+    $u ??= current_user();
+    return is_tech($u) || (is_admin($u) && !tech_account_exists());
 }
 
 /** The clinic ids a user may see: all for an administrator, else the ticked ones. */
