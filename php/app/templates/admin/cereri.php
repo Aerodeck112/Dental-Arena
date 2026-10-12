@@ -11,7 +11,7 @@ if (isset(LEAD_STATUS[$stare])) {
     $where[] = 'status = ?';
     $params[] = $stare;
 }
-if (in_array($tip, ['programare', 'contact'], true)) {
+if (in_array($tip, ['programare', 'contact', 'chat'], true)) {
     $where[] = 'kind = ?';
     $params[] = $tip;
 }
@@ -38,7 +38,7 @@ foreach ($allowed as $id) {
 $clinicOptions['fara'] = 'Fără clinică';
 $filters = '<form method="get" action="/admin/cereri" class="mb-6 grid gap-4 rounded-panou border border-linie bg-suprafata p-4 sm:grid-cols-2 lg:grid-cols-4 lg:items-end">'
     . select_field('stare', 'Starea', ['' => 'Toate'] + LEAD_STATUS, ['value' => $stare])
-    . select_field('tip', 'Tipul', ['' => 'Toate', 'programare' => 'Cereri de programare', 'contact' => 'Mesaje'], ['value' => $tip])
+    . select_field('tip', 'Tipul', ['' => 'Toate', 'programare' => 'Cereri de programare', 'chat' => 'Din chatul de pe site', 'contact' => 'Mesaje'], ['value' => $tip])
     . select_field('clinica', 'Clinica', $clinicOptions, ['value' => $clinica])
     . '<div class="flex gap-3"><button type="submit" class="' . e(btn('primary')) . '">' . icon('filter', 18) . 'Filtrați</button>'
     . '<a href="/admin/cereri" class="' . e(btn('text')) . '">Toate</a></div></form>';

@@ -124,3 +124,36 @@ consent, `leads.marketing_ok`.
   structured output (`ai_schema()`), server-side refusal fallback, the name/CNP/phone removed
   before sending (`ai_pseudonymize`). The browser does the speech-to-text (Web Speech API, ro-RO).
 - Public routes: `/webhook/whatsapp`, `/d/{token}` (unsubscribe from marketing).
+
+## Tablet signing and the site's AI chat (stage 5)
+
+`migrations/005_tablet_chat.sql`: `kiosk_devices`, `consent_sessions`, `patient_forms`,
+`consents.text_snapshot/session_id/signed_at/integrity_hash`, `doctor_locations.schedule`,
+`chat_conversations`, `chat_messages`.
+
+- `src/admin/kiosk.php` + `src/tablet.php` (`/tableta`, `/tableta/semnare`, `/tableta/gata`,
+  `assets/tableta.js`): a tablet is paired from `/admin/tablete` (random token in an httpOnly
+  cookie, only its hash stored; the admin session ends on the tablet). Reception makes a 6-digit,
+  single-use, 30-minute code (`consent_session_create`); the signature PNG is checked for ink
+  (`signature_has_ink`, GD), stored as a patient document, and each consent keeps the exact text
+  and `integrity_hash = sha256(patient|type|text|sha256(png)|signed_at|device)`, verified on
+  `/admin/pacienti/{id}/acord/{type}?semnat={id}`. The questionnaire becomes a `patient_forms`
+  row that a doctor applies (`apply_history_form`, additive) or sets aside.
+- `src/booking.php`: `schedule_decode`/`schedule_text`, `ro_holidays($year)` (Orthodox Easter by
+  Meeus + 13 days), `free_slots([...])` (schedule − active appointments of the doctor at any clinic
+  − holidays − notice; spread over the day), `slot_check($id)` (re-validates a slot id
+  `YmdHi-location-doctor`), `book_slot()` (MySQL `GET_LOCK` per doctor, patient by phone or new,
+  appointment `programat`, lead kind `chat`, notices). `CHAT_DEFAULTS`/`chat_settings()`.
+- `src/chat.php` (`/api/chat`, `assets/chat.js`): Claude through the SDK with four tools
+  (`cauta_ore_libere`, `trimite_cod_sms` only in direct mode, `programeaza`, `cere_apel`), all
+  validated server-side; thinking/tool blocks are stored as wire JSON and sent back unchanged;
+  the system prompt (rules + clinic data) is cached, the date goes in a second block. Limits: 30
+  turns, 1000 chars, 12 new conversations per IP per day, a daily cap, 4 bookings per IP per day,
+  OTP 10 min / 5 tries / 3 SMS per hour, one request at a time per conversation (`GET_LOCK`).
+  JSON-only POST with an Origin check (no CSRF token needed). Conversations purge after
+  `retention_days`.
+- Admin: `/admin/tablete`, `/admin/setari/chat`, `/admin/chat`, `/admin/chat/{id}`; doctor
+  schedules in `/admin/echipa/{id}`.
+- `php php/tests/run.php`: holidays, schedules, the ink check and the SDK contract the chat needs
+  (runs in CI after the build). For local end-to-end tests without network, `config.php` may set
+  `'ai_test_transport' => '/path/fake.php'` (a file returning a PSR-18 client); never in production.

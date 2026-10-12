@@ -25,6 +25,8 @@ jobs:
       - name: PHP syntax (8.1)
         run: find php -path php/app/vendor -prune -o -name "*.php" -print0 | xargs -0 -n1 php -l > /dev/null
       - run: npm run build:php:zip
+      - name: Verificări PHP (sărbători, program, semnătură, SDK)
+        run: php php/tests/run.php
       - uses: actions/upload-artifact@v4
         with:
           name: dentalarena-php

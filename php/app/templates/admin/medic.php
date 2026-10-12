@@ -16,6 +16,13 @@ if (!$isNew) {
 }
 $clinicNames = admin_clinic_names();
 $workLocs = $isNew ? array_keys($clinicNames) : array_map('intval', array_column(db_all('SELECT location_id FROM doctor_locations WHERE doctor_id = ?', [$doc['id']]), 'location_id'));
+// When the doctor works at each clinic (for the free times the site's chat offers).
+$schedules = [];
+if (!$isNew) {
+    foreach (db_all('SELECT location_id, schedule FROM doctor_locations WHERE doctor_id = ?', [$doc['id']]) as $dl) {
+        $schedules[(int) $dl['location_id']] = schedule_decode($dl['schedule']);
+    }
+}
 $errors = [];
 $v = [
     'public_name' => $doc['public_name'] ?? 'Dr. ',
@@ -42,6 +49,22 @@ if (is_post()) {
     }
     $v['public_visible'] = post('public_visible') === '1' ? '1' : '0';
     $workLocs = array_values(array_filter(array_map('intval', is_array($_POST['locations'] ?? null) ? $_POST['locations'] : []), static fn ($lid) => isset($clinicNames[$lid])));
+    $schedules = [];
+    $sentSch = is_array($_POST['sch'] ?? null) ? $_POST['sch'] : [];
+    foreach ($workLocs as $lid) {
+        foreach (WEEKDAYS as $day => $dayName) {
+            $from = (string) ($sentSch[$lid][$day][0] ?? '');
+            $to = (string) ($sentSch[$lid][$day][1] ?? '');
+            if ($from === '' && $to === '') {
+                continue;
+            }
+            if (!preg_match('/^\d{2}:\d{2}$/', $from) || !preg_match('/^\d{2}:\d{2}$/', $to) || $from >= $to) {
+                $errors['form'] = "Programul de {$dayName} la {$clinicNames[$lid]}: scrieți ora de început și de sfârșit (de exemplu 09:00 și 17:00).";
+                continue;
+            }
+            $schedules[$lid][$day] = [$from, $to];
+        }
+    }
     foreach (['public_name' => 'Scrieți numele afișat pe site.', 'first_name' => 'Scrieți prenumele.', 'last_name' => 'Scrieți numele de familie.', 'role_line' => 'Scrieți specialitatea.'] as $k => $msg) {
         if (mb_strlen($v[$k]) < 2) {
             $errors[$k] = $msg;
@@ -68,7 +91,7 @@ if (is_post()) {
         if ($photo !== null) {
             $row['photo_path'] = $photo['path'];
         }
-        $id = db_tx(static function () use ($row, $id, $cats, $doc, $workLocs) {
+        $id = db_tx(static function () use ($row, $id, $cats, $doc, $workLocs, $schedules) {
             if ($id === null) {
                 $base = slugify(preg_replace('/^dr\.?\s+/i', '', $row['public_name']) ?? $row['public_name']) ?: 'medic';
                 $slug = $base;
@@ -84,7 +107,7 @@ if (is_post()) {
             }
             db_run('DELETE FROM doctor_locations WHERE doctor_id = ?', [$id]);
             foreach ($workLocs as $lid) {
-                db_run('INSERT INTO doctor_locations (doctor_id, location_id) VALUES (?, ?)', [$id, $lid]);
+                db_run('INSERT INTO doctor_locations (doctor_id, location_id, schedule) VALUES (?, ?, ?)', [$id, $lid, !empty($schedules[$lid]) ? json_encode($schedules[$lid]) : null]);
             }
             db_run('DELETE FROM doctor_categories WHERE doctor_id = ?', [$id]);
             $sent = is_array($_POST['cat'] ?? null) ? $_POST['cat'] : [];
@@ -121,6 +144,21 @@ foreach ($cats as $c) {
     $catRows .= '<li class="grid items-center gap-2 border-t border-linie py-2 first:border-t-0 sm:grid-cols-[1fr_18rem]"><label for="cat-' . $cid . '" class="text-corp">' . e($c['name']) . '</label>'
         . '<select id="cat-' . $cid . '" name="cat[' . $cid . ']" class="' . e(input_classes('h-control-s')) . '">' . $opt . '</select></li>';
 }
+$workBlocks = '';
+foreach ($clinicNames as $lid => $n) {
+    $rows = '';
+    foreach (WEEKDAYS as $day => $dayName) {
+        $span = $schedules[$lid][$day] ?? ['', ''];
+        $rows .= '<div class="grid grid-cols-[6.5rem_1fr_1fr] items-center gap-2"><span class="text-corp">' . e($dayName) . '</span>'
+            . '<input type="time" step="900" name="sch[' . $lid . '][' . $day . '][0]" value="' . e($span[0]) . '" aria-label="' . e("{$dayName}, {$n}: de la") . '" class="' . e(input_classes('h-control-s min-w-0')) . '">'
+            . '<input type="time" step="900" name="sch[' . $lid . '][' . $day . '][1]" value="' . e($span[1]) . '" aria-label="' . e("{$dayName}, {$n}: până la") . '" class="' . e(input_classes('h-control-s min-w-0')) . '"></div>';
+    }
+    $workBlocks .= '<fieldset class="min-w-0 rounded-panou border border-linie p-4">'
+        . '<legend class="px-1">' . checkbox_field('locations[]', '<strong>' . e($n) . '</strong>', ['id' => "field-locations-{$lid}", 'value' => (string) $lid, 'checked' => in_array($lid, $workLocs, true)]) . '</legend>'
+        . '<div class="mt-1 grid grid-cols-[6.5rem_1fr_1fr] gap-2 text-mic text-discret"><span></span><span>De la</span><span>Până la</span></div>'
+        . '<div class="mt-1 flex flex-col gap-2">' . $rows . '</div>'
+        . '<p class="mt-2 text-mic text-discret">Lăsați gol în zilele în care nu lucrează aici.</p></fieldset>';
+}
 $portrait = '';
 if (!$isNew) {
     $d = public_doctor($doc);
@@ -138,8 +176,8 @@ $body = '<p class="mb-4"><a href="/admin/echipa" class="inline-flex min-h-contro
     . '</div><div class="mt-5">' . text_area('bio', 'Despre medic', ['value' => $v['bio'], 'rows' => 5, 'optional' => true, 'hint' => 'Câteva fraze despre experiență și ce îi place să facă. Apare pe profilul medicului.']) . '</div>'
     . '<div class="mt-5 grid gap-5 md:grid-cols-2">' . text_field('sort_order', 'Ordinea pe site', ['type' => 'number', 'value' => $v['sort_order'], 'min' => 0, 'inputClass' => 'max-w-32'])
     . checkbox_field('public_visible', 'Apare pe site', ['checked' => $v['public_visible'] === '1', 'class' => 'md:mt-7']) . '</div></section>'
-    . admin_section_open('Unde lucrează', 'clinici', 'Medicul apare în calendarul clinicilor bifate.')
-    . '<div class="mt-3 flex flex-wrap gap-x-8">' . implode('', array_map(static fn ($lid, $n) => checkbox_field('locations[]', e($n), ['id' => "field-locations-{$lid}", 'value' => (string) $lid, 'checked' => in_array($lid, $workLocs, true)]), array_keys($clinicNames), $clinicNames)) . '</div></section>'
+    . admin_section_open('Unde și când lucrează', 'clinici', 'Medicul apare în calendarul clinicilor bifate. Din program, asistentul de pe site propune orele libere (fără zilele de sărbătoare legală și fără orele deja ocupate). Fără program, medicul nu primește programări online.')
+    . '<div class="mt-4 grid gap-6 lg:grid-cols-2">' . $workBlocks . '</div></section>'
     . admin_section_open('Portretul', 'portret', 'O fotografie verticală, cu fața în treimea de sus. Fără portret, pe site apar inițialele.')
     . '<div class="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start">' . $portrait
     . '<div class="flex flex-col gap-2"><label for="foto" class="text-control font-medium">Portret nou (JPG, PNG sau WebP)</label>'

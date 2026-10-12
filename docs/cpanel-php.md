@@ -230,6 +230,59 @@ numerele de telefon. Textul consultației rămâne totuși o informație despre 
 acceptați termenii comerciali Anthropic (cuprind acordul de prelucrare a datelor), menționați
 furnizorul în Politica de confidențialitate și spuneți-i pacientului când înregistrați discuția.
 
+## Semnarea acordurilor pe tabletă (etapa 5)
+
+Pacientul semnează acordurile (GDPR, tratament, inhalosedare, fotografii) pe o tabletă la recepție,
+cu degetul, după un **cod din 6 cifre** primit de la recepționeră.
+
+**O singură dată, pe tabletă:** deschideți pe tabletă `https://dentalarena.ro/admin/tablete`,
+intrați cu contul de administrator și apăsați **Asociați această tabletă**. Contul se închide
+singur pe tabletă (pacienții nu ajung în panou), iar tableta deschide de acum `/tableta`. Puneți
+pagina pe ecranul de pornire și activați „Acces ghidat” (iPad) sau „Fixarea aplicației” (Android).
+O tabletă pierdută se oprește din aceeași pagină (**Opriți**).
+
+**La fiecare pacient:** în fișă → **Documente și acorduri** → **Semnare pe tabletă** bifați ce
+semnează (și, la nevoie, chestionarul medical și acordul pentru oferte), apoi **Dați un cod**. Codul
+e valabil 30 de minute, o singură dată. Pacientul îl introduce pe tabletă, citește textele, bifează,
+completează chestionarul și semnează. În fișă vedeți pe loc „pacientul semnează acum”, apoi
+acordurile trec la „Semnat pe tabletă”.
+
+**Ce se păstrează:** textul exact semnat, semnătura (imagine în documentele pacientului), ora,
+tableta și o amprentă SHA-256 a tuturor; la **acordul semnat** panoul verifică amprenta și arată dacă
+documentul a rămas neschimbat. Chestionarul completat de pacient apare în fișă ca propunere:
+medicul îl **trece în anamneză** (bolile bifate se adaugă, textele se adaugă la ce era scris) sau îl
+pune deoparte. După 6 coduri greșite în 10 minute, tableta așteaptă.
+
+## Chatul AI de pe site și programările online (etapa 5)
+
+Pe site apare butonul **Întrebați-ne**: un asistent AI răspunde oricând la întrebări despre
+clinici, servicii, prețuri și medici (doar din datele din panou) și **programează** pe orele libere.
+
+**1. Programul medicilor:** Echipa → medic → **Unde și când lucrează**: pentru fiecare clinică, orele
+pe zile (de exemplu Luni–Vineri 09:00–17:00). Din program, din programările existente și din
+sărbătorile legale (inclusiv Paștele și Rusaliile ortodoxe) se calculează orele libere. Un medic fără
+program nu primește programări online.
+
+**2. Pornirea:** Setări → **Chatul de pe site** (cheia API Anthropic trebuie salvată înainte în
+Setări → Asistentul AI). Alegeți:
+- **Cerere** (implicit): pacientul alege ora, iar recepția îl sună să o confirme; cererea apare la
+  Cereri online, cu ora aleasă.
+- **Direct în calendar**: pacientul primește un cod prin SMS, îl scrie în chat, iar programarea intră
+  în calendar și pacientul primește confirmarea. Cere SMS-urile pornite (SMSLink, mod „Trimitere
+  reală”).
+
+Mai setați durata unei programări online (implicit 30 de minute), cu cât timp înainte (implicit 3
+ore), câte zile înainte, o limită zilnică de conversații (cost) și după câte zile se șterg.
+
+**3. Urmărirea:** meniul **Chat pe site** arată conversațiile, ce s-a întâmplat (doar întrebări,
+cerere, programare) și consumul. La „Programare făcută online” din Contul meu → Notificările mele,
+recepția poate primi SMS/e-mail.
+
+**Siguranță:** asistentul nu vede fișele pacienților; programează doar pe ore libere reale, verificate
+din nou în momentul programării; limitează cererile (pe conexiune și pe zi); nu pune diagnostice și
+trimite urgențele la telefon sau 112. Ce scrie vizitatorul ajunge la Anthropic: menționați în
+Politica de confidențialitate.
+
 ## Reamintiri pe e-mail (Cron Jobs)
 
 Pacienții primesc reamintirea în ziua dinaintea programării (între orele 10 și 21), pe SMS/WhatsApp

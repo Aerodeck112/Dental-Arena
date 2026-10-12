@@ -11,6 +11,7 @@ require __DIR__ . '/billing.php';
 require __DIR__ . '/clinical.php';
 require __DIR__ . '/ai.php';
 require __DIR__ . '/kiosk.php';
+require APP_DIR . '/src/booking.php';
 require APP_DIR . '/templates/admin/layout.php';
 
 $path = request_path();
@@ -61,6 +62,9 @@ $routes = [
     '#^/admin/setari/mesaje$#' => ['setari-mesaje', 'admin'],
     '#^/admin/setari/ai$#' => ['setari-ai', 'admin'],
     '#^/admin/tablete$#' => ['tablete', 'admin'],
+    '#^/admin/setari/chat$#' => ['setari-chat', 'admin'],
+    '#^/admin/chat$#' => ['chat', null],
+    '#^/admin/chat/(\d+)$#' => ['chat-conversatie', null],
     '#^/admin/documente/(\d+)$#' => ['document', null],
     '#^/admin/rechemari$#' => ['rechemari', null],
     '#^/admin/cereri$#' => ['cereri', null],

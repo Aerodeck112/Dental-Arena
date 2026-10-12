@@ -7,6 +7,8 @@ if ($lead === null || !can_see_lead($lead, $user)) {
     admin_not_found($user);
 }
 $id = (int) $lead['id'];
+$lead['appointment_id'] = db_value('SELECT id FROM appointments WHERE lead_id = ? ORDER BY id DESC LIMIT 1', [$id]);
+$chatId = db_value('SELECT id FROM chat_conversations WHERE lead_id = ?', [$id]);
 
 if (is_post()) {
     csrf_check();
@@ -37,8 +39,11 @@ foreach (lead_summary_lines($lead) as $line) {
 $actions = '';
 if (!empty($lead['appointment_id'])) {
     $actions .= '<a href="/admin/programari/' . (int) $lead['appointment_id'] . '" class="' . e(btn('secondary')) . '">' . icon('calendar', 20) . 'Vedeți programarea</a>';
-} elseif ($lead['kind'] === 'programare' || $lead['phone'] !== '') {
+} elseif ($lead['kind'] !== 'contact' || $lead['phone'] !== '') {
     $actions .= '<a href="/admin/programari/noua?cerere=' . $id . '" class="' . e(btn('primary')) . '">' . icon('calendar-plus', 20) . 'Faceți programarea</a>';
+}
+if ($chatId) {
+    $actions .= '<a href="/admin/chat/' . (int) $chatId . '" class="' . e(btn('secondary')) . '">' . admin_icon('bot', 20) . 'Conversația</a>';
 }
 if ($lead['phone'] !== '') {
     $actions .= '<a href="' . e(tel_href($lead['phone'])) . '" class="' . e(btn('secondary')) . '">' . icon('phone', 20) . 'Sunați: <span class="telefon">' . e(format_phone($lead['phone'])) . '</span></a>';
@@ -48,7 +53,7 @@ if ($lead['email'] && ($mail = admin_mailto($lead['email'])) !== null) {
 }
 
 $body = '<p class="mb-4"><a href="/admin/cereri" class="inline-flex min-h-control items-center gap-1 text-link underline underline-offset-4">' . icon('chevron-left', 18) . 'Toate cererile</a></p>'
-    . admin_header(($lead['kind'] === 'programare' ? 'Cerere de programare' : 'Mesaj') . ': ' . $lead['name'], 'Primită ' . format_datetime($lead['created_at']) . ($clinic ? " · {$clinic}" : ''), $actions)
+    . admin_header(match ($lead['kind']) { 'programare' => 'Cerere de programare', 'chat' => 'Din chat', default => 'Mesaj' } . ': ' . $lead['name'], 'Primită ' . format_datetime($lead['created_at']) . ($clinic ? " · {$clinic}" : ''), $actions)
     . '<div class="grid gap-8 lg:grid-cols-12">'
     . '<div class="lg:col-span-7">' . admin_section_open('Ce ne-a trimis', 'detalii') . '<dl class="mt-3">' . $lines . '</dl></section></div>'
     . '<div class="lg:col-span-5">' . admin_section_open('Ce s-a făcut', 'urmarire')

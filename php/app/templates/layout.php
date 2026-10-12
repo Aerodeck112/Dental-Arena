@@ -41,6 +41,10 @@ function render_page(string $body, array $meta, string $jsonLd = '', bool $chrom
 <?= $body ?>
 <?php } ?>
 <?php cookie_banner(); ?>
+<?php if (chat_on()) { ?>
+<div id="asistent" data-chat data-telefoane="<?= e(implode(' · ', array_map(static fn ($c) => $c['shortName'] . ' ' . format_phone($c['phone']), clinics()))) ?>"></div>
+<script src="<?= e(asset(is_file(PUBLIC_DIR . '/assets/chat.min.js') ? '/assets/chat.min.js' : '/assets/chat.js')) ?>" defer></script>
+<?php } ?>
 </body>
 </html>
     <?php

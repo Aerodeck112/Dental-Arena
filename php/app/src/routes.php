@@ -56,6 +56,11 @@ if (preg_match('#^/d/([A-Za-z0-9]{12})$#', $path, $m)) {
     exit;
 }
 
+if ($path === '/api/chat') {
+    require APP_DIR . '/src/chat.php';
+    chat_endpoint();
+}
+
 if ($path === '/tableta' || str_starts_with($path, '/tableta/')) {
     require APP_DIR . '/src/tablet.php';
     exit;

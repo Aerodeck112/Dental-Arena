@@ -159,3 +159,18 @@ function fill_legal(string $text, array $values): string
         return trim((string) $v) !== '' ? (string) $v : '[de completat]';
     }, $text) ?? $text;
 }
+
+/** The AI chat bubble on the site: switched on, with an API key (Panou → Setări → Chatul). */
+function chat_on(): bool
+{
+    if (!INSTALLED) {
+        return false;
+    }
+    try {
+        $c = setting('chat');
+        $ai = setting('ai');
+        return is_array($c) && !empty($c['enabled']) && is_array($ai) && ($ai['api_key'] ?? '') !== '';
+    } catch (Throwable $e) {
+        return false;
+    }
+}

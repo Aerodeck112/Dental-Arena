@@ -180,7 +180,7 @@ function notify_new_lead(int $id): void
     if ($lead === null) {
         return;
     }
-    $isBooking = $lead['kind'] === 'programare';
+    $isBooking = $lead['kind'] === 'programare' || $lead['kind'] === 'chat';
     $lines = lead_summary_lines($lead);
     $to = (string) setting('notify_email');
     foreach (clinics() as $c) {

@@ -30,10 +30,12 @@ function ai_ready(): bool
 function ai_client(): \Anthropic\Client
 {
     require_once APP_DIR . '/vendor/autoload.php';
-    return new \Anthropic\Client(
-        apiKey: secret_open(ai_settings()['api_key']),
-        requestOptions: ['timeout' => 120.0, 'maxRetries' => 1],
-    );
+    $options = ['timeout' => 120.0, 'maxRetries' => 1];
+    // Local tests only: config.php may name a file that returns a fake HTTP client (no network).
+    if (!empty(CONFIG['ai_test_transport']) && is_file((string) CONFIG['ai_test_transport'])) {
+        $options['transporter'] = require (string) CONFIG['ai_test_transport'];
+    }
+    return new \Anthropic\Client(apiKey: secret_open(ai_settings()['api_key']), requestOptions: $options);
 }
 
 /** The answer's shape: Claude must return exactly this JSON. */

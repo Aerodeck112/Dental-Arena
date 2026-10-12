@@ -175,7 +175,7 @@ function find_patient(int $id, array $user): ?array
 }
 
 /** A patient by phone (same digits), else a new file: used when a site request becomes an appointment. */
-function find_or_create_patient(string $name, string $phone, ?string $email, ?int $locationId, int $userId): int
+function find_or_create_patient(string $name, string $phone, ?string $email, ?int $locationId, ?int $userId): int
 {
     $digits = preg_replace('/\D+/', '', $phone) ?? '';
     $nat = national_digits($phone);

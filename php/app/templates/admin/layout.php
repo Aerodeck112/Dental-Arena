@@ -11,6 +11,7 @@ const ADMIN_NAV = [
     ['/admin/calendar', 'Calendar', 'calendar', null],
     ['/admin/pacienti', 'Pacienți', 'users', null],
     ['/admin/cereri', 'Cereri online', 'inbox', null],
+    ['/admin/chat', 'Chat pe site', 'bot', null],
     ['/admin/rechemari', 'Rechemări', 'phone-call', null],
     ['/admin/facturi', 'Facturi', 'receipt', 'billing'],
     ['/admin/incasari', 'Încasări', 'wallet', 'billing'],

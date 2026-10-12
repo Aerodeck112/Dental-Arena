@@ -114,7 +114,7 @@ function lead_status_chip(string $status): string
 
 function lead_kind_label(string $kind): string
 {
-    return $kind === 'programare' ? 'Programare' : 'Mesaj';
+    return match ($kind) { 'programare' => 'Programare', 'chat' => 'Din chat', default => 'Mesaj' };
 }
 
 /** The requests as a table on wide screens and as a list on phones. */

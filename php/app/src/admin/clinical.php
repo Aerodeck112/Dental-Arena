@@ -687,6 +687,9 @@ const AUDIT_LABELS = [
     'chestionar-aplicat' => 'Chestionarul pacientului trecut în anamneză',
     'chestionar-respins' => 'Chestionarul pacientului respins',
     'acord-semnat-vazut' => 'Acord semnat deschis',
+    'programare-online' => 'Programare făcută de pacient în chatul de pe site',
+    'setari-chat' => 'Setările chatului de pe site',
+    'chat-sters' => 'Conversație din chat ștearsă',
 ];
 
 function audit_label(string $action): string

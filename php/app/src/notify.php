@@ -112,6 +112,7 @@ const STAFF_EVENTS = [
     'staff-pacient-sosit' => ['label' => 'Pacientul a sosit', 'who' => 'medic', 'sms' => '{pacient} a sosit (programarea de la {ora}, {clinica}).', 'params' => ['pacient', 'ora', 'clinica']],
     'staff-agenda' => ['label' => 'Programările zilei, dimineața la 7', 'who' => 'medic', 'sms' => 'Programarile de azi, {data}: {lista}', 'params' => ['data', 'lista']],
     'staff-cerere-noua' => ['label' => 'Cerere nouă de pe site', 'who' => 'receptie', 'sms' => 'Cerere noua de pe site: {pacient}, {telefon}, {serviciu}, {clinica}.', 'params' => ['pacient', 'telefon', 'serviciu', 'clinica']],
+    'staff-programare-online' => ['label' => 'Programare făcută online, în chatul de pe site', 'who' => 'receptie', 'sms' => 'Programare online: {pacient}, {telefon}, {data} ora {ora}, {clinica}, {medic}.', 'params' => ['pacient', 'telefon', 'data', 'ora', 'clinica', 'medic']],
     'staff-whatsapp-primit' => ['label' => 'Mesaj nou de la un pacient pe WhatsApp', 'who' => 'receptie', 'sms' => 'Mesaj WhatsApp de la {pacient}: {text}', 'params' => ['pacient', 'text']],
 ];
 
