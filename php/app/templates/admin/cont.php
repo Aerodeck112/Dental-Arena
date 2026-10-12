@@ -55,7 +55,7 @@ if (is_post() && post('op') === 'notificari' && !$forced) {
     }
 }
 
-$password = '<form method="post" novalidate class="flex flex-col gap-5 rounded-panou border border-linie bg-suprafata p-6">' . csrf_field() . (post('op') !== 'notificari' ? error_summary($errors) : '')
+$password = '<form method="post" novalidate class="flex min-w-0 flex-col gap-5 rounded-panou border border-linie bg-suprafata p-6">' . csrf_field() . (post('op') !== 'notificari' ? error_summary($errors) : '')
     . '<h2 class="text-h3 font-semibold">Schimbați parola</h2>'
     . text_field('current', 'Parola de acum', ['type' => 'password', 'required' => true, 'autocomplete' => 'current-password', 'error' => $errors['current'] ?? null])
     . text_field('new', 'Parola nouă', ['type' => 'password', 'required' => true, 'autocomplete' => 'new-password', 'hint' => 'Cel puțin 10 caractere.', 'error' => $errors['new'] ?? null])
@@ -79,7 +79,7 @@ if (!$forced) {
         $rows .= '<tr class="border-t border-linie"><th scope="row" class="py-2 pr-3 text-left font-normal">' . e($def['label']) . ($def['who'] === 'medic' ? '<span class="block text-mic text-discret">pentru programările la medicul legat de contul dvs.</span>' : '') . '</th>' . $boxes . '</tr>';
     }
     $th = 'px-2 py-2 text-center text-mic font-semibold text-discret';
-    $notices = '<form id="notificari" method="post" novalidate class="flex flex-col gap-5 rounded-panou border border-linie bg-suprafata p-6">' . csrf_field() . '<input type="hidden" name="op" value="notificari">'
+    $notices = '<form id="notificari" method="post" novalidate class="flex min-w-0 flex-col gap-5 rounded-panou border border-linie bg-suprafata p-6">' . csrf_field() . '<input type="hidden" name="op" value="notificari">'
         . (post('op') === 'notificari' ? error_summary($errors) : '')
         . '<h2 class="text-h3 font-semibold">Notificările mele</h2>'
         . ($user['role'] === 'medic' && !$user['doctor_id'] ? '<p class="text-mic text-mustar-text">Contul nu e legat de un medic din echipă; administratorul îl leagă din Utilizatori.</p>' : '')
