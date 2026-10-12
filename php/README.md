@@ -105,3 +105,22 @@ panel visits (at most every 15 minutes).
   served by `/admin/documente/{id}` after the patient-scope check.
 - Routes declare who may open them (`null`, `'admin'` or a permission) in `src/admin/routes.php`;
   every page re-checks the patient or clinic scope.
+
+## Messages and AI (stage 4)
+
+`migrations/004_messages_ai.sql`: `messages` (the queue and the log, both directions), `campaigns`,
+`ai_sessions`, staff `phone`/`notify_prefs`, patient `phone_channel` and per-channel marketing
+consent, `leads.marketing_ok`.
+
+- `src/notify.php` (loaded everywhere): `PATIENT_EVENTS` / `STAFF_EVENTS` (texts, defaults, WhatsApp
+  template parameter order), `notify_patient`, `notify_staff`, `notify_appointment`,
+  `notify_contact`, `queue_message`, `process_message_queue` (claims rows, 3 tries),
+  `send_queue_after_response` (after `fastcgi_finish_request`), `smslink_send`, `whatsapp_send`
+  (Cloud API: templates, or free text inside the 24 h window), `whatsapp_webhook` (signature
+  checked with the App Secret), `run_daily_jobs`, `secret_seal`/`secret_open` for stored keys.
+  In „probă” mode nothing leaves the server.
+- `src/admin/ai.php`: the AI consultation through the official Anthropic PHP SDK
+  (`composer.json`, installed into `vendor/` by `npm run build:php:zip`), model `claude-opus-5-5`,
+  structured output (`ai_schema()`), server-side refusal fallback, the name/CNP/phone removed
+  before sending (`ai_pseudonymize`). The browser does the speech-to-text (Web Speech API, ro-RO).
+- Public routes: `/webhook/whatsapp`, `/d/{token}` (unsubscribe from marketing).

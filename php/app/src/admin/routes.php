@@ -9,6 +9,7 @@ require __DIR__ . '/lib.php';
 require __DIR__ . '/crm.php';
 require __DIR__ . '/billing.php';
 require __DIR__ . '/clinical.php';
+require __DIR__ . '/ai.php';
 require APP_DIR . '/templates/admin/layout.php';
 
 $path = request_path();
@@ -34,6 +35,7 @@ if ($path === '/admin/iesire') {
 
 $user = require_login();
 maybe_send_reminders();
+send_queue_after_response();
 
 // Path → page and who may open it (null = everyone signed in, 'admin', or a permission).
 $routes = [
@@ -50,6 +52,13 @@ $routes = [
     '#^/admin/pacienti/(\d+)/documente$#' => ['pacient-documente', null],
     '#^/admin/pacienti/(\d+)/acord/([a-z]+)$#' => ['acord-tipar', null],
     '#^/admin/pacienti/(\d+)/gdpr$#' => ['pacient-gdpr', 'gdpr'],
+    '#^/admin/pacienti/(\d+)/mesaje$#' => ['pacient-mesaje', null],
+    '#^/admin/pacienti/(\d+)/consultatie-ai$#' => ['pacient-ai', 'medical'],
+    '#^/admin/mesaje$#' => ['mesaje', null],
+    '#^/admin/marketing$#' => ['marketing', 'admin'],
+    '#^/admin/marketing/(noua|\d+)$#' => ['campanie', 'admin'],
+    '#^/admin/setari/mesaje$#' => ['setari-mesaje', 'admin'],
+    '#^/admin/setari/ai$#' => ['setari-ai', 'admin'],
     '#^/admin/documente/(\d+)$#' => ['document', null],
     '#^/admin/rechemari$#' => ['rechemari', null],
     '#^/admin/cereri$#' => ['cereri', null],

@@ -13,6 +13,9 @@ const ADMIN_ICONS = [
     'tag' => '<path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/>',
     'image' => '<rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>',
     'shield' => '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+    'megaphone' => '<path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>',
+    'mic' => '<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/>',
+    'sparkles' => '<path d="M9.94 14.06 8 20l-1.94-5.94L0 12l6.06-1.94L8 4l1.94 6.06L16 12z" transform="translate(3 -1) scale(.85)"/><path d="M20 3v4M22 5h-4"/>',
     'chart' => '<path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>',
     'history' => '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
     'user-round' => '<circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/>',
@@ -211,4 +214,116 @@ function admin_period(string $defaultFrom, string $defaultTo): array
         [$from, $to] = [$to, $from];
     }
     return [$from, $to, date('Y-m-d', strtotime($to . ' +1 day'))];
+}
+
+/** WhatsApp replies from patients nobody has opened yet (for the menu badge). */
+function unread_messages_count(array $user): int
+{
+    try {
+        [$scope, $params] = patient_scope_sql($user);
+        return (int) db_value("SELECT COUNT(*) FROM messages m LEFT JOIN patients p ON p.id = m.patient_id WHERE m.direction = 'in' AND m.status = 'primit' AND (m.patient_id IS NULL OR {$scope})", $params);
+    } catch (Throwable $e) {
+        return 0;
+    }
+}
+
+function message_event_label(string $event): string
+{
+    return PATIENT_EVENTS[$event]['label'] ?? STAFF_EVENTS[$event]['label'] ?? match ($event) {
+        'manual' => 'Mesaj din panou',
+        'raspuns' => 'Mesaj de la pacient',
+        'campanie' => 'Campanie',
+        default => $event,
+    };
+}
+
+function msg_status_chip(string $status): string
+{
+    $cls = match ($status) {
+        'livrat', 'citit', 'trimis' => 'bg-menta-pal text-cerneala',
+        'esuat' => 'bg-carmin-pal text-carmin',
+        'in-asteptare', 'se-trimite' => 'border border-dashed border-linie-control text-discret',
+        'primit' => 'bg-mustar-pal text-mustar-text',
+        default => 'bg-adancit text-discret',
+    };
+    return '<span class="' . e(cn('inline-flex items-center whitespace-nowrap rounded-chip px-2 py-0.5 text-mic font-medium', $cls)) . '">' . e(MSG_STATUS[$status] ?? $status) . '</span>';
+}
+
+/** One message as a chat bubble: the patient's on the left, the clinic's on the right. */
+function message_bubble(array $m, bool $withPatient = false): string
+{
+    $in = $m['direction'] === 'in';
+    $who = $withPatient && !empty($m['last_name']) ? '<a class="font-semibold text-link underline-offset-4 hover:underline" href="/admin/pacienti/' . (int) $m['patient_id'] . '/mesaje">' . e(trim($m['last_name'] . ' ' . $m['first_name'])) . '</a> · ' : '';
+    return '<li class="' . e(cn('flex', $in ? 'justify-start' : 'justify-end')) . '"><div class="' . e(cn('max-w-[36rem] rounded-panou border p-3', $in ? 'border-mustar bg-mustar-pal/50' : 'border-linie bg-suprafata')) . '">'
+        . '<p class="flex flex-wrap items-center gap-2 text-mic text-discret">' . $who . '<span class="font-medium text-cerneala">' . e(MSG_CHANNELS[$m['channel']] ?? $m['channel']) . '</span> · ' . e(message_event_label($m['event']))
+        . ' · <span class="cifre">' . e(date('d.m.Y H:i', strtotime($m['sent_at'] ?? $m['created_at']))) . '</span> ' . msg_status_chip($m['status']) . '</p>'
+        . ($m['subject'] ? '<p class="mt-1 font-semibold">' . e($m['subject']) . '</p>' : '')
+        . '<p class="mt-1 whitespace-pre-line break-words text-corp">' . e($m['body']) . '</p>'
+        . ($m['error'] ? '<p class="mt-1 text-mic text-carmin">' . e($m['error']) . '</p>' : '')
+        . ($m['status'] === 'in-asteptare' && strtotime($m['send_after']) > time() + 60 ? '<p class="mt-1 text-mic text-discret">Pleacă ' . e(format_datetime($m['send_after'])) . '</p>' : '')
+        . '</div></li>';
+}
+
+// ── Marketing campaigns ──────────────────────────────────────────────────────
+
+const CAMPAIGN_STATUS = ['ciorna' => 'Ciornă', 'programata' => 'Programată', 'trimisa' => 'Trimisă'];
+
+/**
+ * The patients a campaign goes to: active, with marketing consent for the channel and a usable
+ * address, filtered by the segment (clinic, no visit for N months, an open treatment plan,
+ * birthday this month, a service received).
+ */
+function campaign_recipients(array $seg, string $channel): array
+{
+    $where = ['p.active = 1', 'p.anonymized_at IS NULL'];
+    $params = [];
+    $where[] = match ($channel) {
+        'sms' => "p.marketing_sms = 1 AND p.phone <> ''",
+        'whatsapp' => "p.marketing_whatsapp = 1 AND p.phone <> ''",
+        default => "p.marketing_email = 1 AND p.email IS NOT NULL AND p.email <> ''",
+    };
+    if (!empty($seg['clinica'])) {
+        $where[] = 'p.preferred_location_id = ?';
+        $params[] = (int) $seg['clinica'];
+    }
+    if (!empty($seg['inactiv_luni'])) {
+        $where[] = "NOT EXISTS (SELECT 1 FROM appointments a WHERE a.patient_id = p.id AND a.status = 'finalizat' AND a.starts_at > ?)";
+        $params[] = date('Y-m-d H:i:s', strtotime('-' . (int) $seg['inactiv_luni'] . ' months'));
+    }
+    if (!empty($seg['plan_deschis'])) {
+        $where[] = "EXISTS (SELECT 1 FROM treatment_plans t JOIN treatment_plan_items i ON i.plan_id = t.id WHERE t.patient_id = p.id AND t.status IN ('prezentat', 'acceptat', 'in-curs') AND i.status IN ('propus', 'acceptat'))";
+    }
+    if (!empty($seg['luna_nasterii'])) {
+        $where[] = 'MONTH(p.birth_date) = ?';
+        $params[] = (int) date('n');
+    }
+    if (!empty($seg['serviciu'])) {
+        $where[] = "EXISTS (SELECT 1 FROM appointments a WHERE a.patient_id = p.id AND a.status = 'finalizat' AND a.category_slug = ?)";
+        $params[] = (string) $seg['serviciu'];
+    }
+    $rows = db_all('SELECT p.* FROM patients p WHERE ' . implode(' AND ', $where) . ' ORDER BY p.last_name, p.first_name', $params);
+    return array_values(array_filter($rows, static fn ($p) => $channel === 'email' ? (bool) filter_var($p['email'], FILTER_VALIDATE_EMAIL) : ($channel === 'sms' ? phone_ro_mobile($p['phone']) !== null : phone_e164($p['phone']) !== null)));
+}
+
+/** Queues a campaign to its recipients; returns how many messages were queued. */
+function queue_campaign(array $c, string $when): int
+{
+    $seg = json_decode((string) $c['segment'], true) ?: [];
+    $n = 0;
+    $after = within_hours(new DateTimeImmutable($when), true)->format('Y-m-d H:i:s');
+    foreach (campaign_recipients($seg, $c['channel']) as $p) {
+        $vars = patient_vars($p);
+        $text = fill_template($c['body'], $vars);
+        $row = ['event' => 'campanie', 'patient_id' => (int) $p['id'], 'campaign_id' => (int) $c['id'], 'send_after' => $after];
+        if ($c['channel'] === 'sms') {
+            $row += ['channel' => 'sms', 'to_address' => (string) phone_ro_mobile($p['phone']), 'body' => $text . ' Dezabonare: ' . unsubscribe_url($p)];
+        } elseif ($c['channel'] === 'whatsapp') {
+            $row += ['channel' => 'whatsapp', 'to_address' => (string) phone_e164($p['phone']), 'body' => $text, 'template' => $c['template'], 'template_params' => json_encode([$vars['prenume']], JSON_UNESCAPED_UNICODE)];
+        } else {
+            $row += ['channel' => 'email', 'to_address' => (string) $p['email'], 'subject' => fill_template((string) $c['subject'], $vars), 'body' => $text . "\n\nNu mai doriți astfel de mesaje? " . unsubscribe_url($p)];
+        }
+        queue_message($row);
+        $n++;
+    }
+    return $n;
 }

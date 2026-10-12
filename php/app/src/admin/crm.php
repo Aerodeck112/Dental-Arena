@@ -329,6 +329,9 @@ function set_appointment_status(int $id, string $status, array $user, ?string $r
         $row['cancel_reason'] = $reason !== null ? mb_substr($reason, 0, 255) : null;
     }
     db_update('appointments', $row, 'id = :id', ['id' => $id]);
+    if ($status === 'anulat' || $status === 'sosit') {
+        notify_appointment($status === 'anulat' ? 'programare-anulata' : 'sosit', $id);
+    }
     audit('programare-' . $status, "#{$id}", null, (int) db_value('SELECT patient_id FROM appointments WHERE id = ?', [$id]));
 }
 
@@ -383,32 +386,18 @@ function send_due_reminders(?DateTimeImmutable $now = null): int
     }
     $tomorrow = $now->modify('+1 day')->format('Y-m-d');
     $rows = db_all(
-        "SELECT a.*, p.first_name, p.last_name, p.email, p.email_reminders FROM appointments a JOIN patients p ON p.id = a.patient_id
-         WHERE a.status IN ('programat', 'confirmat') AND a.reminder_sent_at IS NULL AND a.starts_at >= ? AND a.starts_at < ?
-           AND a.created_at < DATE_SUB(a.starts_at, INTERVAL 18 HOUR)
-           AND p.email IS NOT NULL AND p.email <> '' AND p.email_reminders = 1",
+        "SELECT a.* FROM appointments a WHERE a.status IN ('programat', 'confirmat') AND a.reminder_sent_at IS NULL AND a.starts_at >= ? AND a.starts_at < ?
+           AND a.created_at < DATE_SUB(a.starts_at, INTERVAL 18 HOUR)",
         ["{$tomorrow} 00:00:00", $now->modify('+2 days')->format('Y-m-d') . ' 00:00:00'],
     );
-    $clinicsById = [];
-    foreach (clinics() as $c) {
-        $clinicsById[$c['id']] = $c;
-    }
-    $docs = doctor_short_names();
     $n = 0;
     foreach ($rows as $a) {
-        $c = $clinicsById[(int) $a['location_id']] ?? null;
-        if ($c === null) {
-            continue;
+        $p = db_one('SELECT * FROM patients WHERE id = ?', [(int) $a['patient_id']]);
+        if ($p !== null) {
+            $n += notify_patient('reamintire', $p, appointment_vars($a), ['appointment_id' => (int) $a['id']]);
         }
-        $text = "Bună ziua,\n\nvă reamintim programarea de mâine la Dental Arena {$c['shortName']}:\n\n"
-            . format_date($a['starts_at'], true) . ', ora ' . hm($a['starts_at']) . "\n"
-            . ($docs[(int) $a['doctor_id']] ?? '') . "\n"
-            . clinic_address($c) . "\n\n"
-            . "Dacă nu puteți veni, vă rugăm să ne sunați: " . format_phone($c['phone']) . ".\n\nVă așteptăm,\nDental Arena\n";
-        if (send_mail($a['email'], 'Programarea de mâine la Dental Arena', $text)) {
-            db_update('appointments', ['reminder_sent_at' => now_sql()], 'id = :id', ['id' => $a['id']]);
-            $n++;
-        }
+        // Marked even without a channel, so the appointment is not looked at again.
+        db_update('appointments', ['reminder_sent_at' => now_sql()], 'id = :id', ['id' => $a['id']]);
     }
     return $n;
 }
@@ -424,6 +413,7 @@ function maybe_send_reminders(): void
     @file_put_contents($marker, (string) time());
     try {
         send_due_reminders();
+        run_daily_jobs();
     } catch (Throwable $e) {
         app_log('error', 'reminders: ' . $e->getMessage());
     }

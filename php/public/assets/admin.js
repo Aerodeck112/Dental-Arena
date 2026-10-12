@@ -113,6 +113,86 @@
     recalc();
   }
 
+  // Dictation for the AI consultation: the browser's speech recognition, in Romanian. Final
+  // phrases go into the text box; the phrase being spoken shows below it. Chrome stops after a
+  // silence, so it restarts on its own until the doctor presses „Opriți”.
+  var dictBtn = document.querySelector("[data-dictare]");
+  if (dictBtn) {
+    var Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    var zone = dictBtn.closest("[data-dictare-zona]");
+    if (!Rec) {
+      dictBtn.hidden = true;
+      var missing = zone && zone.querySelector("[data-dictare-lipsa]");
+      if (missing) missing.hidden = false;
+    } else {
+      var box = document.getElementById(dictBtn.getAttribute("data-dictare"));
+      var label = dictBtn.querySelector("[data-dictare-eticheta]");
+      var state = zone && zone.querySelector("[data-dictare-stare]");
+      var interim = document.querySelector("[data-dictare-interim]");
+      var rec = null;
+      var on = false;
+      var setState = function (t) {
+        if (state) state.textContent = t;
+      };
+      var start = function () {
+        rec = new Rec();
+        rec.lang = "ro-RO";
+        rec.continuous = true;
+        rec.interimResults = true;
+        rec.onresult = function (e) {
+          var temp = "";
+          for (var i = e.resultIndex; i < e.results.length; i++) {
+            var t = e.results[i][0].transcript;
+            if (e.results[i].isFinal) {
+              var sep = box.value && !/\s$/.test(box.value) ? " " : "";
+              box.value += sep + t.trim().replace(/^./, function (c) { return c.toUpperCase(); }) + ".";
+            } else {
+              temp += t;
+            }
+          }
+          if (interim) interim.textContent = temp;
+        };
+        rec.onerror = function (e) {
+          if (e.error === "not-allowed" || e.error === "service-not-allowed") {
+            on = false;
+            setState("Browserul nu are voie să folosească microfonul. Permiteți-l din bara de adrese.");
+          }
+        };
+        rec.onend = function () {
+          if (on) {
+            try { rec.start(); } catch (err) { /* already starting */ }
+          } else {
+            if (interim) interim.textContent = "";
+          }
+        };
+        rec.start();
+      };
+      dictBtn.addEventListener("click", function () {
+        on = !on;
+        if (on) {
+          start();
+          label.textContent = "Opriți dictarea";
+          dictBtn.setAttribute("aria-pressed", "true");
+          setState("Ascult… vorbiți clar, în română.");
+        } else {
+          if (rec) rec.stop();
+          label.textContent = "Dictați";
+          dictBtn.setAttribute("aria-pressed", "false");
+          setState("Dictarea s-a oprit. Verificați textul, apoi „Analizați cu AI”.");
+        }
+      });
+    }
+  }
+
+  // A button that shows a waiting text while its form is sent (the AI takes up to a minute).
+  document.addEventListener("submit", function (e) {
+    var b = e.submitter;
+    if (b && b.getAttribute("data-pending") && !e.defaultPrevented) {
+      b.setAttribute("aria-busy", "true");
+      b.textContent = b.getAttribute("data-pending") + "…";
+    }
+  });
+
   var focusMe = document.querySelector("[data-autofocus], [role=alert]");
   if (focusMe) focusMe.focus();
 })();

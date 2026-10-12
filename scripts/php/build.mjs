@@ -131,6 +131,22 @@ console.log(`${Object.keys(manifest).length} fotografii`);
 
 if (process.argv.includes("--package")) {
   step("5/5 Arhiva pentru cPanel");
+  // The panel's PHP libraries (the Anthropic SDK for the AI consultation), from composer.lock.
+  try {
+    execFileSync("composer", ["install", "--no-dev", "--no-interaction", "--no-progress", "--optimize-autoloader"], { cwd: app, stdio: "inherit" });
+  } catch {
+    throw new Error("Composer lipsește sau a eșuat: instalați Composer (getcomposer.org) ca să se includă biblioteca pentru AI.");
+  }
+  for (const dir of fs.readdirSync(path.join(app, "vendor"), { recursive: true })) {
+    if (path.basename(String(dir)) === ".git") fs.rmSync(path.join(app, "vendor", String(dir)), { recursive: true, force: true });
+  }
+  // standard-webhooks ships its libraries for every language; the panel needs only the PHP one.
+  const libs = path.join(app, "vendor/standard-webhooks/standard-webhooks/libraries");
+  if (fs.existsSync(libs)) {
+    for (const entry of fs.readdirSync(libs)) {
+      if (entry !== "php" && fs.statSync(path.join(libs, entry)).isDirectory()) fs.rmSync(path.join(libs, entry), { recursive: true, force: true });
+    }
+  }
   const deploy = path.join(root, "deploy/dentalarena-php");
   fs.rmSync(deploy, { recursive: true, force: true });
   fs.mkdirSync(deploy, { recursive: true });

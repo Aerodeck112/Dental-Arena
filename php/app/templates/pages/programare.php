@@ -86,6 +86,9 @@ $body = capture(function () use ($clinics, $errors, $values, $sentMessage): void
               'checked' => ($values['consent'] ?? '') === '1',
               'error' => $err('consent'),
           ]) ?>
+          <?= checkbox_field('marketing', 'Vreau să primesc de la Dental Arena, prin SMS și e-mail, oferte și noutăți. Mă pot dezabona oricând.', [
+              'checked' => ($values['marketing'] ?? '') === '1',
+          ]) ?>
           <div><?= submit_button('Trimiteți cererea') ?></div>
         </form>
         <?php } ?>

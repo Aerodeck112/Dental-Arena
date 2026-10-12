@@ -19,7 +19,7 @@ define('INSTALLED', CONFIG !== []);
 ini_set('display_errors', !empty(CONFIG['debug']) ? '1' : '0');
 error_reporting(E_ALL);
 
-foreach (['helpers', 'db', 'content', 'images', 'seo', 'mail', 'auth', 'repo', 'forms'] as $file) {
+foreach (['helpers', 'db', 'content', 'images', 'seo', 'mail', 'auth', 'repo', 'forms', 'notify'] as $file) {
     require APP_DIR . "/src/{$file}.php";
 }
 require APP_DIR . '/templates/components.php';

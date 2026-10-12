@@ -148,14 +148,97 @@ Arhiva `dentalarena-php.zip` conține:
 Documentele încărcate pot avea cel mult cât permite serverul: dacă o radiografie nu se încarcă, măriți
 în cPanel → **MultiPHP INI Editor** valorile `upload_max_filesize` și `post_max_size` (de exemplu 25M).
 
+## Mesaje: SMS, WhatsApp, e-mail (etapa 4)
+
+Panoul trimite notificări la fiecare operațiune: programare făcută, mutată sau anulată, reamintirea
+de a doua zi, factura, plata, rechemarea la control, mulțumirea după vizită, ziua de naștere, și
+anunță echipa (programare nouă, anulare, pacient sosit, agenda zilei, cerere nouă de pe site,
+mesaj nou pe WhatsApp). Totul se reglează din **Setări → Mesaje**.
+
+**Pornirea:**
+
+1. **Mod de probă** este pornit la început: mesajele nu pleacă, apar doar în **Mesaje** ca „Probă”.
+   Lăsați-l așa pe copia de test.
+2. **SMS (SMSLink.ro):** faceți cont pe smslink.ro, cumpărați credit, apoi **SMS Gateway →
+   Configurare**: creați o conexiune și copiați **Connection ID** și parola în Setări → Mesaje.
+   Pentru ca SMS-urile să apară de la „DentalArena” (nu de la un număr scurt), cereți la SMSLink
+   aprobarea expeditorului și scrieți-l în câmpul „Expeditor”.
+3. **WhatsApp (Meta, WhatsApp Business Platform):**
+   - în business.facebook.com faceți (sau verificați) contul de firmă;
+   - în developers.facebook.com creați o aplicație de tip „Business”, adăugați produsul WhatsApp și
+     un număr de telefon dedicat (nu numărul folosit deja în aplicația WhatsApp de pe telefon);
+   - copiați în Setări → Mesaje: **Phone number ID**, un **token permanent** (System User în
+     Business Settings, cu permisiunile whatsapp_business_messaging și whatsapp_business_management)
+     și **App Secret** (App Settings → Basic);
+   - la **WhatsApp → Configuration → Webhook** puneți adresa și „Verify token” afișate în Setări →
+     Mesaje și abonați câmpul **messages**; așa vedeți în panou livrarea, citirea și răspunsurile;
+   - în **WhatsApp Manager → Message templates** cereți aprobarea șabloanelor de mai jos (limba
+     română, categoria „Utility”, iar ultimele două „Marketing”) și scrieți numele fiecăruia în
+     Setări → Mesaje, la notificarea lui. Fără șablon, pacienții cu WhatsApp primesc SMS.
+4. Trimiteți un **mesaj de probă** (jos în Setări → Mesaje), apoi alegeți **Trimitere reală**.
+5. Fiecare om din echipă își alege notificările în **Contul meu** (SMS, WhatsApp, e-mail) și își
+   scrie telefonul.
+
+Șabloanele WhatsApp (parametrii {{1}}, {{2}}… se completează automat, în ordinea de mai jos):
+
+| Notificare | Nume propus | Text pentru Meta |
+|---|---|---|
+| Programare făcută | `programare_noua` | Bună ziua, {{1}}! Programarea dumneavoastră la Dental Arena este {{2}}, ora {{3}}, la {{4}} ({{5}}). Pentru modificări sunați la {{6}}. |
+| Programare mutată | `programare_mutata` | Bună ziua, {{1}}! Programarea dumneavoastră a fost mutată pe {{2}}, ora {{3}}, la Dental Arena {{4}}. Întrebări: {{5}}. |
+| Programare anulată | `programare_anulata` | Bună ziua, {{1}}! Programarea din {{2}}, ora {{3}}, a fost anulată. Pentru o programare nouă sunați la {{4}}. |
+| Reamintire | `reamintire_programare` | Bună ziua, {{1}}! Vă așteptăm mâine, {{2}}, la ora {{3}}, la Dental Arena {{4}}. Dacă nu puteți veni, sunați la {{5}}. |
+| Cerere primită | `cerere_primita` | Am primit cererea dumneavoastră de programare la Dental Arena. Vă sunăm în cel mult o zi lucrătoare. Urgențe: {{1}}. |
+| Factură emisă | `factura_emisa` | Bună ziua, {{1}}! Factura {{2}}, în valoare de {{3}}, a fost emisă. Vă mulțumim! |
+| Plată primită | `plata_primita` | Bună ziua, {{1}}! Am primit plata de {{2}}. Vă mulțumim! |
+| Rechemare | `rechemare_control` | Bună ziua, {{1}}! Se apropie controlul periodic recomandat. Sunați-ne la {{2}} ca să stabilim ora potrivită. |
+| După vizită (Marketing) | `multumire_vizita` | Bună ziua, {{1}}! Vă mulțumim pentru vizită. Ne lăsați o părere? {{2}} |
+| La mulți ani (Marketing) | `la_multi_ani` | La mulți ani, {{1}}! Echipa Dental Arena vă dorește sănătate și zâmbete frumoase. |
+
+Pentru campanii, faceți câte un șablon „Marketing” cu {{1}} = prenumele pacientului.
+
+**Ce primește fiecare pacient:** în fișă alegeți „Notificările pe telefon”: SMS, WhatsApp sau
+deloc; e-mailul se bifează separat. Ofertele (campanii, mulțumirea după vizită, la mulți ani) pleacă
+**doar** pacienților care și-au dat acordul pentru acel canal (bifat în fișă, cu data, sau din
+formularul de pe site), și au mereu link de dezabonare. Pacienților li se scrie doar între orele
+alese (implicit 9–20; ofertele 10–20); mesajele către echipă pleacă imediat.
+
+**Mesaje** (meniu): conversațiile WhatsApp (pacienții care v-au scris; răspundeți din fișa lor, în
+24 de ore, cum cere WhatsApp) și jurnalul tuturor mesajelor, cu „Reîncercați” la cele eșuate.
+
+**Marketing** (meniu, administratori): campanii pe SMS, WhatsApp sau e-mail, către pacienții cu
+acord, filtrați după clinică, „fără vizită de N luni”, plan de tratament neterminat, ziua de naștere
+sau un serviciu făcut. Vedeți înainte câți pacienți o primesc și câte SMS-uri înseamnă, vă trimiteți
+o probă, apoi trimiteți acum sau programați.
+
+> Completați **Politica de confidențialitate** cu: mesajele de notificare (SMS prin SMSLink,
+> WhatsApp prin Meta), ofertele trimise doar cu acord și asistentul AI (Anthropic).
+
+## Consultație cu AI (etapa 4)
+
+În fișa pacientului, medicul apasă **Consultație cu AI**, apoi **Dictați** și vorbește (sau lasă
+calculatorul/telefonul să asculte discuția cu pacientul). Dictarea merge în Chrome, Edge și Safari,
+pe adresa cu https. **Analizați cu AI** propune: nota clinică, anamneza (alergii, medicamente,
+afecțiuni), constatările pe dinți și lucrările pentru planul de tratament, plus ce trebuie verificat.
+Medicul bifează ce e corect și apasă **Treceți în fișă ce e bifat**; nimic nu intră fără verificare.
+
+**Pornirea:** pe console.anthropic.com faceți cont de firmă, adăugați o metodă de plată și creați
+o **API key**; în **Setări → Asistentul AI** bifați „pornit”, lipiți cheia și apăsați **Testați
+conexiunea**. Costul e de regulă de câțiva cenți pe consultație.
+
+**Date personale:** înainte de trimitere, panoul scoate din text numele pacientului, CNP-ul și
+numerele de telefon. Textul consultației rămâne totuși o informație despre sănătate, deci:
+acceptați termenii comerciali Anthropic (cuprind acordul de prelucrare a datelor), menționați
+furnizorul în Politica de confidențialitate și spuneți-i pacientului când înregistrați discuția.
+
 ## Reamintiri pe e-mail (Cron Jobs)
 
-Pacienții cu e-mail primesc o reamintire în ziua dinaintea programării (între orele 10 și 21), dacă
-programarea a fost făcută cu cel puțin 18 ore înainte și au bifa „Primește reamintirea” în fișă.
-Reamintirile pleacă și singure, când cineva lucrează în panou, dar ca să plece sigur la timp:
+Pacienții primesc reamintirea în ziua dinaintea programării (între orele 10 și 21), pe SMS/WhatsApp
+și/sau e-mail, dacă programarea a fost făcută cu cel puțin 18 ore înainte. Tot din Cron Jobs pleacă
+mesajele din coadă, agenda de dimineață a medicilor, mulțumirile, felicitările și rechemările.
+Merg și singure, când cineva lucrează în panou, dar ca să plece sigur la timp:
 
 1. cPanel → **Cron Jobs** → **Add New Cron Job**;
-2. **Common Settings**: **Once Per Hour** (`0 * * * *`);
+2. **Common Settings**: **Once Per Five Minutes** (`*/5 * * * *`);
 3. **Command** (înlocuiți `contcpanel` cu numele contului cPanel, cel din File Manager → `/home/...`):
 
    ```

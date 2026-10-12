@@ -67,6 +67,7 @@ function submit_lead(string $kind): array
         'confort' => post('confort'),
         'message' => mb_substr(post('message'), 0, 2000),
         'consent' => post('consent'),
+        'marketing' => post('marketing') === '1' ? '1' : '',
     ];
     $errors = [];
     if (mb_strlen($v['name']) < 3) {
@@ -138,6 +139,7 @@ function submit_lead(string $kind): array
         'preferred_date' => $v['data'] !== '' ? $v['data'] : null,
         'preferred_time' => $kind === 'programare' ? $v['interval'] : null,
         'comfort' => $v['confort'] !== '' ? $v['confort'] : null,
+        'marketing_ok' => $v['marketing'] === '1' ? 1 : 0,
         'name' => $v['name'],
         'phone' => $v['phone'],
         'email' => $v['email'] !== '' ? $v['email'] : null,
@@ -202,6 +204,26 @@ function notify_new_lead(int $id): void
         }
         $patient .= "\nDental Arena\n" . site_url() . "\n";
         send_mail($lead['email'], $isBooking ? 'Am primit cererea de programare' : 'Am primit mesajul dumneavoastră', $patient);
+    }
+
+    // SMS / WhatsApp to the front desk who chose it, and the optional SMS to the patient.
+    try {
+        $clinic = null;
+        foreach (clinics() as $c) {
+            if ($c['id'] !== null && (int) $lead['location_id'] === $c['id']) {
+                $clinic = $c;
+            }
+        }
+        $service = $lead['category_slug'] ? (service_content($lead['category_slug'])['title'] ?? '') : ($isBooking ? '' : 'mesaj');
+        notify_staff('staff-cerere-noua', front_desk_users($lead['location_id'] !== null ? (int) $lead['location_id'] : null), [
+            'pacient' => $lead['name'], 'telefon' => format_phone($lead['phone']), 'serviciu' => $service, 'clinica' => $clinic['shortName'] ?? '',
+        ]);
+        if ($isBooking && $lead['phone'] !== '') {
+            notify_contact('cerere-primita', $lead['phone'], ['telefon_clinica' => $clinic ? format_phone($clinic['phone']) : '']);
+        }
+        send_queue_after_response();
+    } catch (Throwable $e) {
+        app_log('error', 'notify_new_lead: ' . $e->getMessage());
     }
 }
 

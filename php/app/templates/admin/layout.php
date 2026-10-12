@@ -14,7 +14,9 @@ const ADMIN_NAV = [
     ['/admin/rechemari', 'Rechemări', 'phone-call', null],
     ['/admin/facturi', 'Facturi', 'receipt', 'billing'],
     ['/admin/incasari', 'Încasări', 'wallet', 'billing'],
+    ['/admin/mesaje', 'Mesaje', 'message-square', null],
     ['/admin/rapoarte', 'Rapoarte', 'chart', null],
+    ['/admin/marketing', 'Marketing', 'megaphone', 'admin'],
     ['/admin/servicii', 'Servicii și prețuri', 'tag', 'admin'],
     ['/admin/fotografii', 'Fotografii site', 'image', 'admin'],
     ['/admin/echipa', 'Echipa', 'user-round', 'admin'],
@@ -43,6 +45,7 @@ function admin_page(string $title, string $body, ?array $user = null): void
         return $href === '/admin' ? $path === '/admin' : ($path === $href || str_starts_with($path, $href . '/'));
     };
     $newCount = $user ? new_leads_count($user) : 0;
+    $unreadCount = $user ? unread_messages_count($user) : 0;
     $nav = '';
     if ($user) {
         $group = false;
@@ -55,8 +58,9 @@ function admin_page(string $title, string $body, ?array $user = null): void
                 $nav .= '<li class="mt-4 mb-1 px-3 text-mic font-semibold text-discret" aria-hidden="true">Administrare</li>';
             }
             $on = $active($href);
-            $badge = $href === '/admin/cereri' && $newCount > 0
-                ? '<span class="ml-auto rounded-chip bg-mustar px-2 text-mic font-semibold text-pe-menta cifre">' . $newCount . '<span class="sr-only"> noi</span></span>' : '';
+            $count = match ($href) { '/admin/cereri' => $newCount, '/admin/mesaje' => $unreadCount, default => 0 };
+            $badge = $count > 0
+                ? '<span class="ml-auto rounded-chip bg-mustar px-2 text-mic font-semibold text-pe-menta cifre">' . $count . '<span class="sr-only"> noi</span></span>' : '';
             $nav .= '<li><a href="' . e($href) . '"' . ($on ? ' aria-current="page"' : '') . ' class="'
                 . e(cn('flex min-h-control items-center gap-3 rounded-control px-3 text-control', $on ? 'bg-menta-pal font-semibold text-cerneala' : 'text-cerneala hover:bg-adancit'))
                 . '">' . admin_icon($ico, 20, $on ? 'text-actiune' : 'text-discret') . e($label) . $badge . '</a></li>';

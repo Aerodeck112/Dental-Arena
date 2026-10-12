@@ -508,6 +508,7 @@ function patient_tabs(array $user): array
         $tabs['financiar'] = 'Facturi și plăți';
     }
     $tabs['documente'] = 'Documente și acorduri';
+    $tabs['mesaje'] = 'Mesaje';
     if (can('gdpr', $user)) {
         $tabs['gdpr'] = 'GDPR';
     }
@@ -523,7 +524,7 @@ function patient_header(array $p, array $user, string $active, string $extraActi
     $lead = 'Fișa nr. ' . (int) $p['file_number'] . ($age !== null ? " · {$age} ani" : '') . ($p['phone'] !== '' ? ' · ' . format_phone($p['phone']) : '');
     $actions = $extraActions;
     if ($p['anonymized_at'] === null) {
-        $actions .= '<a href="/admin/programari/noua?pacient=' . $id . '" class="' . e(btn($extraActions === '' ? 'primary' : 'secondary')) . '">' . icon('calendar-plus', 18) . 'Programare nouă</a>'
+        $actions .= '<a href="/admin/programari/noua?pacient=' . $id . '" class="' . e(btn($extraActions === '' || str_contains($extraActions, 'consultatie-ai') ? 'primary' : 'secondary')) . '">' . icon('calendar-plus', 18) . 'Programare nouă</a>'
             . ($p['phone'] !== '' ? '<a href="' . e(tel_href($p['phone'])) . '" class="' . e(btn('secondary')) . '">' . icon('phone', 18) . 'Sunați</a>' : '');
     }
     $nav = '';
@@ -657,6 +658,14 @@ const AUDIT_LABELS = [
     'gdpr-export' => 'GDPR: date exportate',
     'pacient-anonimizat' => 'GDPR: fișă anonimizată',
     'cerere-gdpr' => 'GDPR: cerere în registru',
+    'mesaj-trimis' => 'Mesaj trimis pacientului',
+    'mesaj-proba' => 'Mesaj de probă',
+    'setari-mesaje' => 'Setările mesajelor',
+    'dezabonare' => 'Dezabonare de la oferte',
+    'campanie' => 'Campanie de marketing',
+    'consultatie-ai' => 'Consultație analizată cu AI',
+    'consultatie-ai-aplicata' => 'Propunerile AI aplicate în fișă',
+    'setari-ai' => 'Setările asistentului AI',
 ];
 
 function audit_label(string $action): string

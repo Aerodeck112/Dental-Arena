@@ -20,10 +20,10 @@ jobs:
         with:
           php-version: "8.1"
           extensions: pdo_mysql, mbstring, gd
-          tools: none
+          tools: composer
       - run: npm ci
       - name: PHP syntax (8.1)
-        run: find php -name "*.php" -print0 | xargs -0 -n1 php -l > /dev/null
+        run: find php -path php/app/vendor -prune -o -name "*.php" -print0 | xargs -0 -n1 php -l > /dev/null
       - run: npm run build:php:zip
       - uses: actions/upload-artifact@v4
         with:

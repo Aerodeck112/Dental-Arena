@@ -192,6 +192,10 @@ if (is_post()) {
             ];
             if ($isNew) {
                 $id = db_insert('appointments', $row + ['status' => 'programat', 'lead_id' => $lead['id'] ?? null, 'created_by' => $user['id'], 'created_at' => now_sql()]);
+                if ($lead !== null && (int) ($lead['marketing_ok'] ?? 0) === 1) {
+                    // The consent ticked on the site's form goes to the patient's file.
+                    db_run("UPDATE patients SET marketing_sms = 1, marketing_email = 1, marketing_consent_at = COALESCE(marketing_consent_at, ?), marketing_consent_source = COALESCE(marketing_consent_source, 'formularul de pe site') WHERE id = ?", [$lead['created_at'], $patientId]);
+                }
                 if ($lead !== null) {
                     db_update('leads', ['status' => 'programat', 'patient_id' => $patientId, 'appointment_id' => $id, 'updated_at' => now_sql(), 'updated_by' => $user['id']], 'id = :id', ['id' => $lead['id']]);
                 }
@@ -211,6 +215,11 @@ if (is_post()) {
             }
             return $id;
         });
+        if ($isNew) {
+            notify_appointment('programare-noua', $id);
+        } elseif ($appt['starts_at'] !== $startsAt && in_array($v['status'], ['programat', 'confirmat'], true)) {
+            notify_appointment('programare-mutata', $id);
+        }
         audit($isNew ? 'programare-noua' : 'programare', "#{$id} {$startsAt}", null, (int) db_value('SELECT patient_id FROM appointments WHERE id = ?', [$id]));
         flash($isNew ? 'Programarea a fost făcută.' : 'Programarea a fost salvată.');
         redirect($back ?? "/admin/programari/{$id}");

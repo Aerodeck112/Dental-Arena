@@ -59,6 +59,7 @@ next-env.d.ts
 /php/app/data/
 /php/app/config.php
 /php/app/storage/
+/php/app/vendor/
 /php/public/assets/site.css
 /php/public/assets/fonts/
 /php/public/images/

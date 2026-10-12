@@ -25,6 +25,10 @@ $v = [
     'phone' => $p['phone'] ?? '',
     'email' => $p['email'] ?? '',
     'email_reminders' => (string) ($p['email_reminders'] ?? 1),
+    'phone_channel' => (string) ($p['phone_channel'] ?? 'sms'),
+    'marketing_sms' => (string) ($p['marketing_sms'] ?? 0),
+    'marketing_whatsapp' => (string) ($p['marketing_whatsapp'] ?? 0),
+    'marketing_email' => (string) ($p['marketing_email'] ?? 0),
     'street' => $p['street'] ?? '',
     'city' => $p['city'] ?? '',
     'county' => $p['county'] ?? 'Mureș',
@@ -83,6 +87,10 @@ if (is_post()) {
         $v[$k] = post($k);
     }
     $v['email_reminders'] = post('email_reminders') === '1' ? '1' : '0';
+    $v['phone_channel'] = isset(PHONE_CHANNELS[post('phone_channel')]) ? post('phone_channel') : 'sms';
+    foreach (['marketing_sms', 'marketing_whatsapp', 'marketing_email'] as $k) {
+        $v[$k] = post($k) === '1' ? '1' : '0';
+    }
     $v['prefers_sedation'] = post('prefers_sedation') === '1' ? '1' : '0';
     if (mb_strlen($v['last_name']) < 2) {
         $errors['last_name'] = 'Scrieți numele de familie.';
@@ -122,6 +130,10 @@ if (is_post()) {
             'phone' => $v['phone'] !== '' && national_digits($v['phone']) !== null ? format_phone($v['phone']) : $v['phone'],
             'email' => $v['email'] ?: null,
             'email_reminders' => (int) $v['email_reminders'],
+            'phone_channel' => $v['phone_channel'],
+            'marketing_sms' => (int) $v['marketing_sms'],
+            'marketing_whatsapp' => (int) $v['marketing_whatsapp'],
+            'marketing_email' => (int) $v['marketing_email'],
             'street' => mb_substr($v['street'], 0, 190) ?: null,
             'city' => mb_substr($v['city'], 0, 80) ?: null,
             'county' => mb_substr($v['county'], 0, 80) ?: null,
@@ -133,6 +145,12 @@ if (is_post()) {
             'notes' => mb_substr($v['notes'], 0, 4000) ?: null,
             'updated_at' => now_sql(),
         ];
+        // A consent newly given is dated, with who recorded it.
+        $hadConsent = $p !== null && ((int) $p['marketing_sms'] + (int) $p['marketing_whatsapp'] + (int) $p['marketing_email']) > 0;
+        if (!$hadConsent && ($row['marketing_sms'] + $row['marketing_whatsapp'] + $row['marketing_email']) > 0) {
+            $row['marketing_consent_at'] = now_sql();
+            $row['marketing_consent_source'] = mb_substr('în clinică, notat de ' . $user['name'], 0, 60);
+        }
         if ($cnp !== '') {
             $row['cnp_enc'] = cnp_encrypt($cnp);
             $row['cnp_hash'] = cnp_hash($cnp);
@@ -169,7 +187,17 @@ $personal = '<form method="post" novalidate class="flex flex-col gap-5">' . csrf
     . text_field('email', 'E-mail', ['type' => 'email', 'value' => $v['email'], 'optional' => true, 'error' => $err('email')])
     . '</div>'
     . radio_group('sex', 'Sexul', ['' => 'Nespecificat', 'F' => 'Feminin', 'M' => 'Masculin'], ['inline' => true, 'value' => $v['sex']])
-    . checkbox_field('email_reminders', 'Primește reamintirea pe e-mail cu o zi înainte', ['checked' => $v['email_reminders'] === '1'])
+    . '<fieldset class="flex flex-col gap-2 rounded-panou border border-linie p-4"><legend class="px-1 text-control font-medium">Mesaje</legend>'
+    . radio_group('phone_channel', 'Notificările pe telefon (programări, reamintiri)', PHONE_CHANNELS, ['inline' => true, 'value' => $v['phone_channel']])
+    . checkbox_field('email_reminders', 'Primește notificările și pe e-mail', ['checked' => $v['email_reminders'] === '1'])
+    . '<p class="mt-2 text-control font-medium">Oferte și noutăți (doar cu acordul pacientului)</p>'
+    . '<div class="flex flex-wrap gap-x-6">'
+    . checkbox_field('marketing_sms', 'SMS', ['checked' => $v['marketing_sms'] === '1'])
+    . checkbox_field('marketing_whatsapp', 'WhatsApp', ['checked' => $v['marketing_whatsapp'] === '1'])
+    . checkbox_field('marketing_email', 'E-mail', ['checked' => $v['marketing_email'] === '1'])
+    . '</div>'
+    . (($p['marketing_consent_at'] ?? null) ? '<p class="text-mic text-discret">Acord dat ' . e(format_datetime($p['marketing_consent_at'])) . ($p['marketing_consent_source'] ? ', ' . e($p['marketing_consent_source']) : '') . '.</p>' : '<p class="text-mic text-discret">Bifați doar dacă pacientul a spus că dorește. Se notează data.</p>')
+    . '</fieldset>'
     . '<div class="grid gap-5 md:grid-cols-3">'
     . text_field('street', 'Adresa', ['value' => $v['street'], 'optional' => true])
     . text_field('city', 'Localitatea', ['value' => $v['city'], 'optional' => true])
@@ -243,7 +271,7 @@ $balanceNote = $balance !== null && $balance['balance'] !== 0
     ? '<a href="/admin/pacienti/' . $id . '/financiar" class="' . e(cn('mb-6 flex items-center gap-3 rounded-panou p-4 text-corp', $balance['balance'] > 0 ? 'border border-carmin bg-carmin-pal' : 'bg-menta-pal')) . '">' . icon('wallet', 20)
         . ($balance['balance'] > 0 ? 'Rest de plată: <strong class="cifre">' . e(lei($balance['balance'])) . '</strong>' : 'Avans în cont: <strong class="cifre">' . e(lei(-$balance['balance'])) . '</strong>') . '<span class="ml-auto text-link underline">Facturi și plăți</span></a>'
     : '';
-$body = patient_header($p, $user, '')
+$body = patient_header($p, $user, '', can('medical', $user) && $p['anonymized_at'] === null ? '<a href="/admin/pacienti/' . $id . '/consultatie-ai" class="' . e(btn('secondary')) . '">' . admin_icon('sparkles', 18) . 'Consultație cu AI</a>' : '')
     . $balanceNote
     . '<div class="grid gap-8 lg:grid-cols-12">'
     . '<div class="flex flex-col gap-8 lg:col-span-7">'

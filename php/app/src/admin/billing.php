@@ -224,6 +224,10 @@ function create_invoice(array $d, array $user): array
             ]);
         }
         $number = doc_number($series, $number);
+        $p = db_one('SELECT * FROM patients WHERE id = ?', [$d['patient_id']]);
+        if ($p !== null) {
+            notify_patient('factura-emisa', $p, ['factura' => $number, 'suma' => lei($totals['total'])]);
+        }
         audit('factura-emisa', "{$number}, " . lei($totals['total']), null, $d['patient_id']);
         $paymentId = null;
         if ($d['pay_method'] !== null && $totals['total'] > 0) {
@@ -298,6 +302,10 @@ function insert_payment(array $p, array $user): int
     ]);
     if ($p['invoice_id'] !== null) {
         recompute_amount_paid($p['invoice_id']);
+    }
+    $patient = db_one('SELECT * FROM patients WHERE id = ?', [$p['patient_id']]);
+    if ($patient !== null) {
+        notify_patient('plata-primita', $patient, ['suma' => lei($p['amount'])]);
     }
     audit('incasare', lei($p['amount']) . ' ' . PAYMENT_METHODS[$p['method']] . ($number !== null ? ', chitanța ' . doc_number($series, $number) : '') . ($p['invoice_id'] === null ? ', în cont' : ''), null, $p['patient_id']);
     return $id;

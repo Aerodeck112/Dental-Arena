@@ -48,6 +48,14 @@ if ($path === '/admin/instalare') {
     redirect('/admin', 302);
 }
 
+if ($path === '/webhook/whatsapp') {
+    whatsapp_webhook();
+}
+if (preg_match('#^/d/([A-Za-z0-9]{12})$#', $path, $m)) {
+    require APP_DIR . '/templates/pages/dezabonare.php';
+    exit;
+}
+
 if ($path === '/admin' || str_starts_with($path, '/admin/')) {
     require APP_DIR . '/src/admin/routes.php';
     exit;
