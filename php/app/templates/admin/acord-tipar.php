@@ -10,14 +10,37 @@ $type = (string) $param2;
 if (!isset(CONSENT_TYPES[$type])) {
     admin_not_found($user);
 }
+// ?semnat={id}: the consent as it was signed on the tablet (the text of that moment, the
+// signature, and whether the fingerprint still matches).
+if (query('semnat') !== '') {
+    $c = db_one('SELECT c.*, s.device_id, k.name AS tablet FROM consents c LEFT JOIN consent_sessions s ON s.id = c.session_id LEFT JOIN kiosk_devices k ON k.id = s.device_id WHERE c.id = ? AND c.patient_id = ? AND c.type = ? AND c.text_snapshot IS NOT NULL', [(int) query('semnat'), (int) $p['id'], $type]);
+    if ($c === null) {
+        admin_not_found($user);
+    }
+    $doc = $c['document_id'] ? db_one('SELECT * FROM patient_documents WHERE id = ?', [(int) $c['document_id']]) : null;
+    $raw = $doc ? @file_get_contents(documents_dir() . '/' . basename($doc['stored_name'])) : false;
+    $intact = $raw !== false && hash_equals((string) $c['integrity_hash'], hash('sha256', implode('|', [$p['id'], $type, $c['text_snapshot'], hash('sha256', $raw), $c['signed_at'], $c['device_id']])));
+    $paras = '';
+    foreach (preg_split('/\n{2,}/', trim($c['text_snapshot'])) ?: [] as $para) {
+        $paras .= '<p class="mt-4 whitespace-pre-line">' . e($para) . '</p>';
+    }
+    audit('acord-semnat-vazut', CONSENT_TYPES[$type], null, (int) $p['id']);
+    $body = '<div class="flex flex-wrap items-start justify-between gap-6 border-b border-linie pb-6">'
+        . '<div>' . logo('h-12 w-auto', true, '160px', 'Dental Arena') . '</div>'
+        . '<div class="text-right text-mic"><p>Fișa nr. <span class="cifre">' . (int) $p['file_number'] . '</span></p><p>Versiunea textului: ' . e((string) $c['text_version']) . '</p></div></div>'
+        . '<h1 class="mt-6 font-display text-[1.6rem] leading-tight">' . e(CONSENT_TYPES[$type]) . '</h1>'
+        . '<p class="mt-4">Pacient: <strong>' . e(patient_name($p)) . '</strong></p>' . $paras
+        . '<div class="mt-10 grid gap-6 sm:grid-cols-2 sm:items-end"><div class="text-mic"><p>Semnat electronic pe tabletă' . ($c['tablet'] ? ' („' . e($c['tablet']) . '”)' : '') . '</p><p class="font-semibold cifre">' . e(format_datetime((string) $c['signed_at'])) . '</p>'
+        . ($c['withdrawn_at'] ? '<p class="mt-2 font-semibold text-carmin">Retras ' . e(format_date($c['withdrawn_at'])) . '</p>' : '') . '</div>'
+        . '<div class="text-center">' . ($doc ? '<img src="/admin/documente/' . (int) $doc['id'] . '" alt="Semnătura pacientului" class="mx-auto max-h-36 w-auto">' : '') . '<p class="border-t border-cerneala pt-1 text-mic">Semnătura pacientului</p></div></div>'
+        . '<div class="mt-10 rounded-control border border-linie p-3 text-[12px] leading-snug text-discret"><p>Amprenta SHA-256 (textul, semnătura, ora, tableta): <span class="break-all font-mono">' . e((string) $c['integrity_hash']) . '</span></p>'
+        . '<p class="mt-1 font-semibold ' . ($intact ? 'text-actiune' : 'text-carmin') . '">' . ($intact ? 'Verificată acum: textul și semnătura sunt cele semnate.' : 'Atenție: amprenta nu se mai potrivește cu fișierul semnăturii.') . '</p></div>';
+    print_page(CONSENT_TYPES[$type] . ' (semnat): ' . patient_name($p), $body, '/admin/pacienti/' . (int) $p['id'] . '/documente');
+    exit;
+}
+
 $clinic = $p['preferred_location_id'] ? db_one('SELECT * FROM locations WHERE id = ?', [(int) $p['preferred_location_id']]) : db_one('SELECT * FROM locations ORDER BY sort_order LIMIT 1');
-$company = setting('company');
-$text = strtr(consent_text($type), [
-    '{{pacient}}' => patient_name($p),
-    '{{firma}}' => $company['legalName'] !== '' ? $company['legalName'] : 'Dental Arena',
-    '{{clinica}}' => 'Dental Arena ' . ($clinic['short_name'] ?? ''),
-    '{{email}}' => content('site.email'),
-]);
+$text = consent_text_for($type, $p);
 $paras = '';
 foreach (preg_split('/\n{2,}/', trim($text)) ?: [] as $para) {
     $paras .= '<p class="mt-4 whitespace-pre-line">' . e($para) . '</p>';

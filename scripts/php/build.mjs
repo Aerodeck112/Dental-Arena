@@ -46,6 +46,8 @@ fs.writeFileSync(
     '@source "../app/src";',
     '@source "../public/assets/site.js";',
     '@source "../public/assets/admin.js";',
+    '@source "../public/assets/tableta.js";',
+    '@source "../public/assets/chat.js";',
     // next/font set these on <html>; here the self-hosted families of step 3.
     ":root { --font-forum: 'Forum'; --font-redhat: 'Red Hat Text Variable'; }",
     '@import "./fonts.css";',
@@ -80,7 +82,7 @@ console.log(`${rel(path.join(pub, "assets/site.css"))}: ${Math.round(result.css.
 
 // The browser script, minified (the readable source stays in assets/site.js).
 const { transform } = await import("esbuild");
-for (const name of ["site", "admin"]) {
+for (const name of ["site", "admin", "tableta", "chat"]) {
   const file = path.join(pub, `assets/${name}.js`);
   if (fs.existsSync(file)) {
     const min = await transform(fs.readFileSync(file, "utf8"), { minify: true, target: "es2017" });

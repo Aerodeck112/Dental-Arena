@@ -161,7 +161,7 @@ foreach ($locations as $l) {
         . '</div></section>';
 }
 
-$body = admin_header('Setări', 'Datele firmei, unde ajung cererile și datele clinicilor. Se văd pe site imediat după salvare.', '<a href="/admin/setari/mesaje" class="' . e(btn('secondary')) . '">' . icon('message-square', 18) . 'Mesaje: SMS, WhatsApp, e-mail</a><a href="/admin/setari/ai" class="' . e(btn('secondary')) . '">' . admin_icon('sparkles', 18) . 'Asistentul AI</a>')
+$body = admin_header('Setări', 'Datele firmei, unde ajung cererile și datele clinicilor. Se văd pe site imediat după salvare.', '<a href="/admin/setari/mesaje" class="' . e(btn('secondary')) . '">' . icon('message-square', 18) . 'Mesaje: SMS, WhatsApp, e-mail</a><a href="/admin/setari/ai" class="' . e(btn('secondary')) . '">' . admin_icon('sparkles', 18) . 'Asistentul AI</a><a href="/admin/tablete" class="' . e(btn('secondary')) . '">' . admin_icon('tablet', 18) . 'Tablete de semnare</a>')
     . '<form method="post" novalidate class="flex max-w-4xl flex-col gap-8">' . csrf_field() . error_summary($errors)
     . admin_section_open('Datele firmei', 'firma', 'Apar în Termeni și condiții și în Politica de confidențialitate. Cât timp lipsesc, acolo scrie „[de completat]”.')
     . '<div class="mt-4 grid gap-5 md:grid-cols-2">' . $companyFields . '</div></section>'

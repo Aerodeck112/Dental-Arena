@@ -11,6 +11,18 @@ $base = "/admin/pacienti/{$pid}/documente";
 $writable = $p['anonymized_at'] === null;
 $errors = [];
 
+// The signing tablet asks here whether the code was used (admin.js, every few seconds).
+if (query('stare') !== '') {
+    $s = db_one('SELECT status, opened_at FROM consent_sessions WHERE id = ? AND patient_id = ?', [(int) query('stare'), $pid]);
+    if (($s['status'] ?? '') === 'semnat') {
+        flash('Pacientul a semnat pe tabletă.');
+    }
+    header('Content-Type: application/json');
+    header('Cache-Control: no-store');
+    echo json_encode(['status' => $s['status'] ?? 'anulat', 'opened' => $s && $s['opened_at'] !== null]);
+    exit;
+}
+
 if (is_post() && $writable) {
     csrf_check();
     $op = post('op');
@@ -19,6 +31,21 @@ if (is_post() && $writable) {
             save_document($_FILES['fisier'] ?? [], $pid, post('kind'), trim(post('title')), $user);
             flash('Documentul a fost încărcat.');
             redirect($base . '#documente');
+        }
+        if ($op === 'cod-tableta') {
+            $types = array_values(array_filter((array) ($_POST['types'] ?? []), 'is_string'));
+            $history = post('with_history') === '1';
+            if (array_intersect(array_keys(CONSENT_TYPES), $types) === [] && !$history) {
+                throw new DomainException('Alegeți cel puțin un acord sau chestionarul.');
+            }
+            consent_session_create($p, $types, $history, post('with_marketing') === '1', $user);
+            redirect($base . '#tableta');
+        }
+        if ($op === 'anuleaza-cod') {
+            if (db_run("UPDATE consent_sessions SET status = 'anulat' WHERE id = ? AND patient_id = ? AND status = 'asteptare'", [(int) post('id'), $pid]) > 0) {
+                audit('cod-tableta-anulat', '', null, $pid);
+            }
+            redirect($base . '#tableta');
         }
         if ($op === 'acord') {
             $type = post('type');
@@ -58,7 +85,7 @@ if (is_post() && $writable) {
             redirect($base . '#documente');
         }
     } catch (DomainException $e) {
-        $errors[$op === 'incarca' ? 'fisier' : 'acord'] = $e->getMessage();
+        $errors[match ($op) { 'incarca' => 'fisier', 'cod-tableta' => 'tableta', default => 'acord' }] = $e->getMessage();
     }
 }
 
@@ -74,7 +101,8 @@ foreach (CONSENT_TYPES as $type => $label) {
     $state = $c === null ? '<span class="text-mustar-text">Nesemnat</span>'
         : ($c['withdrawn_at'] !== null ? '<span class="text-carmin">Retras ' . e(format_date($c['withdrawn_at'])) . '</span>'
             : '<span class="text-actiune">' . icon('check', 16, 'inline') . ' ' . e(CONSENT_METHODS[$c['method']] ?? $c['method']) . ', ' . e(format_date($c['signed_on'])) . '</span>'
-                . ($c['document_id'] ? ' · <a class="text-link underline" href="/admin/documente/' . (int) $c['document_id'] . '">copia scanată</a>' : ''));
+                . ($c['text_snapshot'] !== null ? ' · <a class="text-link underline" href="/admin/pacienti/' . $pid . '/acord/' . $type . '?semnat=' . (int) $c['id'] . '">acordul semnat</a>'
+                    : ($c['document_id'] ? ' · <a class="text-link underline" href="/admin/documente/' . (int) $c['document_id'] . '">copia scanată</a>' : '')));
     $consentRows .= '<li class="flex flex-wrap items-center justify-between gap-3 border-t border-linie py-3 first:border-t-0">'
         . '<div class="min-w-0"><p class="font-semibold">' . e($label) . '</p><p class="text-mic">' . $state . '</p></div>'
         . '<div class="flex flex-wrap items-center gap-2"><a href="/admin/pacienti/' . $pid . '/acord/' . $type . '" class="' . e(btn('secondary', 's')) . '">' . icon('printer', 16) . 'Formularul</a>'
@@ -89,6 +117,44 @@ $consentForm = $writable ? '<details class="mt-4 rounded-panou border border-lin
     . text_field('signed_on', 'Data', ['type' => 'date', 'value' => post('signed_on') ?: date('Y-m-d'), 'max' => date('Y-m-d')]) . '</div>'
     . '<div class="flex flex-col gap-1.5">' . field_label('field-scan', 'Copia scanată sau fotografiată', true) . '<input id="field-scan" type="file" name="scan" accept="application/pdf,image/jpeg,image/png,image/webp" class="w-full min-w-0 max-w-full text-corp file:mr-3 file:rounded-control file:border file:border-linie-control file:bg-suprafata file:px-3 file:py-2"></div>'
     . '<div><button type="submit" class="' . e(btn('primary')) . '">Înregistrați acordul</button></div></form></details>' : '';
+
+// The signing tablet: the code waiting to be used, or the form that makes one.
+$session = db_one("SELECT * FROM consent_sessions WHERE patient_id = ? AND status = 'asteptare' AND expires_at > ? ORDER BY id DESC LIMIT 1", [$pid, now_sql()]);
+$hasTablet = (bool) db_value('SELECT 1 FROM kiosk_devices WHERE revoked_at IS NULL LIMIT 1');
+if ($session !== null) {
+    $what = array_map(static fn ($t) => CONSENT_TYPES[$t] ?? $t, array_filter(explode(',', (string) $session['types'])));
+    if ((int) $session['with_history'] === 1) {
+        $what[] = 'chestionarul medical';
+    }
+    if ((int) $session['with_marketing'] === 1) {
+        $what[] = 'ofertele (opțional)';
+    }
+    $tablet = '<div id="cod-activ" data-cod-tableta="' . e($base . '?stare=' . (int) $session['id']) . '" class="mt-4 flex flex-wrap items-center gap-6 rounded-panou border-2 border-actiune bg-menta-pal p-5">'
+        . '<div><p class="text-mic font-semibold text-actiune">Codul pentru tabletă</p><p class="font-display text-[3rem] leading-none tracking-[0.18em] text-cerneala cifre" aria-label="' . e(implode(' ', str_split($session['code']))) . '">' . e(substr($session['code'], 0, 3) . ' ' . substr($session['code'], 3)) . '</p>'
+        . '<p class="mt-2 text-mic">Valabil până la ' . e(hm($session['expires_at'])) . ', o singură dată.</p></div>'
+        . '<div class="min-w-0 flex-1"><p class="flex items-center gap-2 font-semibold" data-cod-stare role="status">' . ($session['opened_at'] ? admin_icon('signature', 18) . 'Pacientul semnează acum pe tabletă…' : icon('clock', 18) . 'Așteaptă codul pe tabletă') . '</p>'
+        . '<p class="mt-1 text-mic text-discret">' . e(ucfirst(implode(', ', $what))) . '</p></div>'
+        . '<form method="post">' . csrf_field() . '<input type="hidden" name="op" value="anuleaza-cod"><input type="hidden" name="id" value="' . (int) $session['id'] . '"><button type="submit" class="' . e(btn('secondary', 's')) . '">Anulați codul</button></form></div>';
+} elseif ($writable) {
+    $unsigned = array_keys(array_filter(CONSENT_TYPES, static fn ($l, $t) => !isset($latest[$t]) || $latest[$t]['withdrawn_at'] !== null, ARRAY_FILTER_USE_BOTH));
+    $preset = $unsigned !== [] ? array_values(array_intersect($unsigned, ['gdpr', 'tratament', 'foto'])) : ['tratament'];
+    $boxes = '';
+    foreach (CONSENT_TYPES as $t => $label) {
+        $boxes .= checkbox_field('types[]', e($label), ['id' => "tip-{$t}", 'value' => $t, 'checked' => in_array($t, $preset, true)]);
+    }
+    $h = db_one('SELECT reviewed_at FROM medical_histories WHERE patient_id = ?', [$pid]);
+    $tablet = '<form method="post" novalidate class="mt-4 flex flex-col gap-4">' . csrf_field() . '<input type="hidden" name="op" value="cod-tableta">'
+        . (isset($errors['tableta']) ? field_error('tableta-eroare', $errors['tableta']) : '')
+        . '<div class="grid gap-x-6 md:grid-cols-2"><fieldset><legend class="mb-1 text-control font-medium">Ce semnează</legend>' . $boxes . '</fieldset>'
+        . '<fieldset><legend class="mb-1 text-control font-medium">Ce mai completează</legend>'
+        . checkbox_field('with_history', 'Chestionarul medical', ['checked' => !$h, 'description' => 'Alergii, medicamente, boli. Intră în fișă după ce îl verifică medicul.'])
+        . checkbox_field('with_marketing', 'Acordul pentru oferte', ['checked' => ((int) $p['marketing_sms'] + (int) $p['marketing_whatsapp'] + (int) $p['marketing_email']) === 0, 'description' => 'SMS, WhatsApp, e-mail; opțional pentru pacient.'])
+        . '</fieldset></div>'
+        . '<div class="flex flex-wrap items-center gap-4"><button type="submit" class="' . e(btn('primary')) . '">' . admin_icon('tablet', 18) . 'Dați un cod pentru tabletă</button>'
+        . ($hasTablet ? '' : '<span class="text-mic text-mustar-text">Nicio tabletă asociată încă: <a class="underline" href="/admin/tablete">Setări → Tablete</a>.</span>') . '</div></form>';
+} else {
+    $tablet = '';
+}
 
 // Documents.
 $docs = db_all('SELECT d.*, u.name AS author FROM patient_documents d LEFT JOIN users u ON u.id = d.created_by WHERE d.patient_id = ? AND d.deleted_at IS NULL ORDER BY d.created_at DESC', [$pid]);
@@ -114,6 +180,7 @@ $uploadForm = $writable ? '<form method="post" enctype="multipart/form-data" nov
 
 $body = patient_header($p, $user, 'documente')
     . '<div class="flex flex-col gap-8">'
+    . ($tablet !== '' ? admin_section_open('Semnare pe tabletă', 'tableta', 'Pacientul introduce codul pe tableta de la recepție, bifează acordurile și semnează cu degetul.') . $tablet . '</section>' : '')
     . admin_section_open('Acorduri', 'acorduri', 'Tipăriți formularul, dați-l pacientului să-l semneze, apoi înregistrați-l aici (eventual cu copia scanată).')
     . '<ul class="mt-3">' . $consentRows . '</ul>' . $consentForm . '</section>'
     . admin_section_open('Documente', 'documente', 'Radiografii, fotografii, documente semnate. Se păstrează în afara site-ului și se deschid doar din panou.')

@@ -58,6 +58,18 @@ if (is_post()) {
         flash('Anamneza a fost salvată.');
         redirect("/admin/pacienti/{$id}#anamneza");
     }
+    if (in_array($op, ['chestionar-aplica', 'chestionar-respinge'], true) && $id && $clinical) {
+        $f = db_one("SELECT * FROM patient_forms WHERE id = ? AND patient_id = ? AND status = 'nou'", [(int) post('id'), $id]);
+        if ($f) {
+            if ($op === 'chestionar-aplica') {
+                apply_history_form($id, json_decode($f['data'], true) ?: [], $user);
+            }
+            db_update('patient_forms', ['status' => $op === 'chestionar-aplica' ? 'aplicat' : 'respins', 'reviewed_by' => $user['id'], 'reviewed_at' => now_sql()], 'id = :id', ['id' => $f['id']]);
+            audit($op === 'chestionar-aplica' ? 'chestionar-aplicat' : 'chestionar-respins', '', null, $id);
+            flash($op === 'chestionar-aplica' ? 'Răspunsurile au fost trecute în anamneză. Verificați-le mai jos.' : 'Chestionarul a fost pus deoparte.');
+        }
+        redirect("/admin/pacienti/{$id}#anamneza");
+    }
     if ($op === 'nota' && $id) {
         $body = trim(post('body'));
         if ($body !== '') {
@@ -240,6 +252,18 @@ if ($clinical) {
 } else {
     $history = '<div class="mt-3 flex flex-wrap gap-2">' . ($alerts !== [] ? alert_chips($alerts, 'text-corp') : '<p class="text-corp text-discret">Nicio alertă.</p>') . '</div><p class="mt-3 text-mic text-discret">Anamneza completă o văd și o completează medicii.</p>';
 }
+
+// The questionnaire the patient filled in on the tablet, until a doctor checks it.
+$forms = db_all("SELECT * FROM patient_forms WHERE patient_id = ? AND kind = 'anamneza' AND status = 'nou' ORDER BY id DESC", [$id]);
+$formNote = '';
+foreach ($forms as $f) {
+    $lines = $clinical ? '<ul class="mt-2 flex flex-col gap-1 text-corp">' . implode('', array_map(static fn ($l) => '<li>' . e($l) . '</li>', history_form_lines(json_decode($f['data'], true) ?: []))) . '</ul>' : '';
+    $buttons = $clinical ? '<div class="mt-3 flex flex-wrap gap-2"><form method="post">' . csrf_field() . '<input type="hidden" name="op" value="chestionar-aplica"><input type="hidden" name="id" value="' . (int) $f['id'] . '"><button type="submit" class="' . e(btn('primary', 's')) . '">' . icon('check', 16) . 'Treceți în anamneză</button></form>'
+        . '<form method="post" data-confirma="Puneți deoparte chestionarul, fără să-l treceți în fișă?">' . csrf_field() . '<input type="hidden" name="op" value="chestionar-respinge"><input type="hidden" name="id" value="' . (int) $f['id'] . '"><button type="submit" class="' . e(btn('text', 's')) . '">Puneți deoparte</button></form></div>'
+        : '<p class="mt-1 text-mic text-discret">Îl verifică medicul înainte de tratament.</p>';
+    $formNote .= '<div class="mt-4 rounded-panou border-2 border-mustar bg-mustar-pal p-4"><p class="flex items-center gap-2 font-semibold">' . admin_icon('tablet', 18) . 'Chestionar completat de pacient pe tabletă, ' . e(format_datetime($f['created_at'])) . '</p>' . $lines . $buttons . '</div>';
+}
+$history = $formNote . $history;
 
 // Appointments.
 $appts = db_all('SELECT * FROM appointments WHERE patient_id = ? ORDER BY starts_at DESC LIMIT 100', [$id]);

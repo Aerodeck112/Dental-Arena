@@ -193,6 +193,31 @@
     }
   });
 
+  // The code for the signing tablet: the page follows the patient (opened, then signed).
+  var code = document.querySelector("[data-cod-tableta]");
+  if (code && window.fetch) {
+    var state = code.querySelector("[data-cod-stare]");
+    var opened = false;
+    var poll = setInterval(function () {
+      if (document.hidden) return;
+      fetch(code.getAttribute("data-cod-tableta"), { credentials: "same-origin", cache: "no-store" })
+        .then(function (r) {
+          return r.ok ? r.json() : null;
+        })
+        .then(function (d) {
+          if (!d) return;
+          if (d.status !== "asteptare") {
+            clearInterval(poll);
+            window.location.reload();
+          } else if (d.opened && !opened && state) {
+            opened = true;
+            state.textContent = "Pacientul semnează acum pe tabletă…";
+          }
+        })
+        .catch(function () {});
+    }, 4000);
+  }
+
   var focusMe = document.querySelector("[data-autofocus], [role=alert]");
   if (focusMe) focusMe.focus();
 })();

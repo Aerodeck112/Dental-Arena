@@ -385,7 +385,7 @@ const CONSENT_TYPES = [
     'inhalosedare' => 'Consimțământ pentru inhalosedare',
     'foto' => 'Fotografii și radiografii',
 ];
-const CONSENT_METHODS = ['hartie' => 'Semnat pe hârtie', 'verbal' => 'Acord verbal, notat de personal'];
+const CONSENT_METHODS = ['hartie' => 'Semnat pe hârtie', 'tableta' => 'Semnat pe tabletă', 'verbal' => 'Acord verbal, notat de personal'];
 
 /** The default texts; {{pacient}}, {{firma}}, {{clinica}} and {{email}} are filled when printing. */
 const CONSENT_DEFAULTS = [
@@ -399,6 +399,19 @@ function consent_text(string $type): string
 {
     $custom = setting('consent_texts')[$type] ?? null;
     return is_string($custom) && trim($custom) !== '' ? $custom : (CONSENT_DEFAULTS[$type] ?? '');
+}
+
+/** A consent's text for one patient: {{pacient}}, {{firma}}, {{clinica}}, {{email}} filled in. */
+function consent_text_for(string $type, array $p): string
+{
+    $clinic = $p['preferred_location_id'] ? db_one('SELECT short_name FROM locations WHERE id = ?', [(int) $p['preferred_location_id']]) : null;
+    $company = setting('company');
+    return strtr(consent_text($type), [
+        '{{pacient}}' => trim($p['last_name'] . ' ' . $p['first_name']),
+        '{{firma}}' => $company['legalName'] !== '' ? $company['legalName'] : 'Dental Arena',
+        '{{clinica}}' => 'Dental Arena' . ($clinic ? ' ' . $clinic['short_name'] : ''),
+        '{{email}}' => content('site.email'),
+    ]);
 }
 
 /** The version printed under a consent (the date its text last changed). */
@@ -666,6 +679,14 @@ const AUDIT_LABELS = [
     'consultatie-ai' => 'Consultație analizată cu AI',
     'consultatie-ai-aplicata' => 'Propunerile AI aplicate în fișă',
     'setari-ai' => 'Setările asistentului AI',
+    'tableta-asociata' => 'Tabletă de semnare asociată',
+    'tableta-oprita' => 'Tabletă de semnare oprită',
+    'cod-tableta' => 'Cod de semnare pe tabletă',
+    'cod-tableta-anulat' => 'Cod de semnare anulat',
+    'semnat-tableta' => 'Acorduri semnate pe tabletă',
+    'chestionar-aplicat' => 'Chestionarul pacientului trecut în anamneză',
+    'chestionar-respins' => 'Chestionarul pacientului respins',
+    'acord-semnat-vazut' => 'Acord semnat deschis',
 ];
 
 function audit_label(string $action): string
