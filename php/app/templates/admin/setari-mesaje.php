@@ -132,6 +132,7 @@ foreach (STAFF_EVENTS as $ev => $def) {
     $staffRows .= '<div class="grid gap-3 border-t border-linie pt-4 first:border-t-0 first:pt-0 md:grid-cols-2">'
         . text_area("{$ev}_sms", $def['label'], ['value' => $c['sms'], 'rows' => 2])
         . text_field("{$ev}_wa", 'Șablon WhatsApp', ['value' => $c['wa'], 'optional' => true, 'hint' => 'Parametri: ' . implode(', ', array_map(static fn ($i, $k) => '{{' . ($i + 1) . '}} = ' . $k, array_keys($def['params']), $def['params'])) . '.'])
+        . (isset($def['wa_text']) ? '<p class="text-mic text-discret md:col-span-2">Text propus pentru șablonul de la Meta (categoria „Utility”, limba română): <span class="font-medium text-cerneala">' . e($def['wa_text']) . '</span></p>' : '')
         . '</div>';
 }
 

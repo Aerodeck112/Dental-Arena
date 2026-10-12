@@ -9,6 +9,7 @@ declare(strict_types=1);
 const APP_DIR = __DIR__ . '/../app';
 require APP_DIR . '/src/booking.php';
 require APP_DIR . '/src/admin/kiosk.php';
+require APP_DIR . '/src/helpers.php';
 
 $failed = 0;
 $check = static function (string $what, bool $ok) use (&$failed): void {
@@ -28,6 +29,9 @@ $sch = schedule_decode('{"1":["09:00","17:00"],"2":["09:00","17:00"],"3":["09:00
 $check('programul ignoră intervale greșite', array_keys($sch) === [1, 2, 3, 5]);
 $check('programul în cuvinte', schedule_text($sch) === 'Luni–Miercuri 09:00–17:00, Vineri 10:00–14:00');
 $check('ziua în cuvinte', day_label('2026-10-14') === 'miercuri, 14 octombrie');
+
+$check('numerele în română', count_ro(1, 'o programare', 'programări') === 'o programare' && count_ro(5, 'o programare', 'programări') === '5 programări'
+    && count_ro(20, 'o programare', 'programări') === '20 de programări' && count_ro(101, 'o programare', 'programări') === '101 programări' && count_ro(120, 'o programare', 'programări') === '120 de programări');
 
 if (function_exists('imagecreatetruecolor')) {
     $img = imagecreatetruecolor(600, 200);

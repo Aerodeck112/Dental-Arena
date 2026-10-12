@@ -32,7 +32,22 @@ $v = [
     'bio' => $doc['bio'] ?? '',
     'sort_order' => (string) ($doc['sort_order'] ?? ((int) db_value('SELECT COALESCE(MAX(sort_order), 0) + 1 FROM doctors'))),
     'public_visible' => (string) ($doc['public_visible'] ?? 1),
+    'phone' => (string) ($doc['phone'] ?? ''),
+    'email' => (string) ($doc['email'] ?? ''),
+    'agenda_channel' => (string) ($doc['agenda_channel'] ?? ''),
+    'agenda_time' => (string) ($doc['agenda_time'] ?? '07:00'),
+    'agenda_alerts' => (string) ($doc['agenda_alerts'] ?? 0),
 ];
+
+// „Trimiteți acum”: today's programme (or the next day with appointments) to the doctor, now.
+if (!$isNew && is_post() && post('actiune') === 'agenda-proba') {
+    csrf_check();
+    $day = (string) (db_value("SELECT DATE(starts_at) FROM appointments WHERE doctor_id = ? AND starts_at >= ? AND status IN ('programat', 'confirmat', 'sosit', 'in-tratament') ORDER BY starts_at LIMIT 1", [$doc['id'], date('Y-m-d') . ' 00:00:00']) ?: date('Y-m-d'));
+    $n = send_doctor_agenda($doc, $day, true);
+    process_message_queue(10);
+    flash($n > 0 ? 'Programul din ' . format_date($day, true) . ' a fost trimis' . (messaging_live() ? '.' : ' (modul de probă: mesajul apare doar în Mesaje, nu pleacă).') : 'Nu am unde trimite: alegeți canalul și scrieți telefonul sau e-mailul, apoi salvați.', $n > 0 ? 'ok' : 'eroare');
+    redirect("/admin/echipa/{$doc['id']}#agenda");
+}
 
 if (is_post()) {
     csrf_check();
@@ -48,6 +63,24 @@ if (is_post()) {
         $v[$k] = post($k);
     }
     $v['public_visible'] = post('public_visible') === '1' ? '1' : '0';
+    foreach (['phone', 'email', 'agenda_time'] as $k) {
+        $v[$k] = trim(post($k));
+    }
+    $v['agenda_channel'] = isset(AGENDA_CHANNELS[post('agenda_channel')]) ? post('agenda_channel') : '';
+    $v['agenda_alerts'] = post('agenda_alerts') === '1' ? '1' : '0';
+    if ($v['phone'] !== '' && phone_e164($v['phone']) === null) {
+        $errors['phone'] = 'Scrieți numărul ca 0744 123 456.';
+    } elseif (in_array($v['agenda_channel'], ['whatsapp', 'sms'], true) && phone_ro_mobile($v['phone']) === null) {
+        $errors['phone'] = 'Pentru WhatsApp sau SMS scrieți numărul de mobil al medicului.';
+    }
+    if ($v['email'] !== '' && !filter_var($v['email'], FILTER_VALIDATE_EMAIL)) {
+        $errors['email'] = 'Adresa de e-mail nu pare corectă.';
+    } elseif ($v['agenda_channel'] === 'email' && $v['email'] === '') {
+        $errors['email'] = 'Pentru e-mail scrieți adresa medicului.';
+    }
+    if (!preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $v['agenda_time'])) {
+        $v['agenda_time'] = '07:00';
+    }
     $workLocs = array_values(array_filter(array_map('intval', is_array($_POST['locations'] ?? null) ? $_POST['locations'] : []), static fn ($lid) => isset($clinicNames[$lid])));
     $schedules = [];
     $sentSch = is_array($_POST['sch'] ?? null) ? $_POST['sch'] : [];
@@ -87,6 +120,11 @@ if (is_post()) {
             'bio' => $v['bio'] !== '' ? mb_substr($v['bio'], 0, 4000) : null,
             'sort_order' => (int) $v['sort_order'],
             'public_visible' => (int) $v['public_visible'],
+            'phone' => $v['phone'] !== '' ? format_phone($v['phone']) : null,
+            'email' => $v['email'] !== '' ? mb_substr($v['email'], 0, 190) : null,
+            'agenda_channel' => $v['agenda_channel'] !== '' ? $v['agenda_channel'] : null,
+            'agenda_time' => $v['agenda_time'],
+            'agenda_alerts' => (int) $v['agenda_alerts'],
         ];
         if ($photo !== null) {
             $row['photo_path'] = $photo['path'];
@@ -159,6 +197,28 @@ foreach ($clinicNames as $lid => $n) {
         . '<div class="mt-1 flex flex-col gap-2">' . $rows . '</div>'
         . '<p class="mt-2 text-mic text-discret">Lăsați gol în zilele în care nu lucrează aici.</p></fieldset>';
 }
+// What the doctor receives: the next day with appointments, as an example.
+$preview = '';
+if (!$isNew) {
+    $day = (string) (db_value("SELECT DATE(starts_at) FROM appointments WHERE doctor_id = ? AND starts_at >= ? AND status IN ('programat', 'confirmat', 'sosit', 'in-tratament') ORDER BY starts_at LIMIT 1", [$doc['id'], date('Y-m-d') . ' 00:00:00']) ?: '');
+    if ($day !== '') {
+        $pv = agenda_vars(['agenda_alerts' => (int) $v['agenda_alerts']] + $doc, $day, doctor_agenda((int) $doc['id'], $day));
+        $preview = '<div class="min-w-0 rounded-[1.25rem] rounded-tl-md bg-[#dcf8c6] p-4 text-corp text-[#111b21] shadow-sm"><p>Bună dimineața, ' . e($pv['medic']) . '! Azi, ' . e($pv['data']) . ', aveți ' . e($pv['numar']) . ':</p>'
+            . '<ul class="mt-2 flex flex-col gap-1">' . implode('', array_map(static fn ($l) => '<li>• ' . e($l) . '</li>', $pv['linii'])) . '</ul>'
+            . '<p class="mt-2 text-mic text-[#667781]">Exemplu: programul din ' . e(format_date($day, true)) . '</p></div>';
+    } else {
+        $preview = '<p class="rounded-panou bg-fundal p-4 text-mic text-discret">Medicul nu are încă programări viitoare; mesajul pleacă doar în zilele cu programări.</p>';
+    }
+}
+$agenda = admin_section_open('Programul zilei, pe telefon', 'agenda', 'În fiecare zi în care are programări, medicul primește dimineața lista lor: ora, pacientul, motivul. Dacă se adaugă, se mută sau se anulează ceva pentru aceeași zi, primește și asta. Nu are nevoie de cont în panou.')
+    . '<div class="mt-4 grid gap-6 lg:grid-cols-2"><div class="flex min-w-0 flex-col gap-4">'
+    . select_field('agenda_channel', 'Unde primește programul', AGENDA_CHANNELS, ['value' => $v['agenda_channel']])
+    . '<div class="grid gap-4 sm:grid-cols-2">' . text_field('phone', 'Mobilul medicului', ['type' => 'tel', 'value' => $v['phone'], 'optional' => true, 'error' => $errors['phone'] ?? null])
+    . text_field('agenda_time', 'La ce oră', ['type' => 'time', 'value' => $v['agenda_time'], 'step' => 900, 'hint' => 'Dacă prima programare e mai devreme, alegeți o oră înaintea ei.']) . '</div>'
+    . text_field('email', 'E-mailul medicului', ['type' => 'email', 'value' => $v['email'], 'optional' => true, 'error' => $errors['email'] ?? null])
+    . checkbox_field('agenda_alerts', 'Cu alertele medicale ale pacienților', ['checked' => $v['agenda_alerts'] === '1', 'description' => 'Alergii, anticoagulante, sarcină etc. Sunt date de sănătate: bifați doar dacă telefonul medicului e protejat.'])
+    . '<p class="text-mic text-discret">Pe WhatsApp e nevoie de un șablon aprobat de Meta (Setări → Mesaje → „Programul zilei”); până atunci pleacă prin SMS.</p></div>'
+    . '<div class="min-w-0"><p class="mb-2 text-mic font-semibold text-discret">Cum arată</p>' . $preview . '</div></div></section>';
 $portrait = '';
 if (!$isNew) {
     $d = public_doctor($doc);
@@ -178,6 +238,7 @@ $body = '<p class="mb-4"><a href="/admin/echipa" class="inline-flex min-h-contro
     . checkbox_field('public_visible', 'Apare pe site', ['checked' => $v['public_visible'] === '1', 'class' => 'md:mt-7']) . '</div></section>'
     . admin_section_open('Unde și când lucrează', 'clinici', 'Medicul apare în calendarul clinicilor bifate. Din program, asistentul de pe site propune orele libere (fără zilele de sărbătoare legală și fără orele deja ocupate). Fără program, medicul nu primește programări online.')
     . '<div class="mt-4 grid gap-6 lg:grid-cols-2">' . $workBlocks . '</div></section>'
+    . $agenda
     . admin_section_open('Portretul', 'portret', 'O fotografie verticală, cu fața în treimea de sus. Fără portret, pe site apar inițialele.')
     . '<div class="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start">' . $portrait
     . '<div class="flex flex-col gap-2"><label for="foto" class="text-control font-medium">Portret nou (JPG, PNG sau WebP)</label>'
@@ -186,5 +247,6 @@ $body = '<p class="mb-4"><a href="/admin/echipa" class="inline-flex min-h-contro
     . admin_section_open('Serviciile', 'servicii', 'Ce face medicul. Cei marcați „apare” sunt arătați pe pagina serviciului.')
     . '<ul class="mt-3">' . $catRows . '</ul></section>'
     . '<div><button type="submit" class="' . e(btn('primary', 'l')) . '">' . ($isNew ? 'Adăugați medicul' : 'Salvați') . '</button></div></form>'
-    . (!$isNew && $doc['photo_path'] && str_starts_with($doc['photo_path'], '/media/') ? '<form method="post" class="mt-6" data-confirma="Scoateți portretul?">' . csrf_field() . '<input type="hidden" name="actiune" value="sterge-foto"><button type="submit" class="' . e(btn('text', 's')) . '">' . icon('trash-2', 16) . 'Scoateți portretul</button></form>' : '');
+    . (!$isNew && $doc['photo_path'] && str_starts_with($doc['photo_path'], '/media/') ? '<form method="post" class="mt-6" data-confirma="Scoateți portretul?">' . csrf_field() . '<input type="hidden" name="actiune" value="sterge-foto"><button type="submit" class="' . e(btn('text', 's')) . '">' . icon('trash-2', 16) . 'Scoateți portretul</button></form>' : '')
+    . (!$isNew && $doc['agenda_channel'] ? '<form method="post" class="mt-6">' . csrf_field() . '<input type="hidden" name="actiune" value="agenda-proba"><button type="submit" class="' . e(btn('secondary', 'm', 'h-auto min-h-control max-w-full whitespace-normal py-2 text-left')) . '">' . icon('phone', 18) . 'Trimiteți acum programul medicului (probă)</button></form>' : '');
 admin_page($isNew ? 'Medic nou' : $doc['public_name'], $body, $user);

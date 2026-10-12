@@ -228,6 +228,16 @@ function format_date(string|DateTimeInterface $d, bool $withWeekday = false): st
     return $withWeekday ? RO_WEEKDAYS[(int) $dt->format('N') - 1] . ', ' . $s : $s;
 }
 
+/** „o programare”, „3 programări”, „20 de programări” */
+function count_ro(int $n, string $one, string $many): string
+{
+    if ($n === 1) {
+        return $one;
+    }
+    $m = $n % 100;
+    return $n . ($n >= 20 && ($m === 0 || $m >= 20) ? ' de ' : ' ') . $many;
+}
+
 /** „7 oct. 2026, 14:05” for the panel. */
 function format_datetime(string $d): string
 {

@@ -157,3 +157,13 @@ consent, `leads.marketing_ok`.
 - `php php/tests/run.php`: holidays, schedules, the ink check and the SDK contract the chat needs
   (runs in CI after the build). For local end-to-end tests without network, `config.php` may set
   `'ai_test_transport' => '/path/fake.php'` (a file returning a PSR-18 client); never in production.
+
+## Doctors' daily programme (migration 006)
+
+`doctors.phone/email/agenda_channel/agenda_time/agenda_alerts`, `messages.doctor_id`. In
+`notify.php`: `doctor_agenda`, `agenda_vars` (one-line `lista` ≤ 800 chars for the WhatsApp
+template, `linii` for e-mail), `agenda_recipients` (the doctor's own contact + accounts that chose
+`staff-agenda`, one per phone/e-mail), `send_doctor_agenda` (template → free text inside the 24 h
+window → SMS), `send_agendas` (from `run_daily_jobs` on every cron tick: once a day per doctor,
+from `agenda_time` until the last appointment), `notify_doctor_today` (same-day changes after the
+programme went out). `count_ro()` in helpers.php.

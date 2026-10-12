@@ -110,7 +110,8 @@ const STAFF_EVENTS = [
     'staff-programare-mutata' => ['label' => 'Programare mutată', 'who' => 'medic', 'sms' => 'Programare mutata: {pacient}, acum {data} ora {ora}, {clinica}.', 'params' => ['pacient', 'data', 'ora', 'clinica']],
     'staff-programare-anulata' => ['label' => 'Programare anulată', 'who' => 'medic', 'sms' => 'Programare anulata: {pacient}, {data} ora {ora}, {clinica}.', 'params' => ['pacient', 'data', 'ora', 'clinica']],
     'staff-pacient-sosit' => ['label' => 'Pacientul a sosit', 'who' => 'medic', 'sms' => '{pacient} a sosit (programarea de la {ora}, {clinica}).', 'params' => ['pacient', 'ora', 'clinica']],
-    'staff-agenda' => ['label' => 'Programările zilei, dimineața la 7', 'who' => 'medic', 'sms' => 'Programarile de azi, {data}: {lista}', 'params' => ['data', 'lista']],
+    'staff-agenda' => ['label' => 'Programul zilei, dimineața (doar în zilele cu programări)', 'who' => 'medic', 'sms' => 'Buna dimineata, {medic}! Azi, {data}, aveti {numar}: {lista}', 'params' => ['medic', 'data', 'numar', 'lista'],
+        'wa_text' => 'Bună dimineața, {{1}}! Azi, {{2}}, aveți {{3}}: {{4}}. Vă dorim o zi frumoasă!'],
     'staff-cerere-noua' => ['label' => 'Cerere nouă de pe site', 'who' => 'receptie', 'sms' => 'Cerere noua de pe site: {pacient}, {telefon}, {serviciu}, {clinica}.', 'params' => ['pacient', 'telefon', 'serviciu', 'clinica']],
     'staff-programare-online' => ['label' => 'Programare făcută online, în chatul de pe site', 'who' => 'receptie', 'sms' => 'Programare online: {pacient}, {telefon}, {data} ora {ora}, {clinica}, {medic}.', 'params' => ['pacient', 'telefon', 'data', 'ora', 'clinica', 'medic']],
     'staff-whatsapp-primit' => ['label' => 'Mesaj nou de la un pacient pe WhatsApp', 'who' => 'receptie', 'sms' => 'Mesaj WhatsApp de la {pacient}: {text}', 'params' => ['pacient', 'text']],
@@ -183,10 +184,16 @@ function patient_event(string $event): array
     return array_merge(PATIENT_EVENTS[$event] + ['wa' => ''], array_intersect_key($over, array_flip(['phone', 'email', 'sms', 'subject', 'body', 'wa'])));
 }
 
+/** Texts that were the default once: when saved unchanged, the new default is used. */
+const STAFF_SMS_OLD_DEFAULTS = ['staff-agenda' => 'Programarile de azi, {data}: {lista}'];
+
 function staff_event(string $event): array
 {
     $saved = setting('notificari');
     $over = is_array($saved) && is_array($saved[$event] ?? null) ? $saved[$event] : [];
+    if (isset($over['sms'], STAFF_SMS_OLD_DEFAULTS[$event]) && trim((string) $over['sms']) === STAFF_SMS_OLD_DEFAULTS[$event]) {
+        unset($over['sms']);
+    }
     return array_merge(STAFF_EVENTS[$event] + ['wa' => ''], array_intersect_key($over, array_flip(['sms', 'wa'])));
 }
 
@@ -402,6 +409,182 @@ function front_desk_users(?int $locationId): array
     return array_values(array_filter($rows, static fn ($u) => $u['role'] === 'admin' || in_array((int) $u['id'], $at, true)));
 }
 
+// ── The doctors' programme of the day ────────────────────────────────────────
+
+const AGENDA_CHANNELS = ['' => 'Nu trimite', 'whatsapp' => 'WhatsApp', 'sms' => 'SMS', 'email' => 'E-mail'];
+const AGENDA_STATUSES = ['programat', 'confirmat', 'sosit', 'in-tratament'];
+
+/** A doctor's appointments of a day, with the patient and the clinic. */
+function doctor_agenda(int $doctorId, string $date): array
+{
+    $in = "'" . implode("','", AGENDA_STATUSES) . "'";
+    return db_all(
+        "SELECT a.*, p.first_name, p.last_name, l.short_name AS clinic FROM appointments a JOIN patients p ON p.id = a.patient_id JOIN locations l ON l.id = a.location_id
+         WHERE a.doctor_id = ? AND a.starts_at >= ? AND a.starts_at <= ? AND a.status IN ({$in}) ORDER BY a.starts_at",
+        [$doctorId, "{$date} 00:00:00", "{$date} 23:59:59"],
+    );
+}
+
+/**
+ * The values of the message: medic, data, numar, clinici, lista (one line, for SMS and the
+ * WhatsApp template, which allows no line breaks), linii (one per appointment, for e-mail), link.
+ */
+function agenda_vars(array $doctor, string $date, array $rows): array
+{
+    $clinics = array_values(array_unique(array_column($rows, 'clinic')));
+    $alerts = (int) ($doctor['agenda_alerts'] ?? 0) === 1 && function_exists('medical_alerts');
+    $lines = [];
+    foreach ($rows as $r) {
+        $what = trim((string) ($r['reason'] ?: ($r['category_slug'] ? (service_content($r['category_slug'])['title'] ?? '') : '')));
+        $line = substr($r['starts_at'], 11, 5) . ' ' . trim($r['last_name'] . ' ' . $r['first_name'])
+            . ($what !== '' ? ' – ' . mb_strimwidth($what, 0, 48, '…') : '')
+            . (count($clinics) > 1 ? ' (' . $r['clinic'] . ')' : '');
+        if ($alerts && ($al = medical_alerts((int) $r['patient_id'])) !== []) {
+            $line .= ' ⚠ ' . implode(', ', $al);
+        }
+        $lines[] = $line;
+    }
+    // The WhatsApp template's text stays under its limit: the rest is in the panel.
+    $one = '';
+    foreach ($lines as $i => $line) {
+        if (mb_strlen($one . $line) > 800) {
+            $one .= ' · și încă ' . (count($lines) - $i) . ' în panou';
+            break;
+        }
+        $one .= ($one !== '' ? ' · ' : '') . $line;
+    }
+    return [
+        'medic' => 'Dr. ' . $doctor['last_name'],
+        'data' => format_date($date, true),
+        'numar' => $rows === [] ? 'nicio programare' : count_ro(count($rows), 'o programare', 'programări') . (count($clinics) === 1 ? ' la ' . $clinics[0] : ''),
+        'lista' => $one !== '' ? $one : '—',
+        'linii' => $lines,
+        'link' => absolute_url('/admin/calendar?data=' . $date),
+    ];
+}
+
+/**
+ * Where a doctor's programme goes: the contact set on the doctor (Echipa → medic) and the panel
+ * accounts of the doctor who chose it in „Contul meu”, each address once.
+ *
+ * @return list<array{channel:string,to:string,user_id:?int}>
+ */
+function agenda_recipients(array $doctor): array
+{
+    $out = [];
+    $add = static function (string $ch, string $phone, string $email, ?int $userId) use (&$out): void {
+        $to = match ($ch) {
+            'whatsapp' => phone_e164($phone),
+            'sms' => phone_ro_mobile($phone),
+            'email' => filter_var($email, FILTER_VALIDATE_EMAIL) ? $email : null,
+            default => null,
+        };
+        // On WhatsApp and SMS it is the same phone: one message is enough.
+        $key = $ch === 'email' ? "e:{$to}" : 'p:' . phone_e164($phone);
+        if ($to !== null && !isset($out[$key])) {
+            $out[$key] = ['channel' => $ch, 'to' => $to, 'user_id' => $userId];
+        }
+    };
+    $users = users_of_doctor((int) $doctor['id']);
+    if (!empty($doctor['agenda_channel'])) {
+        $add((string) $doctor['agenda_channel'], (string) ($doctor['phone'] ?? ''), (string) ($doctor['email'] ?: ($users[0]['email'] ?? '')), null);
+    }
+    foreach ($users as $u) {
+        foreach (user_notify_prefs($u)['staff-agenda'] ?? [] as $ch) {
+            $add($ch, (string) $u['phone'], (string) $u['email'], (int) $u['id']);
+        }
+    }
+    return array_values($out);
+}
+
+/** Queues a doctor's programme of $date. $test: also when it was sent already or the day is empty. */
+function send_doctor_agenda(array $doctor, string $date, bool $test = false): int
+{
+    $rows = doctor_agenda((int) $doctor['id'], $date);
+    if (!$test && ($rows === [] || db_value("SELECT 1 FROM messages WHERE event = 'staff-agenda' AND doctor_id = ? AND created_at >= ?", [$doctor['id'], "{$date} 00:00:00"]))) {
+        return 0;
+    }
+    $v = agenda_vars($doctor, $date, $rows);
+    $cfg = staff_event('staff-agenda');
+    $text = fill_template((string) $cfg['sms'], $v);
+    $longText = "Bună dimineața, {$v['medic']}!\n\nAzi, {$v['data']}, aveți {$v['numar']}:\n" . implode("\n", array_map(static fn ($l) => "• {$l}", $v['linii'])) . "\n\nCalendarul: {$v['link']}";
+    $n = 0;
+    foreach (agenda_recipients($doctor) as $r) {
+        $row = ['event' => 'staff-agenda', 'doctor_id' => (int) $doctor['id'], 'user_id' => $r['user_id'], 'send_after' => now_sql(), 'created_by' => null];
+        $ch = $r['channel'];
+        if ($ch === 'whatsapp') {
+            $tpl = trim((string) $cfg['wa']);
+            if ($tpl !== '') {
+                $n += (int) (bool) queue_message($row + ['channel' => 'whatsapp', 'to_address' => $r['to'], 'body' => $text, 'template' => $tpl, 'template_params' => json_encode([$v['medic'], $v['data'], $v['numar'], $v['lista']], JSON_UNESCAPED_UNICODE)]);
+                continue;
+            }
+            if (whatsapp_window_open($r['to'])) {
+                // The doctor wrote to the clinic's number in the last 24 h: free text is allowed.
+                $n += (int) (bool) queue_message($row + ['channel' => 'whatsapp', 'to_address' => $r['to'], 'body' => $longText]);
+                continue;
+            }
+            // No approved template yet: SMS instead.
+            $ch = 'sms';
+            $r['to'] = (string) phone_ro_mobile($r['to']);
+        }
+        if ($ch === 'sms' && $r['to'] !== '') {
+            $n += (int) (bool) queue_message($row + ['channel' => 'sms', 'to_address' => $r['to'], 'body' => $text]);
+        } elseif ($ch === 'email') {
+            $n += (int) (bool) queue_message($row + ['channel' => 'email', 'to_address' => $r['to'], 'subject' => 'Programul de azi, ' . $v['data'], 'body' => $longText . "\n\nDental Arena"]);
+        }
+    }
+    return $n;
+}
+
+/** Each doctor with appointments today gets the programme once, from their hour until the last appointment. */
+function send_agendas(DateTimeImmutable $now): void
+{
+    $today = $now->format('Y-m-d');
+    $in = "'" . implode("','", AGENDA_STATUSES) . "'";
+    $days = db_all("SELECT doctor_id, MAX(starts_at) AS last_start FROM appointments WHERE starts_at >= ? AND starts_at <= ? AND status IN ({$in}) GROUP BY doctor_id", ["{$today} 00:00:00", "{$today} 23:59:59"]);
+    foreach ($days as $d) {
+        $doctor = db_one('SELECT * FROM doctors WHERE id = ?', [(int) $d['doctor_id']]);
+        if ($doctor === null || $now->format('H:i') < ($doctor['agenda_time'] ?: '07:00') || $now->format('Y-m-d H:i:s') > $d['last_start']) {
+            continue;
+        }
+        try {
+            send_doctor_agenda($doctor, $today);
+        } catch (Throwable $e) {
+            app_log('error', 'agenda #' . $doctor['id'] . ': ' . $e->getMessage());
+        }
+    }
+}
+
+/**
+ * After the programme went out, a change to today's appointments reaches the doctor the same way
+ * (accounts that chose these notices in „Contul meu” already get them).
+ */
+function notify_doctor_today(string $staffEvent, array $a, array $vars): void
+{
+    $doctor = db_one('SELECT * FROM doctors WHERE id = ?', [(int) $a['doctor_id']]);
+    if ($doctor === null || empty($doctor['agenda_channel']) || substr($a['starts_at'], 0, 10) !== date('Y-m-d')
+        || !db_value("SELECT 1 FROM messages WHERE event = 'staff-agenda' AND doctor_id = ? AND created_at >= ?", [$doctor['id'], date('Y-m-d') . ' 00:00:00'])) {
+        return;
+    }
+    foreach (users_of_doctor((int) $doctor['id']) as $u) {
+        if ((user_notify_prefs($u)[$staffEvent] ?? []) !== []) {
+            return;
+        }
+    }
+    $cfg = staff_event($staffEvent);
+    $text = fill_template((string) $cfg['sms'], $vars);
+    $row = ['event' => $staffEvent, 'doctor_id' => (int) $doctor['id'], 'appointment_id' => (int) $a['id'], 'created_by' => null];
+    $ch = (string) $doctor['agenda_channel'];
+    $wa = phone_e164((string) $doctor['phone']);
+    if ($ch === 'whatsapp' && $wa !== null && (trim((string) $cfg['wa']) !== '' || whatsapp_window_open($wa))) {
+        queue_message($row + ['channel' => 'whatsapp', 'to_address' => $wa, 'body' => $text] + (trim((string) $cfg['wa']) !== '' ? ['template' => trim((string) $cfg['wa']), 'template_params' => json_encode(array_map(static fn ($k) => (string) ($vars[$k] ?? ''), $cfg['params']), JSON_UNESCAPED_UNICODE)] : []));
+    } elseif (($ch === 'whatsapp' || $ch === 'sms') && ($to = phone_ro_mobile((string) $doctor['phone'])) !== null) {
+        queue_message($row + ['channel' => 'sms', 'to_address' => $to, 'body' => $text]);
+    } elseif ($ch === 'email' && filter_var((string) $doctor['email'], FILTER_VALIDATE_EMAIL)) {
+        queue_message($row + ['channel' => 'email', 'to_address' => (string) $doctor['email'], 'subject' => 'Dental Arena: ' . STAFF_EVENTS[$staffEvent]['label'], 'body' => $text . "\n\n" . absolute_url('/admin/calendar')]);
+    }
+}
+
 /** Patient + doctor notices of an appointment event (new, moved, cancelled, arrived). */
 function notify_appointment(string $what, int $appointmentId): void
 {
@@ -420,6 +603,9 @@ function notify_appointment(string $what, int $appointmentId): void
         if ($staff !== null && ($future || $what === 'sosit')) {
             $others = array_filter(users_of_doctor((int) $a['doctor_id']), static fn ($u) => (int) $u['id'] !== (int) (current_user()['id'] ?? 0));
             notify_staff($staff, $others, $vars, ['appointment_id' => $appointmentId]);
+            if ($what !== 'sosit') {
+                notify_doctor_today($staff, $a, $vars);
+            }
         }
     } catch (Throwable $e) {
         app_log('error', "notify_appointment({$what}): " . $e->getMessage());
@@ -614,18 +800,8 @@ function run_daily_jobs(?DateTimeImmutable $now = null): void
     $now ??= new DateTimeImmutable();
     $today = $now->format('Y-m-d');
 
-    // The doctors' agenda of the day.
-    daily_job('agenda', 7, $now, static function () use ($today): void {
-        $rows = db_all("SELECT a.*, p.first_name, p.last_name FROM appointments a JOIN patients p ON p.id = a.patient_id
-            WHERE a.starts_at >= ? AND a.starts_at < ? AND a.status IN ('programat', 'confirmat') ORDER BY a.starts_at", ["{$today} 00:00:00", "{$today} 23:59:59"]);
-        $byDoctor = [];
-        foreach ($rows as $r) {
-            $byDoctor[(int) $r['doctor_id']][] = substr($r['starts_at'], 11, 5) . ' ' . trim($r['last_name'] . ' ' . $r['first_name']);
-        }
-        foreach ($byDoctor as $doc => $list) {
-            notify_staff('staff-agenda', users_of_doctor($doc), ['data' => format_date($today), 'lista' => implode(', ', $list)]);
-        }
-    });
+    // The doctors' programme of the day, each at the hour set for them (Echipa → medic).
+    send_agendas($now);
 
     // Birthdays (marketing: only with consent).
     daily_job('zi-nastere', 10, $now, static function () use ($now): void {

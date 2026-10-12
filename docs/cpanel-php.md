@@ -253,6 +253,24 @@ documentul a rămas neschimbat. Chestionarul completat de pacient apare în fiș
 medicul îl **trece în anamneză** (bolile bifate se adaugă, textele se adaugă la ce era scris) sau îl
 pune deoparte. După 6 coduri greșite în 10 minute, tableta așteaptă.
 
+## Programul zilei pentru medici, dimineața pe WhatsApp
+
+În fiecare zi în care are programări, medicul primește dimineața lista lor: ora, pacientul,
+motivul, clinica (dacă lucrează la amândouă) și, opțional, alertele medicale (alergii,
+anticoagulante etc.). Dacă în aceeași zi se adaugă, se mută sau se anulează o programare, primește
+și asta. Medicul nu are nevoie de cont în panou.
+
+**Setarea:** Echipa → medic → **Programul zilei, pe telefon**: canalul (WhatsApp, SMS sau e-mail),
+mobilul, ora (de exemplu 07:30) și dacă vrea alertele medicale. În dreapta vedeți cum arată
+mesajul; butonul **Trimiteți acum programul medicului** trimite o probă.
+
+**WhatsApp:** Meta cere un șablon aprobat pentru mesajele trimise de clinică. În Meta Business →
+WhatsApp Manager → Message templates creați un șablon de categoria **Utility**, limba română, cu
+textul: „Bună dimineața, {{1}}! Azi, {{2}}, aveți {{3}}: {{4}}. Vă dorim o zi frumoasă!”, apoi
+scrieți numele lui în Setări → Mesaje → Mesaje către echipă → „Programul zilei”. Până la aprobare
+(de obicei câteva minute–ore), programul pleacă prin SMS. Mesajul pleacă la ora aleasă doar dacă
+**Cron Job-ul** rulează (vezi mai jos).
+
 ## Chatul AI de pe site și programările online (etapa 5)
 
 Pe site apare butonul **Întrebați-ne**: un asistent AI răspunde oricând la întrebări despre
