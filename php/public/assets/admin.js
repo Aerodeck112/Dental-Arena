@@ -276,6 +276,18 @@
     });
   }
 
+  // Absențe: the doctor list only when the absence is a doctor's (not a closed clinic).
+  var cineMedic = document.querySelector("[data-cine-medic]");
+  if (cineMedic) {
+    var cine = document.querySelectorAll("input[name=cine]");
+    var showDoctor = function () {
+      var on = document.querySelector("input[name=cine]:checked");
+      cineMedic.hidden = !!on && on.value === "clinica";
+    };
+    Array.prototype.forEach.call(cine, function (r) { r.addEventListener("change", showDoctor); });
+    showDoctor();
+  }
+
   var focusMe = document.querySelector("[data-autofocus], [role=alert]");
   if (focusMe) focusMe.focus();
 })();

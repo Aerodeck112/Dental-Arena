@@ -174,17 +174,36 @@ function find_patient(int $id, array $user): ?array
     return db_one("SELECT p.* FROM patients p WHERE p.id = ? AND {$scope}", array_merge([$id], $params));
 }
 
-/** A patient by phone (same digits), else a new file: used when a site request becomes an appointment. */
+/**
+ * The patient with this phone and a name in common. A family often shares one phone, so the same
+ * phone with another name is another person.
+ */
+function patient_by_phone_name(string $name, string $phone): ?int
+{
+    $nat = national_digits($phone);
+    if ($nat === null) {
+        return null;
+    }
+    $words = array_filter(preg_split('/[\s-]+/', fold_text($name)) ?: [], static fn ($w) => mb_strlen($w) > 1);
+    foreach (db_all("SELECT id, phone, first_name, last_name FROM patients WHERE phone <> '' AND active = 1 ORDER BY id") as $p) {
+        if (national_digits($p['phone']) !== $nat) {
+            continue;
+        }
+        $known = preg_split('/[\s-]+/', fold_text($p['first_name'] . ' ' . $p['last_name'])) ?: [];
+        if ($words === [] || array_intersect($words, $known) !== []) {
+            return (int) $p['id'];
+        }
+    }
+    return null;
+}
+
+/** A patient by phone and name, else a new file (a site request or booking becomes an appointment). */
 function find_or_create_patient(string $name, string $phone, ?string $email, ?int $locationId, ?int $userId): int
 {
     $digits = preg_replace('/\D+/', '', $phone) ?? '';
-    $nat = national_digits($phone);
-    if ($nat !== null) {
-        foreach (db_all("SELECT id, phone FROM patients WHERE phone <> '' AND active = 1") as $p) {
-            if (national_digits($p['phone']) === $nat) {
-                return (int) $p['id'];
-            }
-        }
+    $found = patient_by_phone_name($name, $phone);
+    if ($found !== null) {
+        return $found;
     }
     $parts = preg_split('/\s+/', trim($name)) ?: [$name];
     $last = count($parts) > 1 ? array_shift($parts) : '';
@@ -302,13 +321,24 @@ function appointment_conflicts(int $doctorId, string $start, string $end, ?int $
     );
 }
 
+/** The patient's other active appointments in that interval (with any doctor). */
+function patient_conflicts(int $patientId, string $start, string $end, ?int $exceptId = null): array
+{
+    $in = "'" . implode("','", APPT_ACTIVE) . "'";
+    return db_all(
+        "SELECT a.*, d.public_name AS doctor FROM appointments a JOIN doctors d ON d.id = a.doctor_id
+         WHERE a.patient_id = ? AND a.status IN ({$in}) AND a.starts_at < ? AND a.ends_at > ? AND a.id <> ?",
+        [$patientId, $end, $start, $exceptId ?? 0],
+    );
+}
+
 function can_see_appointment(array $a, array $user): bool
 {
     return is_admin($user) || in_array((int) $a['location_id'], allowed_location_ids($user), true);
 }
 
 /** Moves an appointment to a status, stamping when it happened. */
-function set_appointment_status(int $id, string $status, array $user, ?string $reason = null): void
+function set_appointment_status(int $id, string $status, array $user, ?string $reason = null, string $by = 'clinica'): void
 {
     if (!isset(APPT_STATUS[$status])) {
         return;
@@ -321,18 +351,23 @@ function set_appointment_status(int $id, string $status, array $user, ?string $r
         'anulat' => 'cancelled_at',
         'neprezentat' => 'no_show_at',
     ][$status] ?? null;
-    $row = ['status' => $status, 'updated_by' => $user['id'], 'updated_at' => now_sql()];
+    $row = ['status' => $status, 'updated_by' => $user['id'] ?? null, 'updated_at' => now_sql()];
     if ($stamp !== null) {
         $row[$stamp] = now_sql();
     }
     if ($status === 'anulat') {
         $row['cancel_reason'] = $reason !== null ? mb_substr($reason, 0, 255) : null;
+        $row['cancelled_by'] = $by;
     }
     db_update('appointments', $row, 'id = :id', ['id' => $id]);
+    if ($status === 'anulat') {
+        // The patient's old link stops working.
+        db_run('UPDATE appointments SET token_version = token_version + 1, reminder_sent_at = NULL WHERE id = ?', [$id]);
+    }
     if ($status === 'anulat' || $status === 'sosit') {
         notify_appointment($status === 'anulat' ? 'programare-anulata' : 'sosit', $id);
     }
-    audit('programare-' . $status, "#{$id}", null, (int) db_value('SELECT patient_id FROM appointments WHERE id = ?', [$id]));
+    audit('programare-' . $status, "#{$id}" . ($by === 'pacient' ? ' (de pacient, din link)' : ''), $user['id'] ?? 0, (int) db_value('SELECT patient_id FROM appointments WHERE id = ?', [$id]));
 }
 
 function appt_status_chip(string $status): string

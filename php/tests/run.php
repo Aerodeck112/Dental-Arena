@@ -1,8 +1,8 @@
 <?php
 /**
- * Checks of the PHP code that needs no database: legal holidays, doctors' schedules, the
- * signature check of the tablet, and the Anthropic SDK contract the site's chat relies on
- * (tool calls and thinking blocks sent back unchanged). Run: php php/tests/run.php
+ * Checks of the PHP code that needs no database: legal holidays, doctors' schedules (with the
+ * break), the free intervals, the signature check of the tablet, and the Anthropic SDK contract
+ * the site's chat relies on (tool calls and thinking blocks sent back unchanged). Run: php php/tests/run.php
  */
 declare(strict_types=1);
 
@@ -28,6 +28,10 @@ $check('o zi obișnuită nu e sărbătoare', !in_array('2026-10-14', ro_holidays
 $sch = schedule_decode('{"1":["09:00","17:00"],"2":["09:00","17:00"],"3":["09:00","17:00"],"5":["10:00","14:00"],"6":["12:00","10:00"],"9":["09:00","10:00"]}');
 $check('programul ignoră intervale greșite', array_keys($sch) === [1, 2, 3, 5]);
 $check('programul în cuvinte', schedule_text($sch) === 'Luni–Miercuri 09:00–17:00, Vineri 10:00–14:00');
+$brk = schedule_decode('{"1":["09:00","17:00","13:00","14:00"],"2":["09:00","17:00","18:00","19:00"],"3":["09:00","17:00","13:00"]}');
+$check('pauza din program', $brk[1] === ['09:00', '17:00', '13:00', '14:00'] && $brk[2] === ['09:00', '17:00'] && !isset($brk[3]));
+$check('programul cu pauză în cuvinte', schedule_text($brk) === 'Luni 09:00–17:00 (pauză 13:00–14:00), Marți 09:00–17:00');
+$check('intervale fără pauză și absențe', intervals_subtract([[540, 1020]], [[780, 840], [1000, 1100]]) === [[540, 780], [840, 1000]]);
 $check('ziua în cuvinte', day_label('2026-10-14') === 'miercuri, 14 octombrie');
 
 $check('numerele în română', count_ro(1, 'o programare', 'programări') === 'o programare' && count_ro(5, 'o programare', 'programări') === '5 programări'

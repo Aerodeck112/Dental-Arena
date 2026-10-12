@@ -168,6 +168,21 @@ window → SMS), `send_agendas` (from `run_daily_jobs` on every cron tick: once 
 from `agenda_time` until the last appointment), `notify_doctor_today` (same-day changes after the
 programme went out). `count_ro()` in helpers.php.
 
+## Online booking and days off (migration 007)
+
+`time_off` (doctor and/or clinic, `ends_at` exclusive), `rate_limits`; `doctors.accepts_online`;
+`services.duration_minutes/bookable_online/online_label/online_hint/urgent`;
+`appointments.source/service_id/token_version/confirmed_via/cancelled_by`; `leads.idempotency_key`.
+In `booking.php`: `booking_settings()` (setting `programare_online`), `schedule_decode` with an
+optional break, `time_off_between/applies/label`, `free_slots` (step grid, notice, horizon, buffer,
+breaks, time off, holidays online only; slot id `YmdHi-loc-doc-minutes`), `slot_check`, `book_slot`
+(lead + patient + appointment under a per-doctor `GET_LOCK`), `schedule_warnings`, `rate_hit`,
+`booking_reasons`, `GET /api/sloturi`. Patient link `/p/{token}` (+ `/ics`): `appointment_token`
+(HMAC, expires 24 h after the start, ends when `token_version` changes). Pages: `pages/programare.php`
+(wizard + `assets/programare.js`, request form without JS), `programare-confirmare.php`,
+`link-programare.php`; admin `absente.php`, `setari-programari.php`. `patient_by_phone_name()` in
+crm.php: same phone and a name in common.
+
 ## Updating from the panel
 
 `src/admin/update.php` + `/admin/actualizare` (administrators). The package from

@@ -63,6 +63,29 @@ if (!str_starts_with($path, '/admin') && is_file(APP_DIR . '/storage/actualizare
     exit('<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><meta http-equiv="refresh" content="20"><title>Actualizăm site-ul</title><p style="font-family:sans-serif;padding:2rem;font-size:1.1rem">Actualizăm site-ul Dental Arena. Reveniți în câteva clipe. Pentru programări: Cristești 0265 326 316, Luduș 0365 430 125.</p>');
 }
 
+// The patient's link to an appointment (SMS, e-mail, booking confirmation).
+if ($path === '/p/anulat') {
+    session_begin();
+    $c = $_SESSION['link_anulat'] ?? null;
+    $body = '<div class="' . CONTAINER . ' py-sectiune"><div class="mx-auto max-w-[40rem]">'
+        . success_panel(is_array($c) ? "Programarea din {$c['day']}, ora {$c['time']}, a fost anulată." : 'Programarea a fost anulată.', 'Vă mulțumim că ne-ați anunțat. Pentru o programare nouă, alegeți altă oră pe site sau sunați-ne.')
+        . '<p class="mt-8"><a href="/programare" class="' . e(btn('primary', 'l')) . '">Faceți o altă programare</a></p></div></div>';
+    header('X-Robots-Tag: noindex');
+    render_page($body, page_meta(['title' => 'Programare anulată', 'description' => 'Programarea a fost anulată.', 'path' => '/p/anulat', 'noindex' => true]));
+    exit;
+}
+if (preg_match('#^/p/([A-Za-z0-9_-]+\.\d+\.[0-9a-z]+\.[A-Za-z0-9_-]{22})(/ics)?$#', $path, $m)) {
+    require APP_DIR . '/templates/pages/link-programare.php';
+    exit;
+}
+
+if ($path === '/api/sloturi') {
+    require APP_DIR . '/src/admin/lib.php';
+    require APP_DIR . '/src/admin/crm.php';
+    require APP_DIR . '/src/booking.php';
+    booking_slots_endpoint();
+}
+
 if ($path === '/api/chat') {
     require APP_DIR . '/src/chat.php';
     chat_endpoint();

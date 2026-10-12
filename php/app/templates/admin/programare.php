@@ -147,10 +147,30 @@ if (is_post()) {
     if ($errors === [] && $d !== false) {
         $startsAt = $d->format('Y-m-d H:i:s');
         $endsAt = $d->modify("+{$dur} minutes")->format('Y-m-d H:i:s');
-        if (in_array($v['status'], APPT_ACTIVE, true) && post('suprapune') !== '1') {
-            $conflicts = appointment_conflicts($doc, $startsAt, $endsAt, $appt ? (int) $appt['id'] : null);
-            if ($conflicts !== []) {
-                $errors['time'] = 'Medicul are deja o programare în acest interval. Alegeți altă oră sau bifați „Programez oricum”.';
+        $moved = $isNew || $appt['starts_at'] !== $startsAt || $appt['ends_at'] !== $endsAt || (int) $appt['doctor_id'] !== $doc || (int) $appt['location_id'] !== $loc;
+        if (in_array($v['status'], APPT_ACTIVE, true) && $moved) {
+            // A doctor away or a clinic closed: the absence has to go first. The rest only warns.
+            foreach (time_off_between($startsAt, $endsAt, [$doc], [$loc]) as $t) {
+                if (time_off_applies($t, $doc, $loc)) {
+                    $errors['time'] = 'În acest interval: ' . time_off_label($t) . '. Alegeți altă oră sau ștergeți întâi absența, la Absențe și zile libere.';
+                    break;
+                }
+            }
+            if (!isset($errors['time']) && post('suprapune') !== '1') {
+                foreach (appointment_conflicts($doc, $startsAt, $endsAt, $appt ? (int) $appt['id'] : null) as $c) {
+                    $conflicts[] = 'Medicul are deja: ' . hm($c['starts_at']) . '–' . hm($c['ends_at']) . ', ' . patient_name($c) . '.';
+                }
+                if ($patient !== null || $appt !== null) {
+                    foreach (patient_conflicts((int) ($patient['id'] ?? $appt['patient_id']), $startsAt, $endsAt, $appt ? (int) $appt['id'] : null) as $c) {
+                        $conflicts[] = 'Pacientul are deja o programare: ' . hm($c['starts_at']) . '–' . hm($c['ends_at']) . ', ' . ($c['doctor'] ?? '') . '.';
+                    }
+                }
+                foreach (schedule_warnings($doc, $loc, $startsAt, $endsAt) as $w) {
+                    $conflicts[] = $w;
+                }
+                if ($conflicts !== []) {
+                    $errors['time'] = 'Verificați ora (vedeți mai sus). Alegeți alta sau bifați „Programez oricum”.';
+                }
             }
         }
     }
@@ -159,13 +179,7 @@ if (is_post()) {
             $patientId = $patient !== null ? (int) $patient['id'] : null;
             if ($patientId === null) {
                 $row = ['first_name' => mb_substr($v['p_first'], 0, 80), 'last_name' => mb_substr($v['p_last'], 0, 80), 'phone' => format_phone($v['p_phone']), 'email' => $v['p_email'] ?: null, 'preferred_location_id' => $loc];
-                $existing = null;
-                foreach (db_all("SELECT id, phone FROM patients WHERE phone <> ''") as $p) {
-                    if (national_digits($p['phone']) === national_digits($v['p_phone'])) {
-                        $existing = (int) $p['id'];
-                        break;
-                    }
-                }
+                $existing = patient_by_phone_name($v['p_last'] . ' ' . $v['p_first'], $v['p_phone']);
                 $patientId = $existing ?? db_insert('patients', $row + [
                     'file_number' => next_file_number(),
                     'search_text' => patient_search_text($row),
@@ -191,7 +205,7 @@ if (is_post()) {
                 'updated_at' => now_sql(),
             ];
             if ($isNew) {
-                $id = db_insert('appointments', $row + ['status' => 'programat', 'lead_id' => $lead['id'] ?? null, 'created_by' => $user['id'], 'created_at' => now_sql()]);
+                $id = db_insert('appointments', $row + ['status' => 'programat', 'source' => $recall !== null ? 'rechemare' : ($lead !== null ? 'cerere' : 'receptie'), 'lead_id' => $lead['id'] ?? null, 'created_by' => $user['id'], 'created_at' => now_sql()]);
                 if ($lead !== null && (int) ($lead['marketing_ok'] ?? 0) === 1) {
                     // The consent ticked on the site's form goes to the patient's file.
                     db_run("UPDATE patients SET marketing_sms = 1, marketing_email = 1, marketing_consent_at = COALESCE(marketing_consent_at, ?), marketing_consent_source = COALESCE(marketing_consent_source, 'formularul de pe site') WHERE id = ?", [$lead['created_at'], $patientId]);
@@ -207,6 +221,10 @@ if (is_post()) {
                 // A moved appointment gets a new reminder.
                 if ($appt['starts_at'] !== $startsAt) {
                     $row['reminder_sent_at'] = null;
+                }
+                // A new time, doctor or clinic: the patient's old link stops working.
+                if ($appt['starts_at'] !== $startsAt || (int) $appt['doctor_id'] !== $doc || (int) $appt['location_id'] !== $loc) {
+                    $row['token_version'] = (int) $appt['token_version'] + 1;
                 }
                 db_update('appointments', $row, 'id = :id', ['id' => $id]);
                 if ($v['status'] !== $appt['status']) {
@@ -279,15 +297,12 @@ if ($patient !== null) {
         . '<div class="grid gap-4 sm:grid-cols-2">'
         . text_field('p_last', 'Numele de familie', ['value' => $v['p_last'], 'error' => $err('p_last')])
         . text_field('p_first', 'Prenumele', ['value' => $v['p_first']])
-        . text_field('p_phone', 'Telefon', ['type' => 'tel', 'value' => $v['p_phone'], 'error' => $err('p_phone'), 'hint' => 'Dacă există deja un pacient cu acest telefon, programarea se face pe fișa lui.'])
+        . text_field('p_phone', 'Telefon', ['type' => 'tel', 'value' => $v['p_phone'], 'error' => $err('p_phone'), 'hint' => 'Dacă există deja un pacient cu acest telefon și același nume, programarea se face pe fișa lui.'])
         . text_field('p_email', 'E-mail', ['type' => 'email', 'value' => $v['p_email'], 'optional' => true, 'error' => $err('p_email'), 'hint' => 'Pentru reamintirea cu o zi înainte.'])
         . '</div></fieldset>';
 }
 
-$conflictList = '';
-foreach ($conflicts as $c) {
-    $conflictList .= '<li>' . e(hm($c['starts_at']) . '–' . hm($c['ends_at']) . ': ' . patient_name($c)) . '</li>';
-}
+$conflictList = implode('', array_map(static fn ($c) => '<li>' . e($c) . '</li>', $conflicts));
 $leadNote = $lead !== null ? '<p class="mb-6 rounded-panou bg-menta-pal p-4 text-corp">Din cererea online a lui <a href="/admin/cereri/' . (int) $lead['id'] . '" class="font-semibold underline">' . e($lead['name']) . '</a>' . ($lead['preferred_date'] ? ', ziua dorită: ' . e(format_date($lead['preferred_date'], true)) : '') . ($lead['preferred_time'] ? ', ' . e(mb_strtolower(TIME_WINDOWS[$lead['preferred_time']] ?? '')) : '') . '.</p>' : '';
 $recallNote = $recall !== null ? '<p class="mb-6 rounded-panou bg-menta-pal p-4 text-corp">Din rechemarea „' . e($recall['reason']) . '”.</p>' : '';
 
@@ -305,7 +320,7 @@ $body = admin_header($isNew ? 'Programare nouă' : 'Programarea din ' . short_da
     . ($lead ? '<input type="hidden" name="cerere" value="' . (int) $lead['id'] . '">' : '')
     . ($recall ? '<input type="hidden" name="rechemare" value="' . (int) $recall['id'] . '">' : '')
     . error_summary($errors)
-    . ($conflictList !== '' ? '<div class="rounded-panou border border-mustar bg-mustar-pal p-4"><p class="font-semibold">Medicul are deja:</p><ul class="mt-1 list-disc pl-5 text-corp">' . $conflictList . '</ul>' . checkbox_field('suprapune', 'Programez oricum (de exemplu, o urgență)', ['class' => 'mt-2']) . '</div>' : '')
+    . ($conflictList !== '' ? '<div class="rounded-panou border border-mustar bg-mustar-pal p-4"><p class="font-semibold">Atenție la ora aleasă:</p><ul class="mt-1 list-disc pl-5 text-corp">' . $conflictList . '</ul>' . checkbox_field('suprapune', 'Programez oricum (de exemplu, o urgență)', ['class' => 'mt-2']) . '</div>' : '')
     . admin_section_open('Pacientul', 'pacient') . '<div class="mt-4">' . $patientBlock . '</div></section>'
     . admin_section_open('Când și la cine', 'cand')
     . '<div class="mt-4 grid gap-5 md:grid-cols-2">'

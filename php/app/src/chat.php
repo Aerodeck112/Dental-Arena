@@ -175,7 +175,7 @@ function chat_run_tool(array $conv, string $name, array $in, array &$ui): array
         $docs = doctor_short_names();
         $ui['slots'] = array_map(static fn ($s) => ['id' => $s['id'], 'day' => day_label($s['start']), 'time' => substr($s['start'], 11, 5), 'clinic' => $names[$s['location_id']] ?? '', 'doctor' => $docs[$s['doctor_id']] ?? ''], $slots);
         if ($slots === []) {
-            return ['ok' => true, 'ore' => [], 'nota' => 'Nicio oră liberă online în următoarele ' . chat_settings()['days_ahead'] . ' zile pentru aceste criterii. Propune alt medic, altă clinică sau cere_apel.'];
+            return ['ok' => true, 'ore' => [], 'nota' => 'Nicio oră liberă online în următoarele ' . booking_settings()['days_ahead'] . ' zile pentru aceste criterii. Propune alt medic, altă clinică sau cere_apel.'];
         }
         return ['ok' => true, 'ore' => array_map(static fn ($s) => ['id' => $s['id'], 'zi' => $s['day'], 'ora' => $s['time'], 'clinica' => $s['clinic'], 'medic' => $s['doctor']], $ui['slots'])];
     }
@@ -437,7 +437,7 @@ function chat_endpoint(): never
         chat_json(['error' => 'Așteptați răspunsul la mesajul de dinainte.'], 429);
     }
     @set_time_limit(120);
-    $reply = chat_turn($conv, $text, preg_match('/^\d{12}-\d+-\d+$/', (string) ($in['s'] ?? '')) ? (string) $in['s'] : '');
+    $reply = chat_turn($conv, $text, preg_match('/^\d{12}-\d+-\d+(-\d{1,3})?$/', (string) ($in['s'] ?? '')) ? (string) $in['s'] : '');
     db_value('SELECT RELEASE_LOCK(?)', ['da-chat-' . $conv['id']]);
     chat_json(['t' => $token, 'reply' => $reply]);
 }

@@ -691,6 +691,9 @@ const AUDIT_LABELS = [
     'setari-chat' => 'Setările chatului de pe site',
     'chat-sters' => 'Conversație din chat ștearsă',
     'actualizare' => 'Site-ul actualizat dintr-o arhivă',
+    'absenta' => 'Absență sau zi liberă adăugată',
+    'absenta-stearsa' => 'Absență sau zi liberă ștearsă',
+    'setari-programari' => 'Setările programărilor online',
     'actualizare-revenire' => 'Site-ul pus înapoi la o versiune de dinainte',
 ];
 

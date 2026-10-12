@@ -32,6 +32,7 @@ $v = [
     'bio' => $doc['bio'] ?? '',
     'sort_order' => (string) ($doc['sort_order'] ?? ((int) db_value('SELECT COALESCE(MAX(sort_order), 0) + 1 FROM doctors'))),
     'public_visible' => (string) ($doc['public_visible'] ?? 1),
+    'accepts_online' => (string) ($doc['accepts_online'] ?? 1),
     'phone' => (string) ($doc['phone'] ?? ''),
     'email' => (string) ($doc['email'] ?? ''),
     'agenda_channel' => (string) ($doc['agenda_channel'] ?? ''),
@@ -63,6 +64,7 @@ if (is_post()) {
         $v[$k] = post($k);
     }
     $v['public_visible'] = post('public_visible') === '1' ? '1' : '0';
+    $v['accepts_online'] = post('accepts_online') === '1' ? '1' : '0';
     foreach (['phone', 'email', 'agenda_time'] as $k) {
         $v[$k] = trim(post($k));
     }
@@ -88,6 +90,8 @@ if (is_post()) {
         foreach (WEEKDAYS as $day => $dayName) {
             $from = (string) ($sentSch[$lid][$day][0] ?? '');
             $to = (string) ($sentSch[$lid][$day][1] ?? '');
+            $bFrom = (string) ($sentSch[$lid][$day][2] ?? '');
+            $bTo = (string) ($sentSch[$lid][$day][3] ?? '');
             if ($from === '' && $to === '') {
                 continue;
             }
@@ -96,6 +100,13 @@ if (is_post()) {
                 continue;
             }
             $schedules[$lid][$day] = [$from, $to];
+            if ($bFrom !== '' || $bTo !== '') {
+                if (!preg_match('/^\d{2}:\d{2}$/', $bFrom) || !preg_match('/^\d{2}:\d{2}$/', $bTo) || !($from < $bFrom && $bFrom < $bTo && $bTo < $to)) {
+                    $errors['form'] = "Pauza de {$dayName} la {$clinicNames[$lid]} trebuie să fie în program (de exemplu 13:00–13:30).";
+                    continue;
+                }
+                $schedules[$lid][$day] = [$from, $to, $bFrom, $bTo];
+            }
         }
     }
     foreach (['public_name' => 'Scrieți numele afișat pe site.', 'first_name' => 'Scrieți prenumele.', 'last_name' => 'Scrieți numele de familie.', 'role_line' => 'Scrieți specialitatea.'] as $k => $msg) {
@@ -120,6 +131,7 @@ if (is_post()) {
             'bio' => $v['bio'] !== '' ? mb_substr($v['bio'], 0, 4000) : null,
             'sort_order' => (int) $v['sort_order'],
             'public_visible' => (int) $v['public_visible'],
+            'accepts_online' => (int) $v['accepts_online'],
             'phone' => $v['phone'] !== '' ? format_phone($v['phone']) : null,
             'email' => $v['email'] !== '' ? mb_substr($v['email'], 0, 190) : null,
             'agenda_channel' => $v['agenda_channel'] !== '' ? $v['agenda_channel'] : null,
@@ -186,16 +198,16 @@ $workBlocks = '';
 foreach ($clinicNames as $lid => $n) {
     $rows = '';
     foreach (WEEKDAYS as $day => $dayName) {
-        $span = $schedules[$lid][$day] ?? ['', ''];
-        $rows .= '<div class="grid grid-cols-[6.5rem_1fr_1fr] items-center gap-2"><span class="text-corp">' . e($dayName) . '</span>'
-            . '<input type="time" step="900" name="sch[' . $lid . '][' . $day . '][0]" value="' . e($span[0]) . '" aria-label="' . e("{$dayName}, {$n}: de la") . '" class="' . e(input_classes('h-control-s min-w-0')) . '">'
-            . '<input type="time" step="900" name="sch[' . $lid . '][' . $day . '][1]" value="' . e($span[1]) . '" aria-label="' . e("{$dayName}, {$n}: până la") . '" class="' . e(input_classes('h-control-s min-w-0')) . '"></div>';
+        $span = ($schedules[$lid][$day] ?? []) + ['', '', '', ''];
+        $t = static fn (int $i, string $label) => '<input type="time" step="300" name="sch[' . $lid . '][' . $day . '][' . $i . ']" value="' . e($span[$i]) . '" aria-label="' . e("{$dayName}, {$n}: {$label}") . '" class="' . e(input_classes('h-control-s min-w-0')) . '">';
+        $rows .= '<div class="grid grid-cols-[6.5rem_1fr_1fr] items-center gap-2"><span class="text-corp">' . e($dayName) . '</span>' . $t(0, 'de la') . $t(1, 'până la')
+            . '<span class="text-mic text-discret">pauză</span>' . $t(2, 'pauză de la') . $t(3, 'pauză până la') . '</div>';
     }
     $workBlocks .= '<fieldset class="min-w-0 rounded-panou border border-linie p-4">'
         . '<legend class="px-1">' . checkbox_field('locations[]', '<strong>' . e($n) . '</strong>', ['id' => "field-locations-{$lid}", 'value' => (string) $lid, 'checked' => in_array($lid, $workLocs, true)]) . '</legend>'
         . '<div class="mt-1 grid grid-cols-[6.5rem_1fr_1fr] gap-2 text-mic text-discret"><span></span><span>De la</span><span>Până la</span></div>'
         . '<div class="mt-1 flex flex-col gap-2">' . $rows . '</div>'
-        . '<p class="mt-2 text-mic text-discret">Lăsați gol în zilele în care nu lucrează aici.</p></fieldset>';
+        . '<p class="mt-2 text-mic text-discret">Lăsați gol în zilele în care nu lucrează aici; pauza e opțională.</p></fieldset>';
 }
 // What the doctor receives: the next day with appointments, as an example.
 $preview = '';
@@ -237,7 +249,9 @@ $body = '<p class="mb-4"><a href="/admin/echipa" class="inline-flex min-h-contro
     . '<div class="mt-5 grid gap-5 md:grid-cols-2">' . text_field('sort_order', 'Ordinea pe site', ['type' => 'number', 'value' => $v['sort_order'], 'min' => 0, 'inputClass' => 'max-w-32'])
     . checkbox_field('public_visible', 'Apare pe site', ['checked' => $v['public_visible'] === '1', 'class' => 'md:mt-7']) . '</div></section>'
     . admin_section_open('Unde și când lucrează', 'clinici', 'Medicul apare în calendarul clinicilor bifate. Din program, asistentul de pe site propune orele libere (fără zilele de sărbătoare legală și fără orele deja ocupate). Fără program, medicul nu primește programări online.')
-    . '<div class="mt-4 grid gap-6 lg:grid-cols-2">' . $workBlocks . '</div></section>'
+    . '<div class="mt-4">' . checkbox_field('accepts_online', 'Primește programări online (pe site și în chat)', ['checked' => $v['accepts_online'] === '1', 'description' => 'Debifat: recepția îl programează normal, dar pe site nu apare.']) . '</div>'
+    . '<div class="mt-4 grid gap-6 lg:grid-cols-2">' . $workBlocks . '</div>'
+    . '<p class="mt-3 text-mic text-discret">Concediile, cursurile și zilele libere se pun la <a class="text-link underline" href="/admin/absente">Absențe și zile libere</a>.</p></section>'
     . $agenda
     . admin_section_open('Portretul', 'portret', 'O fotografie verticală, cu fața în treimea de sus. Fără portret, pe site apar inițialele.')
     . '<div class="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start">' . $portrait

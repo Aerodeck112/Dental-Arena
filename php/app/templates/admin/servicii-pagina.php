@@ -48,6 +48,9 @@ if (is_post()) {
             continue;
         }
         $unit = (string) ($r['unit'] ?? '');
+        $minutes = (int) ($r['minutes'] ?? 0);
+        $online = !empty($r['online']);
+        $label = trim((string) ($r['online_label'] ?? ''));
         $updates[$id] = [
             'name' => mb_substr($name, 0, 190),
             'price_min' => $min,
@@ -56,6 +59,11 @@ if (is_post()) {
             'unit' => isset(UNIT_LABEL[$unit]) && $unit !== 'ACT' ? $unit : null,
             'public_visible' => !empty($r['visible']) ? 1 : 0,
             'representative' => $id === $repId ? 1 : 0,
+            'duration_minutes' => isset(SERVICE_MINUTES[$minutes]) ? $minutes : 30,
+            'bookable_online' => $online ? 1 : 0,
+            'online_label' => $label !== '' ? mb_substr($label, 0, 80) : ($online ? mb_substr($name, 0, 80) : null),
+            'online_hint' => trim((string) ($r['online_hint'] ?? '')) !== '' ? mb_substr(trim((string) $r['online_hint']), 0, 190) : null,
+            'urgent' => $online && !empty($r['urgent']) ? 1 : 0,
             'updated_at' => now_sql(),
         ];
     }
@@ -123,6 +131,13 @@ foreach (UNIT_LABEL as $k => $l) {
         $unitOptions[$k] = "/ {$l}";
     }
 }
+$minuteOptions = static function (string $current): string {
+    $out = '';
+    foreach (SERVICE_MINUTES as $k => $l) {
+        $out .= '<option value="' . $k . '"' . ($current === (string) $k ? ' selected' : '') . '>' . e($l) . '</option>';
+    }
+    return $out;
+};
 $cell = 'block w-full rounded-control border border-linie-control bg-suprafata px-2.5 text-control hover:border-cerneala aria-[invalid=true]:border-2 aria-[invalid=true]:border-carmin';
 $rowsHtml = '';
 $count = count($rows);
@@ -153,6 +168,15 @@ foreach ($rows as $i => $s) {
         . ($i < $count - 1 ? '<button type="submit" name="op" value="jos:' . $id . '" class="' . e(btn('secondary', 's', 'px-2')) . '" aria-label="Mutați mai jos: ' . e($s['name']) . '">' . icon('chevron-down', 16) . '</button>' : '')
         . '<button type="submit" name="op" value="sterge:' . $id . '" data-confirma="Ștergeți „' . e($s['name']) . '” din listă?" class="' . e(btn('danger', 's', 'px-2')) . '" aria-label="Ștergeți: ' . e($s['name']) . '">' . icon('trash-2', 16) . '</button>'
         . '</span></div>'
+        . '<div class="flex flex-wrap items-end gap-x-4 gap-y-3 lg:col-span-2">'
+        . '<label class="flex flex-col gap-1"><span class="text-mic text-discret">Durează</span><select name="r[' . $id . '][minutes]" class="' . $cell . ' h-control w-auto">' . $minuteOptions($val('minutes', $s['duration_minutes'] ?? 30)) . '</select></label>'
+        . '<details class="min-w-0 flex-1"' . ($chk('online', (bool) ($s['bookable_online'] ?? 0)) ? ' open' : '') . '><summary class="flex min-h-control cursor-pointer items-center gap-2 text-corp">' . icon('calendar', 18) . 'Programare online' . ((int) ($s['bookable_online'] ?? 0) === 1 ? ': <span class="font-semibold">„' . e((string) $s['online_label']) . '”</span>' : '') . '</summary>'
+        . '<div class="mt-2 grid gap-3 rounded-panou border border-linie p-3 sm:grid-cols-2">'
+        . '<label class="flex items-center gap-2 sm:col-span-2"><input type="checkbox" name="r[' . $id . '][online]" value="1"' . ($chk('online', (bool) ($s['bookable_online'] ?? 0)) ? ' checked' : '') . ' class="size-5 accent-actiune">Apare ca motiv pe pagina Programare</label>'
+        . '<label class="flex flex-col gap-1"><span class="text-mic text-discret">Textul pentru pacient</span><input name="r[' . $id . '][online_label]" value="' . e($val('online_label', $s['online_label'] ?? '')) . '" maxlength="80" placeholder="' . e(mb_substr($s['name'], 0, 80)) . '" class="' . $cell . ' h-control"></label>'
+        . '<label class="flex flex-col gap-1"><span class="text-mic text-discret">Explicație scurtă (opțional)</span><input name="r[' . $id . '][online_hint]" value="' . e($val('online_hint', $s['online_hint'] ?? '')) . '" maxlength="190" class="' . $cell . ' h-control"></label>'
+        . '<label class="flex items-center gap-2 sm:col-span-2"><input type="checkbox" name="r[' . $id . '][urgent]" value="1"' . ($chk('urgent', (bool) ($s['urgent'] ?? 0)) ? ' checked' : '') . ' class="size-5 accent-actiune">Urgență (apare al doilea, evidențiat)</label>'
+        . '</div></details></div>'
         . '<p class="text-mic text-discret lg:col-span-2">Pe site: <span class="font-semibold text-cerneala cifre">' . e($preview) . '</span>' . ((int) $s['public_visible'] === 0 ? ' · ascuns' : '') . '</p>'
         . '</li>';
 }

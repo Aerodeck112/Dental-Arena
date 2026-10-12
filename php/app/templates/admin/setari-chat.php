@@ -1,8 +1,8 @@
 <?php
 /**
  * /admin/setari/chat (administrators): the AI assistant on the site: on or off, the model, how
- * bookings work (a request for reception, or straight into the calendar after an SMS code), the
- * length of the online appointments, the notice, how far ahead, limits, how long talks are kept.
+ * bookings work (a request for reception, or straight into the calendar after an SMS code),
+ * limits, how long talks are kept. Durations, notice and days ahead: Setări → Programări online.
  */
 declare(strict_types=1);
 
@@ -15,9 +15,6 @@ if (is_post()) {
     $s['enabled'] = post('enabled') === '1';
     $s['model'] = isset(AI_MODELS[post('model')]) ? post('model') : CHAT_DEFAULTS['model'];
     $s['mode'] = isset(CHAT_MODES[post('mode')]) ? post('mode') : 'cerere';
-    $s['slot_minutes'] = in_array((int) post('slot_minutes'), [15, 20, 30, 45, 60], true) ? (int) post('slot_minutes') : 30;
-    $s['notice_hours'] = max(0, min(72, (int) post('notice_hours')));
-    $s['days_ahead'] = max(3, min(90, (int) post('days_ahead')));
     $s['daily_limit'] = max(10, min(5000, (int) post('daily_limit')));
     $s['retention_days'] = max(7, min(730, (int) post('retention_days')));
     if ($s['enabled'] && $ai['api_key'] === '') {
@@ -52,12 +49,9 @@ $form = '<form method="post" novalidate class="flex flex-col gap-5 rounded-panou
     . select_field('model', 'Modelul', AI_MODELS, ['value' => $s['model'], 'hint' => 'Sonnet răspunde mai repede și costă mai puțin; e potrivit pentru chat.'])
     . radio_group('mode', 'Programările din chat', CHAT_MODES, ['value' => $s['mode'], 'error' => $errors['mode'] ?? null])
     . '<div class="grid gap-5 sm:grid-cols-2">'
-    . select_field('slot_minutes', 'Durata unei programări online', [15 => '15 minute', 20 => '20 de minute', 30 => '30 de minute', 45 => '45 de minute', 60 => 'o oră'], ['value' => (string) $s['slot_minutes']])
-    . text_field('notice_hours', 'Cu cel puțin câte ore înainte', ['type' => 'number', 'value' => (string) $s['notice_hours'], 'min' => 0, 'max' => 72, 'hint' => 'Ca recepția să afle din timp.'])
-    . text_field('days_ahead', 'Cu câte zile înainte se poate programa', ['type' => 'number', 'value' => (string) $s['days_ahead'], 'min' => 3, 'max' => 90])
     . text_field('daily_limit', 'Conversații noi pe zi, cel mult', ['type' => 'number', 'value' => (string) $s['daily_limit'], 'min' => 10, 'hint' => 'Limitează costul dacă cineva abuzează.'])
     . text_field('retention_days', 'Conversațiile se șterg după (zile)', ['type' => 'number', 'value' => (string) $s['retention_days'], 'min' => 7, 'max' => 730])
-    . '</div><div><button type="submit" class="' . e(btn('primary')) . '">Salvați</button></div></form>';
+    . '</div><p class="text-mic text-discret">Durata programărilor, cât de devreme și cu câte zile înainte se pot face se aleg la <a class="text-link underline" href="/admin/setari/programari">Setări → Programări online</a>, la fel pentru site și chat.</p><div><button type="submit" class="' . e(btn('primary')) . '">Salvați</button></div></form>';
 
 $body = '<p class="mb-4"><a href="/admin/setari" class="inline-flex min-h-control items-center gap-1 text-link underline underline-offset-4">' . icon('chevron-left', 18) . 'Setări</a></p>'
     . admin_header('Chatul de pe site', 'Un asistent AI care răspunde vizitatorilor la orice oră, din datele clinicii (servicii, prețuri, medici, program), și îi programează pe orele libere din calendar.', '<a href="/admin/chat" class="' . e(btn('secondary')) . '">' . admin_icon('bot', 18) . 'Conversațiile</a>')

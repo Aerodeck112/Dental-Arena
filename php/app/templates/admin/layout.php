@@ -13,6 +13,7 @@ const ADMIN_NAV = [
     ['/admin/cereri', 'Cereri online', 'inbox', null],
     ['/admin/chat', 'Chat pe site', 'bot', null],
     ['/admin/rechemari', 'Rechemări', 'phone-call', null],
+    ['/admin/absente', 'Absențe și zile libere', 'user-x', null],
     ['/admin/facturi', 'Facturi', 'receipt', 'billing'],
     ['/admin/incasari', 'Încasări', 'wallet', 'billing'],
     ['/admin/mesaje', 'Mesaje', 'message-square', null],

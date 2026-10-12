@@ -2,6 +2,8 @@
 /**
  * /admin/calendar: a clinic's day (one column per doctor, 15-minute rows from 8 to 20; a click on
  * a free slot opens a new appointment there) or its week (the appointments of each day, in order).
+ * Shaded: the hours a doctor does not work there, the break, leave and clinic closures; legal
+ * holidays are named above the day.
  */
 declare(strict_types=1);
 
@@ -25,6 +27,15 @@ $appts = db_all(
 );
 $doctors = doctors_at($clinicId);
 $docs = doctor_short_names();
+$timeOff = array_values(array_filter(
+    time_off_between($from->format('Y-m-d 00:00:00'), $to->format('Y-m-d 00:00:00'), array_column($doctors, 'id'), [$clinicId]),
+    static fn ($t) => $t['doctor_id'] === null || $t['location_id'] === null || (int) $t['location_id'] === $clinicId,
+));
+$holidays = array_merge(ro_holidays((int) $from->format('Y')), ro_holidays((int) $to->format('Y')));
+$schedules = [];
+foreach (db_all('SELECT doctor_id, schedule FROM doctor_locations WHERE location_id = ?', [$clinicId]) as $r) {
+    $schedules[(int) $r['doctor_id']] = schedule_decode($r['schedule']);
+}
 $url = static fn (array $q) => admin_url('/admin/calendar', $q + ['clinica' => $clinicId, 'vizualizare' => $view, 'data' => $date]);
 $step = $view === 'zi' ? '1 day' : '7 days';
 
@@ -85,6 +96,40 @@ if ($view === 'zi') {
         }
     }
     $docIndex = array_flip(array_column($doctors, 'id'));
+    // Grey: not working there (outside the hours, the break). Red: leave, clinic closed.
+    $calStart = strtotime("{$date} " . sprintf('%02d:00:00', CAL_START_HOUR));
+    $calEnd = strtotime("{$date} " . sprintf('%02d:00:00', CAL_END_HOUR));
+    $shade = static function (int $col, int $a, int $b, string $cls, string $label = '') use ($calStart, $calEnd, $rowsCount): string {
+        $a = max($a, $calStart);
+        $b = min($b, $calEnd);
+        if ($b <= $a) {
+            return '';
+        }
+        $s = intdiv($a - $calStart, 60 * CAL_SLOT_MIN);
+        $len = max(1, (int) ceil(($b - $a) / 60 / CAL_SLOT_MIN));
+        return '<div class="' . e(cn('pointer-events-none overflow-hidden px-2 py-1 text-mic', $cls)) . '" style="grid-row:' . ($s + 2) . ' / span ' . min($len, $rowsCount - $s) . ';grid-column:' . ($col + 2) . '">' . ($label !== '' ? '<span class="font-semibold">' . e($label) . '</span>' : '') . '</div>';
+    };
+    $weekday = (int) $day->format('N');
+    foreach ($doctors as $i => $dd) {
+        $sch = $schedules[(int) $dd['id']] ?? [];
+        if ($sch !== []) {
+            $w = $sch[$weekday] ?? null;
+            if ($w === null) {
+                $grid .= $shade($i, $calStart, $calEnd, 'bg-adancit/70 text-discret', 'Nu lucrează aici azi');
+            } else {
+                $grid .= $shade($i, $calStart, strtotime("{$date} {$w[0]}"), 'bg-adancit/70');
+                $grid .= $shade($i, strtotime("{$date} {$w[1]}"), $calEnd, 'bg-adancit/70');
+                if (isset($w[2], $w[3])) {
+                    $grid .= $shade($i, strtotime("{$date} {$w[2]}"), strtotime("{$date} {$w[3]}"), 'bg-adancit/70 text-discret', 'Pauză');
+                }
+            }
+        }
+        foreach ($timeOff as $t) {
+            if (time_off_applies($t, (int) $dd['id'], $clinicId)) {
+                $grid .= $shade($i, strtotime($t['starts_at']), strtotime($t['ends_at']), 'bg-carmin-pal/80 text-carmin', TIME_OFF_KINDS[$t['kind']] ?? 'Absent');
+            }
+        }
+    }
     $others = [];
     foreach ($appts as $a) {
         if (!isset($docIndex[(int) $a['doctor_id']])) {
@@ -116,7 +161,14 @@ if ($view === 'zi') {
         foreach ($byDay[$key] ?? [] as $a) {
             $items .= '<li class="min-h-[3.25rem]">' . $block($a) . '<span class="sr-only">, ' . e($docs[(int) $a['doctor_id']] ?? '') . '</span></li>';
         }
-        $content .= '<section class="' . e(cn('flex flex-col rounded-panou border bg-suprafata p-3', $isToday ? 'border-actiune' : 'border-linie')) . '" aria-label="' . e(format_date($d, true)) . '">'
+        $off = in_array($key, $holidays, true) ? 'Sărbătoare legală' : '';
+        foreach ($timeOff as $t) {
+            if ($t['doctor_id'] === null && $t['starts_at'] <= "{$key} 00:00:00" && $t['ends_at'] >= $d->modify('+1 day')->format('Y-m-d 00:00:00')) {
+                $off = 'Clinica închisă';
+            }
+        }
+        $content .= '<section class="' . e(cn('flex flex-col rounded-panou border p-3', $isToday ? 'border-actiune' : 'border-linie', $off !== '' ? 'bg-adancit' : 'bg-suprafata')) . '" aria-label="' . e(format_date($d, true)) . '">'
+            . ($off !== '' ? '<p class="mb-1 text-mic font-semibold text-carmin">' . e($off) . '</p>' : '')
             . '<a href="' . e($url(['vizualizare' => 'zi', 'data' => $key])) . '" class="flex items-baseline justify-between gap-2 hover:text-link"><span class="text-control font-semibold">' . e(ucfirst(RO_WEEKDAYS[$i])) . '</span><span class="text-mic text-discret cifre">' . (int) $d->format('j') . ' ' . e(mb_substr(RO_MONTHS[(int) $d->format('n') - 1], 0, 3)) . '.</span></a>'
             . '<ul class="mt-2 flex flex-col gap-1.5">' . ($items !== '' ? $items : '<li class="text-mic text-discret">Liber</li>') . '</ul>'
             . '<a href="' . e(admin_url('/admin/programari/noua', ['clinica' => $clinicId, 'data' => $key, 'inapoi' => $url([])])) . '" class="mt-auto pt-3 text-mic text-link underline">Adăugați</a></section>';
@@ -124,5 +176,15 @@ if ($view === 'zi') {
     $content .= '</div>';
 }
 
-$body = admin_header('Calendar', $title . ' · ' . ($names[$clinicId] ?? '') . ' · ' . count($appts) . (count($appts) === 1 ? ' programare' : ' programări')) . $toolbar . $content;
+$notes = [];
+foreach ($view === 'zi' ? [$date] : array_map(static fn ($i) => $monday->modify("+{$i} days")->format('Y-m-d'), range(0, 6)) as $k) {
+    if (in_array($k, $holidays, true)) {
+        $notes[] = ucfirst(format_date($k, true)) . ': sărbătoare legală (pe site nu se fac programări).';
+    }
+}
+foreach ($timeOff as $t) {
+    $notes[] = time_off_label($t) . '.';
+}
+$notesHtml = $notes !== [] ? '<ul class="mb-4 flex flex-col gap-1 rounded-panou border border-mustar bg-mustar-pal p-3 text-mic">' . implode('', array_map(static fn ($n) => '<li class="flex items-start gap-2">' . icon('user-x', 16, 'mt-0.5') . '<span>' . e($n) . '</span></li>', array_unique($notes))) . '<li><a class="text-link underline" href="/admin/absente">Absențe și zile libere</a></li></ul>' : '';
+$body = admin_header('Calendar', $title . ' · ' . ($names[$clinicId] ?? '') . ' · ' . count($appts) . (count($appts) === 1 ? ' programare' : ' programări')) . $toolbar . $notesHtml . $content;
 admin_page('Calendar', $body, $user);

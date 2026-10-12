@@ -34,16 +34,16 @@ const PHONE_CHANNELS = ['sms' => 'SMS', 'whatsapp' => 'WhatsApp', 'nu' => 'Făr�
 const PATIENT_EVENTS = [
     'programare-noua' => [
         'label' => 'Programare făcută', 'when' => 'Imediat după ce recepția face programarea.', 'marketing' => false, 'phone' => true, 'email' => true,
-        'sms' => 'Dental Arena: programarea dvs. este {data}, ora {ora}, la {clinica} ({medic}). Pentru modificari sunati la {telefon_clinica}.',
+        'sms' => 'Dental Arena: programarea dvs. este {data}, ora {ora}, la {clinica} ({medic}). Confirmati sau anulati: {link}',
         'subject' => 'Programarea dumneavoastră la Dental Arena',
-        'body' => "Bună ziua, {prenume},\n\nprogramarea dumneavoastră este {data}, la ora {ora}, la Dental Arena {clinica} ({adresa}), cu {medic}.\n\nDacă doriți să o mutați sau nu puteți veni, vă rugăm să ne sunați: {telefon_clinica}.\n\nVă așteptăm,\nDental Arena",
+        'body' => "Bună ziua, {prenume},\n\nprogramarea dumneavoastră este {data}, la ora {ora}, la Dental Arena {clinica} ({adresa}), cu {medic}.\n\nO confirmați, o anulați sau o adăugați în calendar aici: {link}\n\nDacă doriți să o mutați, vă rugăm să ne sunați: {telefon_clinica}.\n\nVă așteptăm,\nDental Arena",
         'params' => ['prenume', 'data', 'ora', 'clinica', 'medic', 'telefon_clinica'],
     ],
     'programare-mutata' => [
         'label' => 'Programare mutată', 'when' => 'Când se schimbă ziua sau ora.', 'marketing' => false, 'phone' => true, 'email' => true,
-        'sms' => 'Dental Arena: programarea dvs. a fost mutata pe {data}, ora {ora}, la {clinica}. Intrebari: {telefon_clinica}.',
+        'sms' => 'Dental Arena: programarea dvs. a fost mutata pe {data}, ora {ora}, la {clinica}. Detalii: {link}',
         'subject' => 'Programarea dumneavoastră a fost mutată',
-        'body' => "Bună ziua, {prenume},\n\nprogramarea dumneavoastră a fost mutată pe {data}, la ora {ora}, la Dental Arena {clinica} ({adresa}).\n\nPentru întrebări: {telefon_clinica}.\n\nDental Arena",
+        'body' => "Bună ziua, {prenume},\n\nprogramarea dumneavoastră a fost mutată pe {data}, la ora {ora}, la Dental Arena {clinica} ({adresa}).\n\nO confirmați sau o adăugați în calendar aici: {link}\n\nPentru întrebări: {telefon_clinica}.\n\nDental Arena",
         'params' => ['prenume', 'data', 'ora', 'clinica', 'telefon_clinica'],
     ],
     'programare-anulata' => [
@@ -55,9 +55,9 @@ const PATIENT_EVENTS = [
     ],
     'reamintire' => [
         'label' => 'Reamintire cu o zi înainte', 'when' => 'În ziua dinaintea programării, între 10 și 21 (doar pentru programările făcute cu cel puțin 18 ore înainte).', 'marketing' => false, 'phone' => true, 'email' => true,
-        'sms' => 'Dental Arena: va asteptam maine, {data}, la ora {ora}, la {clinica}. Daca nu puteti veni, sunati la {telefon_clinica}.',
+        'sms' => 'Dental Arena: va asteptam maine, {data}, la ora {ora}, la {clinica}. Confirmati sau anulati: {link}',
         'subject' => 'Programarea de mâine la Dental Arena',
-        'body' => "Bună ziua, {prenume},\n\nvă reamintim programarea de mâine la Dental Arena {clinica}:\n\n{data}, ora {ora}\n{medic}\n{adresa}\n\nDacă nu puteți veni, vă rugăm să ne sunați: {telefon_clinica}.\n\nVă așteptăm,\nDental Arena",
+        'body' => "Bună ziua, {prenume},\n\nvă reamintim programarea de mâine la Dental Arena {clinica}:\n\n{data}, ora {ora}\n{medic}\n{adresa}\n\nO confirmați sau o anulați aici: {link}\n\nDacă nu puteți veni, vă rugăm să ne sunați: {telefon_clinica}.\n\nVă așteptăm,\nDental Arena",
         'params' => ['prenume', 'data', 'ora', 'clinica', 'telefon_clinica'],
     ],
     'cerere-primita' => [
@@ -176,11 +176,23 @@ function messaging_live(): bool
     return messaging()['mode'] === 'live';
 }
 
+/** Texts that were the default once: saved unchanged, they give way to the new default (with the link). */
+const PATIENT_OLD_DEFAULTS = [
+    'programare-noua' => ['sms' => 'Dental Arena: programarea dvs. este {data}, ora {ora}, la {clinica} ({medic}). Pentru modificari sunati la {telefon_clinica}.', 'body' => "Bună ziua, {prenume},\n\nprogramarea dumneavoastră este {data}, la ora {ora}, la Dental Arena {clinica} ({adresa}), cu {medic}.\n\nDacă doriți să o mutați sau nu puteți veni, vă rugăm să ne sunați: {telefon_clinica}.\n\nVă așteptăm,\nDental Arena"],
+    'programare-mutata' => ['sms' => 'Dental Arena: programarea dvs. a fost mutata pe {data}, ora {ora}, la {clinica}. Intrebari: {telefon_clinica}.', 'body' => "Bună ziua, {prenume},\n\nprogramarea dumneavoastră a fost mutată pe {data}, la ora {ora}, la Dental Arena {clinica} ({adresa}).\n\nPentru întrebări: {telefon_clinica}.\n\nDental Arena"],
+    'reamintire' => ['sms' => 'Dental Arena: va asteptam maine, {data}, la ora {ora}, la {clinica}. Daca nu puteti veni, sunati la {telefon_clinica}.', 'body' => "Bună ziua, {prenume},\n\nvă reamintim programarea de mâine la Dental Arena {clinica}:\n\n{data}, ora {ora}\n{medic}\n{adresa}\n\nDacă nu puteți veni, vă rugăm să ne sunați: {telefon_clinica}.\n\nVă așteptăm,\nDental Arena"],
+];
+
 /** The settings of a patient notice (the defaults, with what the clinic changed). */
 function patient_event(string $event): array
 {
     $saved = setting('notificari');
     $over = is_array($saved) && is_array($saved[$event] ?? null) ? $saved[$event] : [];
+    foreach (PATIENT_OLD_DEFAULTS[$event] ?? [] as $k => $old) {
+        if (isset($over[$k]) && str_replace("\r\n", "\n", trim((string) $over[$k])) === $old) {
+            unset($over[$k]);
+        }
+    }
     return array_merge(PATIENT_EVENTS[$event] + ['wa' => ''], array_intersect_key($over, array_flip(['phone', 'email', 'sms', 'subject', 'body', 'wa'])));
 }
 
@@ -263,7 +275,44 @@ function appointment_vars(array $a): array
         'telefon_clinica' => $c ? format_phone($c['phone']) : '',
         'medic' => $doc['public_name'] ?? '',
         'motiv' => (string) ($a['reason'] ?? ''),
+        'link' => appointment_link($a),
     ];
+}
+
+// ── The patient's link to an appointment (/p/…) ──────────────────────────────
+
+function appointment_link_key(): string
+{
+    return hash_hmac('sha256', 'apt-link', (string) (CONFIG['secret'] ?? 'dentalarena'), true);
+}
+
+/** id . version . expiry . signature; it ends a day after the appointment, or when it is moved or cancelled. */
+function appointment_token(array $a): string
+{
+    $id = rtrim(strtr(base64_encode((string) $a['id']), '+/', '-_'), '=');
+    $exp = base_convert((string) (strtotime($a['starts_at']) + 86400), 10, 36);
+    $body = $id . '.' . (int) ($a['token_version'] ?? 0) . '.' . $exp;
+    return $body . '.' . substr(rtrim(strtr(base64_encode(hash_hmac('sha256', $body, appointment_link_key(), true)), '+/', '-_'), '='), 0, 22);
+}
+
+function appointment_link(array $a): string
+{
+    return absolute_url('/p/' . appointment_token($a));
+}
+
+/** The appointment of a valid link, or null (changed, expired, moved, cancelled). */
+function appointment_from_token(string $token): ?array
+{
+    if (!preg_match('/^([A-Za-z0-9_-]+)\.(\d+)\.([0-9a-z]+)\.([A-Za-z0-9_-]{22})$/', $token, $m)) {
+        return null;
+    }
+    $body = "{$m[1]}.{$m[2]}.{$m[3]}";
+    $sig = substr(rtrim(strtr(base64_encode(hash_hmac('sha256', $body, appointment_link_key(), true)), '+/', '-_'), '='), 0, 22);
+    if (!hash_equals($sig, $m[4]) || (int) base_convert($m[3], 36, 10) < time()) {
+        return null;
+    }
+    $a = db_one('SELECT * FROM appointments WHERE id = ?', [(int) base64_decode(strtr($m[1], '-_', '+/'))]);
+    return $a !== null && (int) $a['token_version'] === (int) $m[2] ? $a : null;
 }
 
 function patient_vars(array $p): array

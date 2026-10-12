@@ -289,8 +289,9 @@ Setări → Asistentul AI). Alegeți:
   în calendar și pacientul primește confirmarea. Cere SMS-urile pornite (SMSLink, mod „Trimitere
   reală”).
 
-Mai setați durata unei programări online (implicit 30 de minute), cu cât timp înainte (implicit 3
-ore), câte zile înainte, o limită zilnică de conversații (cost) și după câte zile se șterg.
+Mai setați o limită zilnică de conversații (cost) și după câte zile se șterg. Durata, cât de
+devreme și cu câte zile înainte se pot face programările se aleg la Setări → **Programări online**
+(aceleași pentru site și chat).
 
 **3. Urmărirea:** meniul **Chat pe site** arată conversațiile, ce s-a întâmplat (doar întrebări,
 cerere, programare) și consumul. La „Programare făcută online” din Contul meu → Notificările mele,
@@ -300,6 +301,31 @@ recepția poate primi SMS/e-mail.
 din nou în momentul programării; limitează cererile (pe conexiune și pe zi); nu pune diagnostice și
 trimite urgențele la telefon sau 112. Ce scrie vizitatorul ajunge la Anthropic: menționați în
 Politica de confidențialitate.
+
+## Programarea online pe site, absențe și zile libere (etapa 6a)
+
+Pe pagina **Programare**, pacientul își alege singur ora, în 4 pași: motivul și clinica → ziua și
+ora (orice medic sau unul anume) → cum se simte (emoții, inhalosedare) → numele și telefonul.
+Programarea intră direct în calendar, cu sursa „online”, iar pacientul primește confirmarea (SMS și
+e-mail) cu un **link** de unde o confirmă, o anulează (până cu N ore înainte) sau o adaugă în
+calendarul telefonului. Dacă recepția mută sau anulează programarea, linkul vechi nu mai merge. Cine
+nu găsește o oră apasă „Prefer să mă sunați” și lasă o cerere.
+
+- **Setări → Programări online**: pornit/oprit (oprit = formularul vechi de cerere), din câte în câte
+  minute se arată orele, cel mai devreme față de acum, câte zile înainte, pauza dintre programări,
+  durata implicită, până când poate anula pacientul, unde se termină dimineața.
+- **Servicii și prețuri → serviciu**: fiecare rând are **Durează** (cât ține) și **Programare online**
+  (apare ca motiv pe site, cu textul și explicația lui; „Urgență” îl pune al doilea, evidențiat).
+- **Echipa → medic**: programul pe zile poate avea o **pauză** (de exemplu 13:00–14:00), iar
+  „Primește programări de pe site” scoate medicul din programarea online.
+- **Absențe și zile libere** (meniu): concediu, curs, interval blocat pentru un medic (la o clinică
+  sau la toate), sau **clinica închisă** o zi sau o perioadă. Orele dispar imediat de pe site și din
+  chat, apar hașurate în calendar, iar programările deja făcute în acel interval sunt arătate ca să fie
+  mutate. Medicul își poate pune singur absențele. Sărbătorile legale sunt știute automat.
+- În panou, o programare peste o absență nu se poate face; în afara programului, în pauză, într-o
+  sărbătoare sau peste altă programare a pacientului apare un avertisment („Programez oricum”).
+- Un telefon folosit de mai mulți din familie: fișa se refolosește doar dacă se potrivește și numele;
+  altfel se face fișă nouă. Programarea pentru un copil face fișa copilului, cu părintele trecut.
 
 ## Reamintiri pe e-mail (Cron Jobs)
 
