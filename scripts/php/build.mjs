@@ -158,6 +158,14 @@ if (process.argv.includes("--package")) {
     filter: (p) => !p.endsWith("config.php") && !p.includes(`${path.sep}storage${path.sep}`),
   });
   fs.mkdirSync(path.join(deploy, "dentalarena/storage"), { recursive: true });
+  // The version shown in Setări → Actualizare: the day and the commit.
+  let commit = "";
+  try {
+    commit = execFileSync("git", ["rev-parse", "--short", "HEAD"], { cwd: root }).toString().trim();
+  } catch {
+    commit = "local";
+  }
+  fs.writeFileSync(path.join(deploy, "dentalarena/VERSION"), `${new Date().toISOString().slice(0, 10)} (${commit})\n`);
   // Photos uploaded from the panel live in public_html/media; an update must not wipe them.
   fs.rmSync(path.join(deploy, "public_html/media"), { recursive: true, force: true });
   fs.copyFileSync(path.join(root, "docs/cpanel-php.md"), path.join(deploy, "CITESTE-MA.md"));

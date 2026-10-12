@@ -690,6 +690,8 @@ const AUDIT_LABELS = [
     'programare-online' => 'Programare făcută de pacient în chatul de pe site',
     'setari-chat' => 'Setările chatului de pe site',
     'chat-sters' => 'Conversație din chat ștearsă',
+    'actualizare' => 'Site-ul actualizat dintr-o arhivă',
+    'actualizare-revenire' => 'Site-ul pus înapoi la o versiune de dinainte',
 ];
 
 function audit_label(string $action): string

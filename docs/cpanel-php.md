@@ -332,10 +332,22 @@ Implicit site-ul trimite prin serverul cPanel. Pentru o livrare mai bună, trimi
 
 ## Actualizări
 
-1. Faceți o copie de siguranță (cPanel → **Backup**).
-2. Încărcați noua `dentalarena-php.zip` în același loc ca prima dată și dați **Extract**, cu
-   suprascriere. Setările (`dentalarena/config.php`), baza de date și fotografiile încărcate
-   (`public_html/media`) rămân. Baza de date se actualizează singură la prima vizită.
+**Din panou (recomandat):** Setări → **Actualizare**.
+1. Faceți o copie a bazei de date (cPanel → **Backup**).
+2. Alegeți arhiva `dentalarena-php.zip` primită și apăsați **Încărcați și verificați**. Arhiva se
+   trimite pe bucăți de 1 MB, deci limita de încărcare a găzduirii nu contează.
+3. Panoul arată versiunea de acum și pe cea nouă. Scrieți parola și apăsați **Instalați
+   actualizarea** (durează de obicei sub un minut; între timp site-ul afișează „Actualizăm
+   site-ul”, panoul merge în continuare).
+4. Dacă ceva nu e în regulă: **Copii de siguranță → Puneți înapoi** versiunea de dinainte.
+
+Nu se ating: `dentalarena/config.php`, `dentalarena/storage` (documente, sesiuni, jurnale),
+`public_html/media` (fotografiile încărcate din panou) și baza de date (tabelele noi se adaugă
+singure). Liniile pe care cPanel le scrie în `.htaccess` (versiunea de PHP) se păstrează. Se
+acceptă doar arhive cu structura pachetului (folderele `public_html` și `dentalarena`).
+
+**Prima dată** (sau dacă panoul nu se mai deschide): încărcați `dentalarena-php.zip` în același loc
+ca la instalare, în cPanel → File Manager, și dați **Extract** cu suprascriere.
 
 ## Copii de siguranță
 

@@ -167,3 +167,16 @@ template, `linii` for e-mail), `agenda_recipients` (the doctor's own contact + a
 window → SMS), `send_agendas` (from `run_daily_jobs` on every cron tick: once a day per doctor,
 from `agenda_time` until the last appointment), `notify_doctor_today` (same-day changes after the
 programme went out). `count_ro()` in helpers.php.
+
+## Updating from the panel
+
+`src/admin/update.php` + `/admin/actualizare` (administrators). The package from
+`npm run build:php:zip` (with `dentalarena/VERSION`, stamped by the build) is uploaded in 1 MB
+pieces (`?op=bucata`, CSRF in a header), checked (`zip_raw_names` reads the central directory
+itself, so `../`, absolute or foreign paths are refused whatever library unpacks it; the key files
+must be there), unpacked (ZipArchive, or PharData without the zip extension), and applied by
+`update_apply`: every target must be writable first, then a folder copy of the running version
+(`storage/actualizari/copie-*`, last 3 kept), a lock that shows „Actualizăm site-ul” on public
+pages, the copy (`config.php`, `storage/`, `public_html/media` never touched; cPanel's handler
+block in `.htaccess` kept), `opcache_reset`, and the migrations on the next request. A copy is put
+back the same way (`update_restore`). Files removed in a new version are not deleted.

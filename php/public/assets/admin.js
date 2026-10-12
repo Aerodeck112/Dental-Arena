@@ -218,6 +218,64 @@
     }, 4000);
   }
 
+  // Setări → Actualizare: the archive goes in 1 MB pieces (past the hosting's upload limit).
+  var upd = document.querySelector("[data-actualizare]");
+  if (upd && window.fetch && window.Blob && window.crypto) {
+    upd.addEventListener("submit", function (e) {
+      var file = upd.querySelector("input[type=file]").files[0];
+      if (!file) return;
+      e.preventDefault();
+      var url = upd.getAttribute("data-actualizare");
+      var bar = upd.querySelector("[data-actualizare-progres]");
+      var state = upd.querySelector("[data-actualizare-stare]");
+      var btnUp = upd.querySelector("button[type=submit]");
+      var token = upd.querySelector("[name=_csrf]").value;
+      var bytes = new Uint8Array(12);
+      window.crypto.getRandomValues(bytes);
+      var id = Array.prototype.map.call(bytes, function (b) { return ("0" + b.toString(16)).slice(-2); }).join("");
+      var size = 1024 * 1024;
+      var offset = 0;
+      var tries = 0;
+      bar.hidden = false;
+      btnUp.disabled = true;
+      var fail = function (msg) {
+        state.textContent = msg;
+        state.className = "text-mic font-medium text-carmin";
+        btnUp.disabled = false;
+        upd.removeAttribute("data-trimis");
+      };
+      var next = function () {
+        if (offset >= file.size) {
+          state.textContent = "Se verifică arhiva…";
+          window.location.href = url + "?pachet=" + id;
+          return;
+        }
+        fetch(url + "?op=bucata", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/octet-stream", "X-CSRF-Token": token, "X-Upload-Id": id, "X-Offset": String(offset) },
+          body: file.slice(offset, offset + size),
+        })
+          .then(function (r) {
+            return r.json().then(function (d) { return { ok: r.ok, d: d }; });
+          })
+          .then(function (x) {
+            if (!x.ok) return fail(x.d.error || "Încărcarea nu a mers.");
+            offset = x.d.size;
+            tries = 0;
+            bar.firstChild.style.width = Math.round((offset / file.size) * 100) + "%";
+            state.textContent = "Se încarcă: " + Math.round((offset / file.size) * 100) + "% din " + (file.size / 1048576).toFixed(1).replace(".", ",") + " MB";
+            next();
+          })
+          .catch(function () {
+            if (++tries <= 3) setTimeout(next, 1500 * tries);
+            else fail("Conexiunea s-a întrerupt. Încercați din nou.");
+          });
+      };
+      next();
+    });
+  }
+
   var focusMe = document.querySelector("[data-autofocus], [role=alert]");
   if (focusMe) focusMe.focus();
 })();

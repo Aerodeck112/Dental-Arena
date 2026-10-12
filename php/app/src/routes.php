@@ -56,6 +56,13 @@ if (preg_match('#^/d/([A-Za-z0-9]{12})$#', $path, $m)) {
     exit;
 }
 
+if (!str_starts_with($path, '/admin') && is_file(APP_DIR . '/storage/actualizare.lock') && filemtime(APP_DIR . '/storage/actualizare.lock') > time() - 600) {
+    http_response_code(503);
+    header('Retry-After: 60');
+    header('Content-Type: text/html; charset=utf-8');
+    exit('<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><meta http-equiv="refresh" content="20"><title>Actualizăm site-ul</title><p style="font-family:sans-serif;padding:2rem;font-size:1.1rem">Actualizăm site-ul Dental Arena. Reveniți în câteva clipe. Pentru programări: Cristești 0265 326 316, Luduș 0365 430 125.</p>');
+}
+
 if ($path === '/api/chat') {
     require APP_DIR . '/src/chat.php';
     chat_endpoint();

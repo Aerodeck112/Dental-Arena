@@ -99,9 +99,19 @@ export function SiteFooter() {
             </li>
           </ul>
         </div>
-        <p className="mt-6 text-legal">
-          © {year} {SITE.brandName}. Toate drepturile rezervate.
-        </p>
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-x-6 gap-y-1">
+          <p className="text-legal">
+            © {year} {SITE.brandName}. Toate drepturile rezervate.
+          </p>
+          <a
+            href="https://www.vitim.ro"
+            target="_blank"
+            rel="noopener"
+            className="inline-flex min-h-control items-center gap-1 text-legal text-discret underline-offset-[0.2em] hover:text-cerneala hover:underline"
+          >
+            Powered by <strong className="font-semibold tracking-wide">VITIM</strong>
+          </a>
+        </div>
       </Container>
     </footer>
   );

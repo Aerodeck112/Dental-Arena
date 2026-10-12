@@ -32,6 +32,12 @@ function logo(string $class = 'h-12 w-auto', bool $priority = false, string $siz
         . ($priority ? ' fetchpriority="high"' : ' loading="lazy"') . ' decoding="async" draggable="false" class="' . e(cn('shrink-0 select-none', $class)) . '">';
 }
 
+/** „Powered by VITIM”, at the bottom of the site and the panel. */
+function powered_by(string $class = ''): string
+{
+    return '<a href="https://www.vitim.ro" target="_blank" rel="noopener" class="' . e(cn('inline-flex min-h-control items-center gap-1 text-legal text-discret underline-offset-[0.2em] hover:text-cerneala hover:underline', $class)) . '">Powered by <strong class="font-semibold tracking-wide">VITIM</strong></a>';
+}
+
 /** The classes of Button / ButtonLink (src/components/ui/button-styles.ts). */
 function btn(string $variant = 'primary', string $size = 'm', string $class = ''): string
 {

@@ -413,7 +413,7 @@ ${atentie("Pe WhatsApp, Meta cere un șablon aprobat (vezi capitolul despre mesa
 export const setari = () => ({
   titlu: "Setări: firma, clinicile, facturarea, acordurile",
   html: `
-<p>${b("Setări")} (doar administratorul). Sus sunt butoanele spre celelalte setări: Mesaje, Asistentul AI, Tablete de semnare, Chatul de pe site.</p>
+<p>${b("Setări")} (doar administratorul). Sus sunt butoanele spre celelalte setări: Mesaje, Asistentul AI, Tablete de semnare, Chatul de pe site, Actualizare.</p>
 ${img("setari", "Setările generale.")}
 ${tabel(["Secțiunea", "Ce conține"], [
   ["Datele firmei", "Denumirea, CUI, Nr. Reg. Com., sediul, IBAN și banca. Apar pe facturi și în paginile legale de pe site."],
@@ -580,10 +580,20 @@ export const intretinere = () => ({
   html: `
 <ul>
 <li><strong>Cron Job (obligatoriu)</strong>: în cPanel → Cron Jobs, la fiecare 5 minute: <span class="adresa-inline">php /home/CONT/dentalarena/cron.php</span>. El trimite mesajele, reamintirile, programul zilei al medicilor, urările și rechemările la timp. Fără el, acestea pleacă doar când cineva deschide panoul.</li>
-<li><strong>Actualizări</strong>: arhiva nouă se urcă peste cea veche (public_html și dentalarena); tabelele noi din baza de date se fac singure la prima deschidere. Fișierul config.php și folderul storage nu se ating.</li>
+<li><strong>Actualizări</strong>: din ${b("Setări")} → ${b("Actualizare")} (vezi mai jos).</li>
 <li><strong>Copii de siguranță</strong>: în cPanel → Backup, săptămânal: baza de date și folderul dentalarena/storage (documentele pacienților). Păstrați o copie și în afara găzduirii.</li>
 <li><strong>Parolele</strong>: fiecare om are contul lui; nu folosiți conturi comune. Dezactivați imediat contul cuiva care pleacă.</li>
 </ul>
+<h3>Actualizarea site-ului din panou</h3>
+<p>Orice modificare a site-ului sau a panoului vine ca o arhivă ZIP (dentalarena-php.zip). O instalați singur, din ${b("Setări")} → ${b("Actualizare")}:</p>
+${pasi([
+  "Faceți o copie a bazei de date din cPanel → Backup (recomandat).",
+  `Alegeți arhiva și apăsați ${b("Încărcați și verificați")}. Se încarcă pe bucăți, deci poate fi oricât de mare.`,
+  `Verificați versiunea nouă, scrieți parola și apăsați ${b("Instalați actualizarea")}. Durează de obicei sub un minut.`,
+  `Dacă ceva nu e în regulă, la ${b("Copii de siguranță")} apăsați ${b("Puneți înapoi")} pentru versiunea de dinainte.`,
+])}
+${img("actualizare", "Pagina Actualizare, cu un pachet încărcat și verificat.")}
+${sfat("Actualizarea nu atinge setările, documentele pacienților, fotografiile încărcate și datele; tabelele noi se adaugă singure. Panoul acceptă doar arhive cu structura pachetului site-ului.")}
 ${sfat("Ghidul tehnic complet (instalare, e-mail, WhatsApp, AI) e în fișierul CITESTE-MA.md din arhivă.")}`,
 });
 

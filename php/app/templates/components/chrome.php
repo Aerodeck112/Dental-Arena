@@ -213,7 +213,10 @@ function site_footer(): void
         <li><button type="button" data-cookie-settings class="inline-flex min-h-control items-center underline underline-offset-[0.2em] hover:decoration-2">Setări cookie-uri</button></li>
       </ul>
     </div>
-    <p class="mt-6 text-legal">© <?= date('Y') ?> <?= e($site['brandName']) ?>. Toate drepturile rezervate.</p>
+    <div class="mt-6 flex flex-wrap items-center justify-between gap-x-6 gap-y-1">
+      <p class="text-legal">© <?= date('Y') ?> <?= e($site['brandName']) ?>. Toate drepturile rezervate.</p>
+      <?= powered_by() ?>
+    </div>
   </div>
 </footer>
     <?php

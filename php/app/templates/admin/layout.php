@@ -119,6 +119,7 @@ function admin_page(string $title, string $body, ?array $user = null): void
       <?php if ($user) { ?>
       <form method="post" action="/admin/iesire" class="mt-12 lg:hidden"><?= csrf_field() ?><p class="text-mic text-discret"><?= e($user['name']) ?> · <a href="/admin/cont" class="text-link underline">Contul meu</a></p><button type="submit" class="<?= e(btn('secondary', 's', 'mt-2')) ?>"><?= icon('log-out', 16) ?>Ieșire</button></form>
       <?php } ?>
+      <p class="mt-12 border-t border-linie pt-2"><?= powered_by() ?></p>
     </div>
   </main>
 </div>
