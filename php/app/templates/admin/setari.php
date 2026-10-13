@@ -228,7 +228,7 @@ foreach ($locations as $l) {
         . '</div>'
         . checkbox_field("loc[{$id}][publish_hours]", 'Programul apare pe site', ['id' => "field-loc_{$id}_publish_hours", 'checked' => (int) $l['publish_hours'] === 1, 'description' => 'Bifați după ce ați verificat orele.'])
         . '</div>'
-        . '<h3 class="mt-6 font-display text-[1.125rem] font-semibold">Firma clinicii</h3>'
+        . '<h3 class="mt-6 text-h3 font-semibold">Firma clinicii</h3>'
         . '<p class="text-mic text-discret">Apare pe acordurile semnate aici (și pe tabletă), pe facturi și în paginile legale de pe site.</p>'
         . '<div class="mt-4 grid gap-5 md:grid-cols-2">'
         . $f('legal_name', 'Denumirea firmei', ['hint' => 'De exemplu S.C. Dental Arena S.R.L.'])

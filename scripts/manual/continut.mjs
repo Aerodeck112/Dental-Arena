@@ -510,7 +510,7 @@ ${tabel(["Secțiunea", "Ce conține"], [
   ["Cererile de pe site", "E-mailul care primește cererile și câte zile se păstrează cererile închise (recomandat 365; apoi se șterg singure)."],
   ["Module", "Partea financiară (facturi, încasări, sold, venituri în rapoarte): oprită în perioada de probă. Bifată, apar meniurile Facturi și Încasări și secțiunea Facturare, cu seria de facturi și de chitanțe a fiecărei clinici (fiecare firmă își numerotează singură documentele)."],
   ["Textele acordurilor", "Textele celor 3 acorduri. {{pacient}}, {{firma}} (firma clinicii unde se semnează), {{clinica}} și {{email}} se completează singure; la sfârșitul fiecărui acord se scrie singură firma căreia i se dă. La o schimbare, versiunea se schimbă singură."],
-  ["Clinicile", "Pentru Cristești și Luduș: numele, adresa, telefonul, e-mailul (primește cererile acelei clinici), programul ca text pe site, orele pe zile, câte cabinete și ${b("Firma clinicii")}: denumirea, CUI, Nr. Reg. Com., sediul, banca și IBAN."],
+  ["Clinicile", "Pentru Cristești și Luduș: numele, adresa, telefonul, e-mailul (primește cererile acelei clinici), programul ca text pe site, orele pe zile, câte cabinete și firma clinicii: denumirea, CUI, Nr. Reg. Com., sediul, banca și IBAN."],
 ])}
 ${img("setari-module", "Modulele: partea financiară.", { mic: true })}
 <h3>Clinica: orele, cabinetele, firma</h3>
