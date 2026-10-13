@@ -22,6 +22,13 @@ $v = [
     'locations' => $isNew ? [] : array_map('intval', array_column(db_all('SELECT location_id FROM user_locations WHERE user_id = ?', [$acc['id']]), 'location_id')),
 ];
 
+if (is_post() && post('op') === 'sesiuni' && !$isNew) {
+    csrf_check();
+    end_all_sessions((int) $acc['id'], $self);
+    audit('sesiuni-inchise', $acc['email']);
+    flash('Contul a fost scos din toate sesiunile' . ($self ? ', mai puțin aceasta' : '') . '.');
+    redirect("/admin/utilizatori/{$acc['id']}");
+}
 if (is_post()) {
     csrf_check();
     $v['name'] = post('name');
@@ -109,4 +116,9 @@ $body = '<p class="mb-4"><a href="/admin/utilizatori" class="inline-flex min-h-c
     . admin_section_open($isNew ? 'Parola de început' : 'Parolă nouă', 'parola', $isNew ? 'O spuneți persoanei; la prima intrare își alege una nouă.' : 'Completați doar dacă persoana și-a uitat parola. Va fi rugată să-și aleagă una nouă.')
     . '<div class="mt-4 max-w-md">' . text_field('password', 'Parola', ['type' => 'text', 'required' => $isNew, 'optional' => !$isNew, 'autocomplete' => 'new-password', 'error' => $errors['password'] ?? null, 'hint' => 'Cel puțin 10 caractere.']) . '</div></section>'
     . '<div><button type="submit" class="' . e(btn('primary', 'l')) . '">' . ($isNew ? 'Creați contul' : 'Salvați') . '</button></div></form>';
+if (!$isNew) {
+    $body .= '<form method="post" class="mt-8 max-w-3xl rounded-panou border border-linie bg-suprafata p-6" data-confirma="Scoateți contul din toate sesiunile deschise?">' . csrf_field() . '<input type="hidden" name="op" value="sesiuni">'
+        . '<h2 class="text-h3 font-semibold">Sesiunile deschise</h2><p class="mt-1 text-corp text-discret">De exemplu, după ce cineva pleacă din echipă sau și-a pierdut telefonul: trebuie să intre din nou cu parola.</p>'
+        . '<div class="mt-4"><button type="submit" class="' . e(btn('secondary')) . '">' . icon('log-out', 18) . 'Închideți toate sesiunile contului</button></div></form>';
+}
 admin_page($isNew ? 'Cont nou' : $acc['name'], $body, $user);

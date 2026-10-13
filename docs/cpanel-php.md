@@ -348,6 +348,48 @@ etapa 2, după perioada de probă. O pornește VITIM din Setări → Module → 
 nimeni din clinică nu vede Facturi, Încasări, fila „Facturi și plăți” din fișă sau veniturile din
 Rapoarte; ce s-a emis deja rămâne în baza de date.
 
+## Calendar, cereri și pacienți (etapa 6b)
+
+**Calendarul**
+- În vederea pe zi, o programare se **trage** la altă oră, la alt medic sau în alt cabinet și se
+  **lungește** de marginea de jos. Câteva secunde apare „Anulați”. Pacientul primește noua oră abia
+  după două minute, deci o mutare anulată nu trimite nimic. Peste o absență nu se poate muta; în
+  afara programului, peste altă programare sau cu inhalosedarea ocupată, calendarul întreabă
+  „Mutați oricum?”.
+- Vederi: **Zi** (pe medici sau pe cabinete), **Săptămână**, **Listă** (șapte zile, cu telefonul și
+  starea). O linie roșie arată ora de acum.
+- Starea se schimbă dintr-un clic pe pagina programării, cu revenire (de exemplu anulat → programat,
+  o vizită redeschisă). La **Finalizat**, pacientul intră singur pe lista de rechemări (la 6 luni,
+  3 la parodontologie, 1 la ortodonție), dacă nu are deja o rechemare sau o programare viitoare.
+- Setări (VITIM) → clinica: **orele clinicii pe zile** (taie programul medicilor pe site),
+  **câte cabinete** și **câte aparate de inhalosedare** are. La Echipa → medic: cabinetul obișnuit.
+
+**Cererile**
+- Pe fiecare cerere: **cine se ocupă**, **istoricul** (apel cu rezultat: a răspuns, nu răspunde,
+  ocupat, sună el; SMS, e-mail, notă), starea și, la închidere fără programare, **motivul** (preț,
+  distanță, altă clinică…). Primul apel trece cererea „În lucru” și o dă celui care a sunat.
+- „Poate este deja pacient”: fișele cu același telefon, e-mail sau nume, cu „Programare pe această
+  fișă”, ca să nu apară fișe duble.
+- Cereri → **Tablou**: câte o coloană pe stare, cu butoane de mutare; filtrul „Se ocupă: Eu”.
+- Rapoarte → „De ce nu s-au programat”.
+
+**Pacienții**
+- La fișă nouă, dacă există cineva cu același telefon, CNP, e-mail sau nume și dată a nașterii,
+  apare lista și trebuie bifat „Este altă persoană”.
+- **Etichete** pe fișă (de exemplu VIP) și filtru după etichetă în lista de pacienți.
+- **Note** fixate sus, modificate sau șterse de autor (sau de administrator).
+- CNP-ul se vede mascat; „Arătați CNP-ul întreg” îl arată două minute și se trece în Jurnal.
+- **Tutorele** poate fi o fișă (nr. fișei); pe fișa tutorelui apar „În grija sa”. Programarea pentru
+  un copil de pe site leagă singură fișa părintelui, dacă există.
+- **Implanturi**: pe fișă, etapele fiecărui caz (plan, inserat, descoperit, amprentă, lucrarea
+  finală, control anual) cu data pasului următor; meniul **Implanturi** arată toate cazurile în
+  curs, cele întârziate marcate.
+
+**Altele**
+- Contul meu: **tema panoului** (luminos, întunecat, ca sistemul) și „Ieșiți de pe celelalte
+  dispozitive”. La Utilizatori (VITIM): „Închideți toate sesiunile contului”.
+- Prima pagină a site-ului arată **prima oră liberă** la fiecare clinică.
+
 ## Reamintiri pe e-mail (Cron Jobs)
 
 Pacienții primesc reamintirea în ziua dinaintea programării (între orele 10 și 21), pe SMS/WhatsApp

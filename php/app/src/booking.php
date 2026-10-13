@@ -533,7 +533,8 @@ function book_slot(string $slotId, array $person, string $reason, ?string $categ
                 if ($pid === null) {
                     $parts = preg_split('/\s+/', trim($person['name'])) ?: [''];
                     $row = ['first_name' => mb_substr($o['child']['first'], 0, 80), 'last_name' => mb_substr(count($parts) > 1 ? $parts[0] : $person['name'], 0, 80), 'phone' => format_phone($person['phone']), 'email' => $person['email'] ?: null, 'preferred_location_id' => $s['location_id']];
-                    $pid = db_insert('patients', $row + ['guardian_name' => mb_substr($person['name'], 0, 160), 'file_number' => next_file_number(), 'search_text' => patient_search_text($row), 'created_at' => now_sql(), 'updated_at' => now_sql()]);
+                    // The parent, when they have a file too, is linked as the guardian.
+                    $pid = db_insert('patients', $row + ['guardian_name' => mb_substr($person['name'], 0, 160), 'guardian_patient_id' => patient_by_phone_name($person['name'], $person['phone']), 'file_number' => next_file_number(), 'search_text' => patient_search_text($row), 'created_at' => now_sql(), 'updated_at' => now_sql()]);
                 }
             } else {
                 $pid = find_or_create_patient($person['name'], $person['phone'], $person['email'] ?: null, $s['location_id'], null);

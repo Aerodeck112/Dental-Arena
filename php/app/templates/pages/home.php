@@ -1,6 +1,10 @@
 <?php
-/** The home page (src/app/(site)/(pagini)/page.tsx). The live slots become a call / request panel. */
+/** The home page (src/app/(site)/(pagini)/page.tsx), with each clinic's first free time for a consultation. */
 declare(strict_types=1);
+
+require_once APP_DIR . '/src/admin/lib.php';
+require_once APP_DIR . '/src/admin/crm.php';
+require_once APP_DIR . '/src/booking.php';
 
 $home = content('home');
 $img = [];
@@ -11,11 +15,27 @@ $prices = prices_by_code([...$home['children']['priceCodes'], 'INH-ORA']);
 $childPrices = array_values(array_filter(array_map(static fn ($c) => $prices[$c] ?? null, $home['children']['priceCodes'])));
 $sedation = $prices['INH-ORA']['price'] ?? null;
 $doctors = public_doctors();
+// The first free time at each clinic, for a consultation (online booking on).
+$first = [];
+$online = false;
+try {
+    if (booking_settings()['enabled']) {
+        $consult = db_value("SELECT id FROM services WHERE code = 'CON-CONSULT'");
+        foreach (clinics() as $slug => $c) {
+            if ($c['id'] !== null && ($f = free_slots(['location_id' => $c['id'], 'service_id' => $consult ?: null, 'limit' => 1, 'per_day' => 1])[0] ?? null) !== null) {
+                $first[$slug] = $f;
+                $online = true;
+            }
+        }
+    }
+} catch (Throwable $e) {
+    app_log('warning', 'home first slots: ' . $e->getMessage());
+}
 $h2 = 'font-display text-[clamp(2.5rem,1.6rem+2.8vw,4.25rem)] leading-[1.02] text-cerneala';
 $link = 'inline-flex min-h-control items-center font-medium text-link underline decoration-1 underline-offset-[0.2em] hover:decoration-2';
 $tile = 'apasat flex min-h-[4.5rem] flex-col items-start justify-center rounded-control border border-linie-control bg-suprafata px-3 py-2 text-control text-cerneala transition-colors duration-150 hover:border-cerneala hover:bg-menta-pal';
 
-$body = capture(function () use ($home, $img, $childPrices, $sedation, $doctors, $h2, $link, $tile): void {
+$body = capture(function () use ($home, $img, $childPrices, $sedation, $doctors, $h2, $link, $tile, $first, $online): void {
     ?>
 <section aria-labelledby="titlu-acasa" class="px-3 pt-1 sm:px-4">
   <div class="relative isolate grid overflow-hidden rounded-mare bg-padure text-white lg:min-h-[min(88svh,920px)] lg:grid-cols-12">
@@ -51,7 +71,13 @@ $body = capture(function () use ($home, $img, $childPrices, $sedation, $doctors,
           </div>
           <ul class="grid grid-cols-2 gap-2">
             <li><a href="<?= e(tel_href($c['phone'])) ?>" class="<?= $tile ?>"><span class="text-mic text-discret">Sunați<span class="sr-only"> la <?= e($c['shortName']) ?></span></span><span class="telefon text-h3 font-semibold"><?= e(format_phone($c['phone'])) ?></span></a></li>
+            <?php if (isset($first[$slug])) {
+                $f = $first[$slug];
+                $when = substr($f['start'], 0, 10) === date('Y-m-d') ? 'azi' : (substr($f['start'], 0, 10) === date('Y-m-d', strtotime('+1 day')) ? 'mâine' : day_label($f['start'])); ?>
+            <li><a href="/programare?clinica=<?= e($slug) ?>" class="<?= $tile ?>"><span class="text-mic text-discret">Prima oră liberă<span class="sr-only"> la <?= e($c['shortName']) ?></span></span><span class="text-h3 font-semibold first-letter:uppercase"><?= e($when . ', ' . substr($f['start'], 11, 5)) ?></span></a></li>
+            <?php } else { ?>
             <li><a href="/programare?clinica=<?= e($slug) ?>" class="<?= $tile ?>"><span class="text-mic text-discret">Cerere online</span><span class="text-h3 font-semibold">Vă sunăm noi<span class="sr-only">, la <?= e($c['shortName']) ?></span></span></a></li>
+            <?php } ?>
           </ul>
         </div>
         <?php } ?>
@@ -139,8 +165,10 @@ $body = capture(function () use ($home, $img, $childPrices, $sedation, $doctors,
       <h2 id="prima-vizita" class="<?= $h2 ?>"><?= e($home['visit']['title']) ?></h2>
       <ol class="mt-10 flex flex-col">
         <?php
-        // The PHP site takes booking requests: the clinic calls back to confirm the time.
-        $home['visit']['steps'][0]['text'] = 'Trimiteți online o cerere de programare sau sunați la clinica la care veniți. Vă sunăm noi ca să stabilim ora.';
+        // With online booking the patient picks the time; without it, the clinic calls back.
+        $home['visit']['steps'][0]['text'] = $online
+            ? 'Alegeți online ora liberă care vă convine sau sunați la clinica la care veniți. Primiți confirmarea pe telefon.'
+            : 'Trimiteți online o cerere de programare sau sunați la clinica la care veniți. Vă sunăm noi ca să stabilim ora.';
         foreach ($home['visit']['steps'] as $n => $s) { ?>
         <li class="grid grid-cols-[3.5rem_1fr] gap-x-4 border-t border-linie py-6">
           <span aria-hidden="true" class="font-display text-[2.5rem] leading-none text-menta cifre"><?= $n + 1 ?></span>

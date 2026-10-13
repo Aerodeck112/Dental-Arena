@@ -72,6 +72,7 @@ $routes = [
     '#^/admin/documente/(\d+)$#' => ['document', null],
     '#^/admin/rechemari$#' => ['rechemari', null],
     '#^/admin/absente$#' => ['absente', null],
+    '#^/admin/implanturi$#' => ['implanturi', 'medical'],
     '#^/admin/setari/programari$#' => ['setari-programari', 'config'],
     '#^/admin/cereri$#' => ['cereri', null],
     '#^/admin/cereri/(\d+)$#' => ['cerere', null],

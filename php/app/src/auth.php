@@ -52,11 +52,11 @@ function current_user(): ?array
     if ($id) {
         $row = db_one('SELECT * FROM users WHERE id = ? AND active = 1', [$id]);
         // A password change ends the other sessions of the account.
-        if ($row && hash_equals((string) ($_SESSION['pw'] ?? ''), substr($row['password_hash'], -16))) {
+        if ($row && hash_equals((string) ($_SESSION['pw'] ?? ''), substr($row['password_hash'], -16)) && (int) ($_SESSION['sv'] ?? 0) === (int) ($row['session_version'] ?? 0)) {
             $row['locationIds'] = array_map('intval', array_column(db_all('SELECT location_id FROM user_locations WHERE user_id = ?', [$row['id']]), 'location_id'));
             $user = $row;
         } else {
-            unset($_SESSION['user_id'], $_SESSION['pw']);
+            unset($_SESSION['user_id'], $_SESSION['pw'], $_SESSION['sv']);
         }
     }
     return $user;
@@ -146,6 +146,7 @@ function attempt_login(string $email, string $password): ?string
     session_regenerate_id(true);
     $_SESSION['user_id'] = (int) $user['id'];
     $_SESSION['pw'] = substr($user['password_hash'], -16);
+    $_SESSION['sv'] = (int) ($user['session_version'] ?? 0);
     db_update('users', ['last_login_at' => now_sql()], 'id = :id', ['id' => $user['id']]);
     db_run('DELETE FROM login_attempts WHERE email = ? OR created_at < ?', [$email, $since]);
     audit('autentificare', $email, (int) $user['id']);
@@ -157,6 +158,19 @@ function logout(): void
     session_begin();
     $_SESSION = [];
     session_regenerate_id(true);
+}
+
+/**
+ * „Închideți toate sesiunile”: every browser where the account is signed in is signed out at its
+ * next click. With $keepThis, the browser that asked stays signed in.
+ */
+function end_all_sessions(int $userId, bool $keepThis = false): void
+{
+    db_run('UPDATE users SET session_version = session_version + 1 WHERE id = ?', [$userId]);
+    session_begin();
+    if ($keepThis && (int) ($_SESSION['user_id'] ?? 0) === $userId) {
+        $_SESSION['sv'] = (int) db_value('SELECT session_version FROM users WHERE id = ?', [$userId]);
+    }
 }
 
 /** Sets a password and keeps the current session (other sessions of the account end). */

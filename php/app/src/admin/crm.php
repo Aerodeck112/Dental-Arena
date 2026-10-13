@@ -34,6 +34,14 @@ const APPT_BACK = [
     'neprezentat' => ['programat' => 'Readuceți la Programat', 'sosit' => 'A venit totuși'],
     'anulat' => ['programat' => 'Readuceți la Programat'],
 ];
+/** Why a request ended without an appointment. */
+const LEAD_LOST_REASONS = ['nu-raspunde' => 'Nu răspunde la telefon', 'pret' => 'Prețul', 'distanta' => 'Distanța', 'alta-clinica' => 'A ales altă clinică', 'nu-mai-vrea' => 'Nu mai dorește', 'doar-info' => 'Voia doar informații', 'dublura' => 'Cerere dublă', 'altul' => 'Alt motiv'];
+/** What was done for a request. */
+const LEAD_ACTIVITY = ['apel' => 'Apel', 'sms' => 'SMS', 'email' => 'E-mail', 'nota' => 'Notă', 'stare' => 'Starea', 'atribuire' => 'Preluată'];
+const CALL_OUTCOMES = ['raspuns' => 'A răspuns', 'nu-raspunde' => 'Nu răspunde', 'ocupat' => 'Ocupat', 'revine' => 'Sună el înapoi'];
+/** Patient tag colours (the next one by name, so a tag keeps its colour). */
+const TAG_COLORS = ['menta', 'mustar', 'carmin', 'gri', 'cerneala'];
+const TAG_CLASSES = ['menta' => 'bg-menta-pal text-cerneala', 'mustar' => 'bg-mustar-pal text-mustar-text', 'carmin' => 'bg-carmin-pal text-carmin', 'gri' => 'bg-adancit text-cerneala', 'cerneala' => 'bg-cerneala text-fundal'];
 /** The comfort answers, short, for the panel. */
 const COMFORT_SHORT = ['fara-emotii' => 'Fără emoții', 'emotii' => 'Are emoții', 'frica' => 'Mi-e frică'];
 const RECALL_STATUS = ['de-facut' => 'De sunat', 'contactat' => 'Contactat', 'programat' => 'Programat', 'refuzat' => 'Nu dorește', 'anulat' => 'Anulată'];
@@ -184,8 +192,8 @@ function find_patient(int $id, array $user): ?array
 }
 
 /**
- * The patient with this phone and a name in common. A family often shares one phone, so the same
- * phone with another name is another person.
+ * The patient with this phone and the same first name. A family often shares one phone (and the
+ * surname), so the same phone with another first name is another person.
  */
 function patient_by_phone_name(string $name, string $phone): ?int
 {
@@ -198,7 +206,8 @@ function patient_by_phone_name(string $name, string $phone): ?int
         if (national_digits($p['phone']) !== $nat) {
             continue;
         }
-        $known = preg_split('/[\s-]+/', fold_text($p['first_name'] . ' ' . $p['last_name'])) ?: [];
+        // A family shares the phone and often the surname: the first name has to match.
+        $known = preg_split('/[\s-]+/', fold_text(trim((string) $p['first_name']) !== '' ? $p['first_name'] : $p['last_name'])) ?: [];
         if ($words === [] || array_intersect($words, $known) !== []) {
             return (int) $p['id'];
         }
@@ -514,4 +523,59 @@ function maybe_send_reminders(): void
     } catch (Throwable $e) {
         app_log('error', 'reminders: ' . $e->getMessage());
     }
+}
+
+// ── Requests as a small pipeline ─────────────────────────────────────────────
+
+/** One line in a request's history. */
+function lead_log(int $leadId, string $kind, ?string $outcome, ?string $body, ?array $user): void
+{
+    db_insert('lead_activities', ['lead_id' => $leadId, 'user_id' => $user['id'] ?? null, 'kind' => $kind, 'outcome' => $outcome, 'body' => $body !== null && $body !== '' ? mb_substr($body, 0, 4000) : null, 'created_at' => now_sql()]);
+}
+
+/** The accounts that can take care of requests (reception and administrators, not VITIM). */
+function lead_handlers(): array
+{
+    return array_column(db_all("SELECT id, name FROM users WHERE active = 1 AND role IN ('admin', 'receptie') ORDER BY name"), 'name', 'id');
+}
+
+/**
+ * Patients who may be the person who sent a request (or a new file): the same phone, CNP or
+ * e-mail, or the same name and birth date. Newest first, at most eight.
+ */
+function possible_duplicates(array $q, ?int $exceptId = null): array
+{
+    $found = [];
+    $nat = !empty($q['phone']) ? national_digits((string) $q['phone']) : null;
+    if ($nat !== null) {
+        $tail = substr($nat, -6);
+        foreach (db_all("SELECT * FROM patients WHERE active = 1 AND phone LIKE ? AND id <> ?", ['%' . substr($tail, 0, 3) . '%' . substr($tail, 3) . '%', $exceptId ?? 0]) as $p) {
+            if (national_digits((string) $p['phone']) === $nat) {
+                $found[(int) $p['id']] = $p + ['why' => 'același telefon'];
+            }
+        }
+    }
+    if (!empty($q['cnp']) && cnp_valid((string) $q['cnp'])) {
+        foreach (db_all('SELECT * FROM patients WHERE cnp_hash = ? AND id <> ?', [cnp_hash((string) $q['cnp']), $exceptId ?? 0]) as $p) {
+            $found[(int) $p['id']] = $p + ['why' => 'același CNP'];
+        }
+    }
+    if (!empty($q['email'])) {
+        foreach (db_all('SELECT * FROM patients WHERE active = 1 AND email = ? AND id <> ?', [mb_strtolower((string) $q['email']), $exceptId ?? 0]) as $p) {
+            $found[(int) $p['id']] ??= $p + ['why' => 'același e-mail'];
+        }
+    }
+    if (!empty($q['last_name']) && !empty($q['first_name'])) {
+        $sql = 'SELECT * FROM patients WHERE active = 1 AND id <> ? AND search_text LIKE ? AND search_text LIKE ?';
+        $params = [$exceptId ?? 0, '%' . fold_text((string) $q['last_name']) . '%', '%' . fold_text((string) $q['first_name']) . '%'];
+        if (!empty($q['birth_date'])) {
+            $sql .= ' AND (birth_date = ? OR birth_date IS NULL)';
+            $params[] = $q['birth_date'];
+        }
+        foreach (db_all($sql . ' LIMIT 8', $params) as $p) {
+            $found[(int) $p['id']] ??= $p + ['why' => !empty($q['birth_date']) && $p['birth_date'] === $q['birth_date'] ? 'același nume și aceeași dată a nașterii' : 'același nume'];
+        }
+    }
+    krsort($found);
+    return array_slice(array_values($found), 0, 8);
 }

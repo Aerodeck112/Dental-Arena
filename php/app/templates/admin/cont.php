@@ -7,6 +7,18 @@ declare(strict_types=1);
 
 $errors = [];
 $forced = (int) $user['must_change_password'] === 1;
+if (is_post() && in_array(post('op'), ['sesiuni', 'tema'], true) && !$forced) {
+    csrf_check();
+    if (post('op') === 'sesiuni') {
+        end_all_sessions((int) $user['id'], true);
+        audit('sesiuni-inchise', 'contul propriu, celelalte dispozitive');
+        flash('Ați ieșit din cont de pe toate celelalte dispozitive.');
+    } else {
+        db_update('users', ['theme' => isset(PANEL_THEMES[post('theme')]) ? post('theme') : null], 'id = :id', ['id' => $user['id']]);
+        flash('Aspectul a fost salvat.');
+    }
+    redirect('/admin/cont');
+}
 $prefs = user_notify_prefs($user);
 $phone = (string) ($user['phone'] ?? '');
 if (is_post() && post('op') === 'notificari' && !$forced) {
@@ -89,6 +101,14 @@ if (!$forced) {
         . '<div><button type="submit" class="' . e(btn('primary')) . '">Salvați notificările</button></div></form>';
 }
 
+$extra = $forced ? '' : '<form method="post" class="flex min-w-0 flex-col gap-4 rounded-panou border border-linie bg-suprafata p-6">' . csrf_field() . '<input type="hidden" name="op" value="tema">'
+    . '<h2 class="text-h3 font-semibold">Aspectul panoului</h2>'
+    . radio_group('theme', 'Culorile', PANEL_THEMES, ['value' => (string) ($user['theme'] ?? 'luminos'), 'inline' => true])
+    . '<div><button type="submit" class="' . e(btn('secondary')) . '">Salvați</button></div></form>'
+    . '<form method="post" class="flex min-w-0 flex-col gap-4 rounded-panou border border-linie bg-suprafata p-6" data-confirma="Ieșiți din cont de pe toate celelalte dispozitive?">' . csrf_field() . '<input type="hidden" name="op" value="sesiuni">'
+    . '<h2 class="text-h3 font-semibold">Dispozitivele mele</h2>'
+    . '<p class="text-corp text-discret">Dacă ați intrat în cont pe un calculator sau telefon pe care nu-l mai folosiți (sau l-ați pierdut), ieșiți de peste tot. Aici rămâneți în cont.</p>'
+    . '<div><button type="submit" class="' . e(btn('secondary')) . '">' . icon('log-out', 18) . 'Ieșiți de pe celelalte dispozitive</button></div></form>';
 $body = admin_header('Contul meu', $forced ? 'Alegeți o parolă a dumneavoastră înainte să continuați.' : $user['email'])
-    . '<div class="grid max-w-5xl gap-8 lg:grid-cols-2">' . $password . $notices . '</div>';
+    . '<div class="grid max-w-5xl gap-8 lg:grid-cols-2">' . $password . $notices . $extra . '</div>';
 admin_page('Contul meu', $body, $user);

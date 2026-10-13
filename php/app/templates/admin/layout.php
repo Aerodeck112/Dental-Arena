@@ -5,6 +5,9 @@
  */
 declare(strict_types=1);
 
+/** The panel's colours, chosen in Contul meu. */
+const PANEL_THEMES = ['luminos' => 'Luminos', 'intunecat' => 'Întunecat', 'automat' => 'Ca sistemul (zi / noapte)'];
+
 /** The panel's menu: path, label, icon, who sees it (null = everyone, 'admin', 'config', or a permission). */
 const ADMIN_NAV = [
     ['/admin', 'Azi', 'house', null],
@@ -14,6 +17,7 @@ const ADMIN_NAV = [
     ['/admin/chat', 'Chat pe site', 'bot', null],
     ['/admin/rechemari', 'Rechemări', 'phone-call', null],
     ['/admin/absente', 'Absențe și zile libere', 'user-x', null],
+    ['/admin/implanturi', 'Implanturi', 'implant', 'medical'],
     ['/admin/facturi', 'Facturi', 'receipt', 'billing'],
     ['/admin/incasari', 'Încasări', 'wallet', 'billing'],
     ['/admin/mesaje', 'Mesaje', 'message-square', null],
@@ -75,7 +79,7 @@ function admin_page(string $title, string $body, ?array $user = null): void
     }
     ?>
 <!DOCTYPE html>
-<html lang="ro" data-theme="light">
+<html lang="ro"<?= ($user['theme'] ?? null) === 'automat' ? '' : ' data-theme="' . (($user['theme'] ?? null) === 'intunecat' ? 'dark' : 'light') . '"' ?>>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -91,7 +95,7 @@ function admin_page(string $title, string $body, ?array $user = null): void
 <?php if ($user) { ?>
   <header class="border-b border-linie bg-suprafata lg:border-r lg:border-b-0">
     <div class="flex items-center justify-between gap-3 px-4 py-3 lg:sticky lg:top-0 lg:flex-col lg:items-stretch lg:px-4 lg:py-6">
-      <a href="/admin" class="inline-flex items-center gap-2" aria-label="Panou Dental Arena, acasă"><?= logo('h-9 w-auto lg:h-11', true, '120px') ?></a>
+      <a href="/admin" class="inline-flex items-center gap-2 dark:rounded-control dark:bg-white dark:px-2 dark:py-1" aria-label="Panou Dental Arena, acasă"><?= logo('h-9 w-auto lg:h-11', true, '120px') ?></a>
       <details class="group relative lg:hidden" data-meniu-panou>
         <summary class="inline-flex min-h-control list-none items-center gap-2 rounded-control px-3 font-medium hover:bg-adancit"><?= icon('menu', 22) ?>Meniu</summary>
         <div class="absolute right-0 z-40 mt-2 w-72 rounded-panou border border-linie bg-suprafata p-2 shadow-float">

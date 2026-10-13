@@ -692,6 +692,13 @@ const AUDIT_LABELS = [
     'chat-sters' => 'Conversație din chat ștearsă',
     'actualizare' => 'Site-ul actualizat dintr-o arhivă',
     'absenta' => 'Absență sau zi liberă adăugată',
+    'implant-nou' => 'Caz de implant nou',
+    'implant-etapa' => 'Etapă la implant',
+    'eticheta' => 'Etichetă la pacient',
+    'nota-modificata' => 'Notă modificată',
+    'nota-stearsa' => 'Notă ștearsă',
+    'cnp-vazut' => 'CNP afișat întreg',
+    'sesiuni-inchise' => 'Toate sesiunile unui cont închise',
     'programare-mutata' => 'Programare mutată în calendar',
     'programare-mutare-anulata' => 'Mutarea unei programări anulată',
     'programare-revenire' => 'Programare readusă la o stare anterioară',
@@ -699,6 +706,35 @@ const AUDIT_LABELS = [
     'setari-programari' => 'Setările programărilor online',
     'actualizare-revenire' => 'Site-ul pus înapoi la o versiune de dinainte',
 ];
+
+/** The steps of an implant case: name, and the usual days until the next step. */
+const IMPLANT_STAGES = [
+    'planificat' => ['Planificat', 0],
+    'inserat' => ['Implant inserat', 90],
+    'descoperit' => ['Descoperit, bont de vindecare', 21],
+    'amprenta' => ['Amprentă luată', 14],
+    'protezat' => ['Lucrarea finală pusă', 365],
+    'control' => ['Control anual', 365],
+    'incheiat' => ['Încheiat', null],
+];
+
+/** The implant cases of a patient, or of everyone not finished (with the patient's name). */
+function implant_cases(?int $patientId = null): array
+{
+    return $patientId !== null
+        ? db_all('SELECT * FROM implant_cases WHERE patient_id = ? ORDER BY created_at DESC', [$patientId])
+        : db_all("SELECT c.*, p.first_name, p.last_name, p.file_number, p.phone FROM implant_cases c JOIN patients p ON p.id = c.patient_id WHERE c.stage <> 'incheiat' AND p.active = 1 ORDER BY c.next_due IS NULL, c.next_due, c.id");
+}
+
+/** A case moves to a step on a date; the next step is due after the usual interval. */
+function implant_set_stage(array $case, string $stage, string $date, array $user): void
+{
+    $dates = json_decode((string) $case['stage_dates'], true) ?: [];
+    $dates[$stage] = $date;
+    $days = IMPLANT_STAGES[$stage][1];
+    db_update('implant_cases', ['stage' => $stage, 'stage_dates' => json_encode($dates), 'next_due' => $days ? date('Y-m-d', strtotime("{$date} +{$days} days")) : null, 'updated_at' => now_sql()], 'id = :id', ['id' => $case['id']]);
+    audit('implant-etapa', "#{$case['id']} ({$case['teeth']}): " . IMPLANT_STAGES[$stage][0], (int) $user['id'], (int) $case['patient_id']);
+}
 
 /** What VITIM does that the administrator is told about: everything but looking and printing. */
 const TECH_QUIET_ACTIONS = ['autentificare', 'iesire', 'fisa-deschisa', 'factura-tiparita', 'chitanta-tiparita', 'acord-tiparit', 'plan-tiparit'];

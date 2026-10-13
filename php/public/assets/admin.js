@@ -441,6 +441,17 @@
     }
   }
 
+  // A request: why it is lost, only when it is being closed.
+  var lost = document.querySelector("[data-motiv-pierdut]");
+  if (lost) {
+    var showLost = function () {
+      var on = document.querySelector("input[name=status]:checked");
+      lost.hidden = !on || on.value !== "inchis";
+    };
+    Array.prototype.forEach.call(document.querySelectorAll("input[name=status]"), function (r) { r.addEventListener("change", showLost); });
+    showLost();
+  }
+
   // Absențe: the doctor list only when the absence is a doctor's (not a closed clinic).
   var cineMedic = document.querySelector("[data-cine-medic]");
   if (cineMedic) {

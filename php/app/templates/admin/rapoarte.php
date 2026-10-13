@@ -174,6 +174,10 @@ if ($finance) {
 }
 $sections[] = admin_section_open('Programări pe medic', 'programari', 'Rata neprezentărilor se calculează din programările deja trecute.') . $table('programari', $apptHead, $apptTable, [], 'Nicio programare în perioadă.') . '</section>';
 $sections[] = admin_section_open('Cereri de programare de pe site', 'cereri', "Pacienți noi în perioadă: {$newPatients}.") . $table('cereri', $leadHead, $leadTable, [], 'Nicio cerere în perioadă.') . '</section>';
+// Why requests ended without an appointment (closed with a reason).
+$lostRows = db_all("SELECT lost_reason, COUNT(*) AS n FROM leads WHERE status = 'inchis' AND lost_reason IS NOT NULL AND (location_id IN ({$in}) OR location_id IS NULL) AND created_at >= ? AND created_at < ? GROUP BY lost_reason ORDER BY n DESC", $period);
+$lostTotal = array_sum(array_map(static fn ($r) => (int) $r['n'], $lostRows));
+$sections[] = admin_section_open('De ce nu s-au programat', 'pierdute', 'Cererile închise fără programare, după motivul ales la închidere.') . $table('pierdute', ['Motivul', 'Cereri', 'Pondere'], array_map(static fn ($r) => [LEAD_LOST_REASONS[$r['lost_reason']] ?? $r['lost_reason'], (int) $r['n'], $pct((int) $r['n'], $lostTotal)], $lostRows), [], 'Nicio cerere închisă fără programare în perioadă.') . '</section>';
 
 $body = admin_header('Rapoarte', format_date($from) . ' – ' . format_date($to) . ($clinic !== null && isset($names[$clinic]) ? ' · ' . $names[$clinic] : (count($allowed) > 1 ? ' · ambele clinici' : '')) . '.')
     . $form . $quick . $tiles

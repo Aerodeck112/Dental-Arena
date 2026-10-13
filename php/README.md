@@ -193,6 +193,19 @@ VITIM's changes: `tech_changes()`, `tech_change_line()`, `send_tech_digest()` (c
 `run_daily_jobs` once VITIM has been quiet 10 minutes, marker setting `vitim_rezumat_pana`), the card on
 „Azi” (`users.changes_seen_id`). Settings pages audit `changes_text($old, $new, $labels)`.
 
+## Calendar, pipeline, patients (migrations 009–010)
+
+009: `locations.hours_json/cabinets/sedation_units`, `doctor_locations.cabinet`, `appointments.cabinet`.
+`location_hours()` cuts doctors' hours in `free_slots`; `appointment_checks()` (booking.php) is the one
+conflict check (block: time off; warn: past, doctor/patient overlap, outside hours, cabinet, sedation
+units). `POST /admin/calendar/muta` (calendar-muta.php, JSON; drag/resize in admin.js, undo, patient
+notice delayed 2 min, `drop_pending_reminder`). `APPT_BACK`, `set_appointment_status()` returns a note
+and calls `auto_recall()` on finish. 010: `leads.assigned_to/lost_reason`, `lead_activities`
+(`lead_log`, `lead_handlers`), `tags`/`patient_tags` (`TAG_CLASSES`), `patient_notes.pinned/updated_at`,
+`patients.guardian_patient_id`, `implant_cases` (`IMPLANT_STAGES`, `implant_set_stage`, /admin/implanturi),
+`users.session_version` (`end_all_sessions`, checked in `current_user`) and `users.theme` (`PANEL_THEMES`).
+`possible_duplicates()` (crm.php) for requests and new files; `patient_by_phone_name()` matches the first name.
+
 ## Updating from the panel
 
 `src/admin/update.php` + `/admin/actualizare` (administrators). The package from
