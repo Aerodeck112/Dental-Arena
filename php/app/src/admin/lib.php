@@ -231,6 +231,52 @@ function unread_messages_count(array $user): int
 }
 
 /**
+ * A week of hours from a form (weekday → [from, to, break from, break to]): empty days are left
+ * out, the break is optional. $error gets the first problem, in words.
+ *
+ * @return array<int,list<string>>
+ */
+function week_schedule_parse(mixed $sent, string $where, ?string &$error): array
+{
+    $sent = is_array($sent) ? $sent : [];
+    $hm = static fn (string $v) => preg_match('/^\d{2}:\d{2}$/', $v) === 1;
+    $out = [];
+    foreach (WEEKDAYS as $day => $dayName) {
+        $f = array_map(static fn ($i) => is_string($sent[$day][$i] ?? null) ? trim($sent[$day][$i]) : '', [0, 1, 2, 3]);
+        if ($f[0] === '' && $f[1] === '') {
+            continue;
+        }
+        if (!$hm($f[0]) || !$hm($f[1]) || $f[0] >= $f[1]) {
+            $error ??= "Programul de {$dayName}{$where}: scrieți ora de început și de sfârșit (de exemplu 09:00 și 17:00).";
+            continue;
+        }
+        $out[$day] = [$f[0], $f[1]];
+        if ($f[2] !== '' || $f[3] !== '') {
+            if (!$hm($f[2]) || !$hm($f[3]) || !($f[0] < $f[2] && $f[2] < $f[3] && $f[3] < $f[1])) {
+                $error ??= "Pauza de {$dayName}{$where} trebuie să fie în program (de exemplu 13:00–13:30).";
+                continue;
+            }
+            $out[$day] = [$f[0], $f[1], $f[2], $f[3]];
+        }
+    }
+    return $out;
+}
+
+/** The seven rows of a week of hours (from, to, an optional break), named {$name}[day][0..3]. */
+function week_schedule_fields(string $name, array $sch, string $where): string
+{
+    $rows = '';
+    foreach (WEEKDAYS as $day => $dayName) {
+        $span = ($sch[$day] ?? []) + ['', '', '', ''];
+        $t = static fn (int $i, string $label) => '<input type="time" step="300" name="' . e($name) . '[' . $day . '][' . $i . ']" value="' . e($span[$i]) . '" aria-label="' . e("{$dayName}{$where}: {$label}") . '" class="' . e(input_classes('h-control-s min-w-0')) . '">';
+        $rows .= '<div class="grid grid-cols-[6.5rem_1fr_1fr] items-center gap-2"><span class="text-corp">' . e($dayName) . '</span>' . $t(0, 'de la') . $t(1, 'până la')
+            . '<span class="text-mic text-discret">pauză</span>' . $t(2, 'pauză de la') . $t(3, 'pauză până la') . '</div>';
+    }
+    return '<div class="mt-1 grid grid-cols-[6.5rem_1fr_1fr] gap-2 text-mic text-discret"><span></span><span>De la</span><span>Până la</span></div>'
+        . '<div class="mt-1 flex flex-col gap-2">' . $rows . '</div>';
+}
+
+/**
  * What a settings form changed, for the audit (and so for the administrator's summary of what
  * VITIM did): „pauză între programări: 0 → 5”. Only the labelled keys; never secrets.
  */

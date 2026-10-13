@@ -20,8 +20,24 @@ $back = admin_safe_return(post('inapoi') ?: query('inapoi')) ?? null;
 if (!$isNew && is_post() && post('op') === 'stare') {
     csrf_check();
     $st = post('stare');
-    if (isset(APPT_STATUS[$st])) {
-        set_appointment_status((int) $appt['id'], $st, $user);
+    $allowedNext = (APPT_NEXT[$appt['status']] ?? []) + (APPT_BACK[$appt['status']] ?? []) + ['neprezentat' => '', 'anulat' => ''];
+    if (isset(APPT_STATUS[$st], $allowedNext[$st]) && $st !== $appt['status']) {
+        if (in_array($appt['status'], ['anulat', 'neprezentat'], true) && in_array($st, APPT_ACTIVE, true)) {
+            // Back in the calendar: the time may have been given to someone else meanwhile.
+            $check = appointment_checks((int) $appt['doctor_id'], (int) $appt['location_id'], $appt['starts_at'], $appt['ends_at'], (int) $appt['patient_id'], (int) $appt['id'], $appt['cabinet'] !== null ? (int) $appt['cabinet'] : null, (int) $appt['wants_sedation'] === 1);
+            if ($check['block'] !== null) {
+                flash($check['block'], 'eroare');
+                redirect($back ?? "/admin/programari/{$appt['id']}");
+            }
+            $warn = array_values(array_filter($check['warn'], static fn ($w) => !str_starts_with($w, 'Ora este în trecut')));
+            if ($warn !== []) {
+                flash('Atenție: ' . implode(' ', $warn), 'info');
+            }
+        }
+        $note = set_appointment_status((int) $appt['id'], $st, $user);
+        if ($note !== null) {
+            flash($note);
+        }
     }
     redirect($back ?? "/admin/programari/{$appt['id']}");
 }
@@ -63,6 +79,7 @@ $v = [
     'sedation' => (string) (int) ($appt['wants_sedation'] ?? ($patient['prefers_sedation'] ?? (($lead['comfort'] ?? '') === 'frica' ? 1 : 0))),
     'notes' => (string) ($appt['notes'] ?? ($lead ? trim(($lead['message'] ?? '') . ($lead['preferred_time'] ? "\nInterval dorit: " . (TIME_WINDOWS[$lead['preferred_time']] ?? '') : '')) : '')),
     'status' => (string) ($appt['status'] ?? 'programat'),
+    'cabinet' => (string) ($appt['cabinet'] ?? ''),
     'p_last' => '',
     'p_first' => '',
     'p_phone' => (string) ($lead['phone'] ?? ''),
@@ -102,7 +119,7 @@ if (is_post()) {
         flash("Rechemarea a fost pusă peste {$months} " . ($months === 1 ? 'lună' : 'luni') . '.');
         redirect("/admin/programari/{$appt['id']}");
     }
-    foreach (['location', 'doctor', 'date', 'time', 'duration', 'category', 'reason', 'comfort', 'notes', 'status', 'p_last', 'p_first', 'p_phone', 'p_email'] as $k) {
+    foreach (['location', 'doctor', 'date', 'time', 'duration', 'cabinet', 'category', 'reason', 'comfort', 'notes', 'status', 'p_last', 'p_first', 'p_phone', 'p_email'] as $k) {
         $v[$k] = post($k);
     }
     $v['sedation'] = post('sedation') === '1' ? '1' : '0';
@@ -119,6 +136,14 @@ if (is_post()) {
         $errors['time'] = 'Alegeți ziua și ora.';
     } elseif ((int) $d->format('H') < 6 || (int) $d->format('H') > 21) {
         $errors['time'] = 'Ora trebuie să fie între 06:00 și 21:00.';
+    }
+    $cabinetMax = $loc !== null ? (int) db_value('SELECT cabinets FROM locations WHERE id = ?', [$loc]) : 1;
+    $cabinet = admin_int($v['cabinet']);
+    if ($cabinet === null && $cabinetMax > 1 && $doc !== null && $loc !== null) {
+        $cabinet = admin_int((string) db_value('SELECT cabinet FROM doctor_locations WHERE doctor_id = ? AND location_id = ?', [$doc, $loc]));
+    }
+    if ($cabinet !== null && ($cabinet < 1 || $cabinet > $cabinetMax)) {
+        $cabinet = null;
     }
     $dur = (int) $v['duration'];
     if (!isset(DURATIONS[$dur])) {
@@ -147,35 +172,22 @@ if (is_post()) {
     if ($errors === [] && $d !== false) {
         $startsAt = $d->format('Y-m-d H:i:s');
         $endsAt = $d->modify("+{$dur} minutes")->format('Y-m-d H:i:s');
-        $moved = $isNew || $appt['starts_at'] !== $startsAt || $appt['ends_at'] !== $endsAt || (int) $appt['doctor_id'] !== $doc || (int) $appt['location_id'] !== $loc;
+        $moved = $isNew || $appt['starts_at'] !== $startsAt || $appt['ends_at'] !== $endsAt || (int) $appt['doctor_id'] !== $doc || (int) $appt['location_id'] !== $loc
+            || (string) ($appt['cabinet'] ?? '') !== (string) ($cabinet ?? '') || ((int) $appt['wants_sedation'] === 0 && $v['sedation'] === '1');
         if (in_array($v['status'], APPT_ACTIVE, true) && $moved) {
             // A doctor away or a clinic closed: the absence has to go first. The rest only warns.
-            foreach (time_off_between($startsAt, $endsAt, [$doc], [$loc]) as $t) {
-                if (time_off_applies($t, $doc, $loc)) {
-                    $errors['time'] = 'În acest interval: ' . time_off_label($t) . '. Alegeți altă oră sau ștergeți întâi absența, la Absențe și zile libere.';
-                    break;
-                }
-            }
-            if (!isset($errors['time']) && post('suprapune') !== '1') {
-                foreach (appointment_conflicts($doc, $startsAt, $endsAt, $appt ? (int) $appt['id'] : null) as $c) {
-                    $conflicts[] = 'Medicul are deja: ' . hm($c['starts_at']) . '–' . hm($c['ends_at']) . ', ' . patient_name($c) . '.';
-                }
-                if ($patient !== null || $appt !== null) {
-                    foreach (patient_conflicts((int) ($patient['id'] ?? $appt['patient_id']), $startsAt, $endsAt, $appt ? (int) $appt['id'] : null) as $c) {
-                        $conflicts[] = 'Pacientul are deja o programare: ' . hm($c['starts_at']) . '–' . hm($c['ends_at']) . ', ' . ($c['doctor'] ?? '') . '.';
-                    }
-                }
-                foreach (schedule_warnings($doc, $loc, $startsAt, $endsAt) as $w) {
-                    $conflicts[] = $w;
-                }
-                if ($conflicts !== []) {
-                    $errors['time'] = 'Verificați ora (vedeți mai sus). Alegeți alta sau bifați „Programez oricum”.';
-                }
+            $check = appointment_checks($doc, $loc, $startsAt, $endsAt, $patient !== null ? (int) $patient['id'] : ($appt !== null ? (int) $appt['patient_id'] : null), $appt ? (int) $appt['id'] : null, $cabinet, $v['sedation'] === '1');
+            if ($check['block'] !== null) {
+                $errors['time'] = $check['block'];
+            } elseif ($check['warn'] !== [] && post('suprapune') !== '1') {
+                $conflicts = $check['warn'];
+                $errors['time'] = 'Verificați ora (vedeți mai sus). Alegeți alta sau bifați „Programez oricum”.';
             }
         }
     }
     if ($errors === []) {
-        $id = db_tx(static function () use ($isNew, $appt, $patient, $v, $loc, $doc, $startsAt, $endsAt, $user, $lead, $recall) {
+        $statusNote = null;
+        $id = db_tx(static function () use ($isNew, $appt, $patient, $v, $loc, $doc, $startsAt, $endsAt, $user, $lead, $recall, $cabinet, &$statusNote) {
             $patientId = $patient !== null ? (int) $patient['id'] : null;
             if ($patientId === null) {
                 $row = ['first_name' => mb_substr($v['p_first'], 0, 80), 'last_name' => mb_substr($v['p_last'], 0, 80), 'phone' => format_phone($v['p_phone']), 'email' => $v['p_email'] ?: null, 'preferred_location_id' => $loc];
@@ -198,6 +210,7 @@ if (is_post()) {
                 'reason' => mb_substr($v['reason'], 0, 255) ?: null,
                 'starts_at' => $startsAt,
                 'ends_at' => $endsAt,
+                'cabinet' => $cabinet,
                 'comfort' => $v['comfort'] ?: null,
                 'wants_sedation' => (int) $v['sedation'],
                 'notes' => mb_substr($v['notes'], 0, 4000) ?: null,
@@ -221,6 +234,7 @@ if (is_post()) {
                 // A moved appointment gets a new reminder.
                 if ($appt['starts_at'] !== $startsAt) {
                     $row['reminder_sent_at'] = null;
+                    drop_pending_reminder($id);
                 }
                 // A new time, doctor or clinic: the patient's old link stops working.
                 if ($appt['starts_at'] !== $startsAt || (int) $appt['doctor_id'] !== $doc || (int) $appt['location_id'] !== $loc) {
@@ -228,7 +242,7 @@ if (is_post()) {
                 }
                 db_update('appointments', $row, 'id = :id', ['id' => $id]);
                 if ($v['status'] !== $appt['status']) {
-                    set_appointment_status($id, $v['status'], $user);
+                    $statusNote = set_appointment_status($id, $v['status'], $user);
                 }
             }
             return $id;
@@ -239,7 +253,7 @@ if (is_post()) {
             notify_appointment('programare-mutata', $id);
         }
         audit($isNew ? 'programare-noua' : 'programare', "#{$id} {$startsAt}", null, (int) db_value('SELECT patient_id FROM appointments WHERE id = ?', [$id]));
-        flash($isNew ? 'Programarea a fost făcută.' : 'Programarea a fost salvată.');
+        flash($isNew ? 'Programarea a fost făcută.' : 'Programarea a fost salvată.' . (isset($statusNote) && $statusNote !== null ? ' ' . $statusNote : ''));
         redirect($back ?? "/admin/programari/{$id}");
     }
 }
@@ -254,6 +268,16 @@ foreach ($allowed as $lid) {
     foreach (doctors_at($lid) as $dd) {
         $doctorOptions[(string) $dd['id']] = $dd['name'];
     }
+}
+// The cabinet, where the clinic has more than one (empty = the doctor's usual one).
+$cabinetSelect = '';
+$maxCab = (int) db_value('SELECT MAX(cabinets) FROM locations WHERE id IN (' . implode(',', array_map('intval', $allowed ?: [0])) . ')');
+if ($maxCab > 1) {
+    $cabOptions = ['' => 'Cabinetul obișnuit al medicului'];
+    for ($c = 1; $c <= $maxCab; $c++) {
+        $cabOptions[(string) $c] = "Cabinetul {$c}";
+    }
+    $cabinetSelect = select_field('cabinet', 'Cabinetul', $cabOptions, ['value' => $v['cabinet']]);
 }
 $serviceOptions = ['' => 'Consultație / nespecificat'];
 foreach (content('services') as $s) {
@@ -306,12 +330,32 @@ $conflictList = implode('', array_map(static fn ($c) => '<li>' . e($c) . '</li>'
 $leadNote = $lead !== null ? '<p class="mb-6 rounded-panou bg-menta-pal p-4 text-corp">Din cererea online a lui <a href="/admin/cereri/' . (int) $lead['id'] . '" class="font-semibold underline">' . e($lead['name']) . '</a>' . ($lead['preferred_date'] ? ', ziua dorită: ' . e(format_date($lead['preferred_date'], true)) : '') . ($lead['preferred_time'] ? ', ' . e(mb_strtolower(TIME_WINDOWS[$lead['preferred_time']] ?? '')) : '') . '.</p>' : '';
 $recallNote = $recall !== null ? '<p class="mb-6 rounded-panou bg-menta-pal p-4 text-corp">Din rechemarea „' . e($recall['reason']) . '”.</p>' : '';
 
+// The status, one click away: the next step, „Nu a venit”, and going back a step.
+$statusBar = '';
+if (!$isNew) {
+    $steps = APPT_NEXT[$appt['status']] ?? [];
+    if (in_array($appt['status'], ['programat', 'confirmat'], true)) {
+        $steps['neprezentat'] = 'Nu a venit';
+    }
+    $btns = '';
+    foreach ($steps as $st => $label) {
+        $btns .= '<button type="submit" name="stare" value="' . e($st) . '" class="' . e(btn($st === 'neprezentat' ? 'text' : 'primary', 's')) . '">' . e($label) . '</button>';
+    }
+    foreach (APPT_BACK[$appt['status']] ?? [] as $st => $label) {
+        $btns .= '<button type="submit" name="stare" value="' . e($st) . '" class="' . e(btn('secondary', 's')) . '">' . icon('undo-2', 16) . e($label) . '</button>';
+    }
+    $statusBar = '<form method="post" class="mb-6 flex flex-wrap items-center gap-3 rounded-panou border border-linie bg-suprafata p-4">' . csrf_field() . '<input type="hidden" name="op" value="stare">'
+        . ($back ? '<input type="hidden" name="inapoi" value="' . e($back) . '">' : '')
+        . '<span class="text-corp">Starea:</span> ' . appt_status_chip($appt['status'])
+        . ($appt['status'] === 'anulat' && $appt['cancel_reason'] ? '<span class="text-mic text-discret">(' . e($appt['cancel_reason']) . ')</span>' : '')
+        . '<span class="flex flex-wrap gap-2 sm:ml-auto">' . $btns . '</span></form>';
+}
 $actions = '';
 if (!$isNew) {
     $actions = '<a href="' . e(admin_url('/admin/calendar', ['data' => substr($appt['starts_at'], 0, 10), 'clinica' => $appt['location_id']])) . '" class="' . e(btn('secondary')) . '">' . icon('calendar', 18) . 'În calendar</a>';
 }
 $body = admin_header($isNew ? 'Programare nouă' : 'Programarea din ' . short_day($appt['starts_at']) . ', ' . hm($appt['starts_at']), $isNew ? '' : 'Starea: ' . (APPT_STATUS[$appt['status']] ?? ''), $actions)
-    . $leadNote . $recallNote
+    . $leadNote . $recallNote . $statusBar
     . '<form id="cauta-pacient" method="get" action="/admin/programari/noua">'
     . '<input type="hidden" name="clinica" value="' . e($v['location']) . '"><input type="hidden" name="data" value="' . e($v['date']) . '"><input type="hidden" name="ora" value="' . e($v['time']) . '"><input type="hidden" name="medic" value="' . e($v['doctor']) . '">'
     . ($lead ? '<input type="hidden" name="cerere" value="' . (int) $lead['id'] . '">' : '') . '</form>'
@@ -329,6 +373,7 @@ $body = admin_header($isNew ? 'Programare nouă' : 'Programarea din ' . short_da
     . text_field('date', 'Ziua', ['type' => 'date', 'value' => $v['date'], 'error' => null])
     . '<div class="grid grid-cols-2 gap-4">' . select_field('time', 'Ora', ['' => '—'] + $times, ['value' => $v['time'], 'error' => $err('time')])
     . select_field('duration', 'Durata', array_map('strval', DURATIONS), ['value' => $v['duration']]) . '</div>'
+    . ($cabinetSelect !== '' ? $cabinetSelect : '')
     . '</div></section>'
     . admin_section_open('Pentru ce', 'motiv')
     . '<div class="mt-4 grid gap-5 md:grid-cols-2">'

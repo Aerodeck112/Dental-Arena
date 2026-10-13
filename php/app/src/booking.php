@@ -190,6 +190,64 @@ function intervals_subtract(array $windows, array $cuts): array
     return $windows;
 }
 
+/** Each clinic's opening hours by weekday (Setări → clinica); [] = not set (the doctors' hours rule). */
+function location_hours(): array
+{
+    static $hours = null;
+    if ($hours === null) {
+        $hours = [];
+        foreach (db_all('SELECT id, hours_json FROM locations') as $l) {
+            $hours[(int) $l['id']] = schedule_decode($l['hours_json']);
+        }
+    }
+    return $hours;
+}
+
+/**
+ * What stands against an appointment at that time. „block”: the doctor is away or the clinic is
+ * closed (the absence has to go first). „warn”: in the past, outside the hours, the doctor or the
+ * patient already booked, the cabinet taken, every sedation unit in use; reception may go on.
+ *
+ * @return array{block: ?string, warn: list<string>}
+ */
+function appointment_checks(int $doc, int $loc, string $start, string $end, ?int $patientId = null, ?int $exceptId = null, ?int $cabinet = null, bool $sedation = false): array
+{
+    foreach (time_off_between($start, $end, [$doc], [$loc]) as $t) {
+        if (time_off_applies($t, $doc, $loc)) {
+            return ['block' => 'În acest interval: ' . time_off_label($t) . '. Alegeți altă oră sau ștergeți întâi absența, la Absențe și zile libere.', 'warn' => []];
+        }
+    }
+    $warn = [];
+    if (strtotime($start) < time() - 600) {
+        $warn[] = 'Ora este în trecut.';
+    }
+    foreach (appointment_conflicts($doc, $start, $end, $exceptId) as $c) {
+        $warn[] = 'Medicul are deja: ' . hm($c['starts_at']) . '–' . hm($c['ends_at']) . ', ' . patient_name($c) . '.';
+    }
+    if ($patientId !== null) {
+        foreach (patient_conflicts($patientId, $start, $end, $exceptId) as $c) {
+            $warn[] = 'Pacientul are deja o programare: ' . hm($c['starts_at']) . '–' . hm($c['ends_at']) . ', ' . ($c['doctor'] ?? '') . '.';
+        }
+    }
+    foreach (schedule_warnings($doc, $loc, $start, $end) as $w) {
+        $warn[] = $w;
+    }
+    $active = "'" . implode("','", APPT_ACTIVE) . "'";
+    if ($cabinet !== null) {
+        foreach (db_all("SELECT a.starts_at, a.ends_at, d.public_name FROM appointments a JOIN doctors d ON d.id = a.doctor_id WHERE a.location_id = ? AND a.cabinet = ? AND a.status IN ({$active}) AND a.starts_at < ? AND a.ends_at > ? AND a.id <> ?", [$loc, $cabinet, $end, $start, $exceptId ?? 0]) as $c) {
+            $warn[] = "Cabinetul {$cabinet} este ocupat: " . hm($c['starts_at']) . '–' . hm($c['ends_at']) . ', ' . $c['public_name'] . '.';
+        }
+    }
+    if ($sedation) {
+        $units = (int) db_value('SELECT sedation_units FROM locations WHERE id = ?', [$loc]);
+        $used = (int) db_value("SELECT COUNT(*) FROM appointments WHERE location_id = ? AND wants_sedation = 1 AND status IN ({$active}) AND starts_at < ? AND ends_at > ? AND id <> ?", [$loc, $end, $start, $exceptId ?? 0]);
+        if ($used >= max(1, $units)) {
+            $warn[] = $units > 1 ? "Toate cele {$units} aparate de inhalosedare sunt folosite în acest interval." : 'Aparatul de inhalosedare este folosit în acest interval.';
+        }
+    }
+    return ['block' => null, 'warn' => $warn];
+}
+
 /**
  * Why a time picked by reception may be wrong (they can still book it): outside the doctor's
  * hours at that clinic, in the break, or on a legal holiday.
@@ -202,6 +260,16 @@ function schedule_warnings(int $doctorId, int $locationId, string $start, string
     $day = substr($start, 0, 10);
     if (in_array($day, ro_holidays((int) substr($day, 0, 4)), true)) {
         $out[] = 'Este zi de sărbătoare legală.';
+    }
+    $open = location_hours()[$locationId] ?? [];
+    if ($open !== []) {
+        $c = $open[(int) date('N', strtotime($start))] ?? null;
+        $cTo = substr($end, 0, 10) === $day ? substr($end, 11, 5) : '24:00';
+        if ($c === null) {
+            $out[] = 'Clinica este închisă în această zi.';
+        } elseif (substr($start, 11, 5) < $c[0] || $cTo > $c[1]) {
+            $out[] = "Este în afara programului clinicii ({$c[0]}–{$c[1]}).";
+        }
     }
     $sch = schedule_decode(db_value('SELECT schedule FROM doctor_locations WHERE doctor_id = ? AND location_id = ?', [$doctorId, $locationId]) ?: null);
     if ($sch === []) {
@@ -295,6 +363,7 @@ function free_slots(array $o = [], ?DateTimeImmutable $now = null): array
         $booked[(int) $a['doctor_id']][substr($a['starts_at'], 0, 10)] = ($booked[(int) $a['doctor_id']][substr($a['starts_at'], 0, 10)] ?? 0) + ($e - $s);
     }
     $offs = time_off_between($rangeFrom, $rangeTo, $doctorIds, $locationIds);
+    $clinicHours = location_hours();
     $holidays = $online ? array_merge(ro_holidays((int) $start->format('Y')), ro_holidays((int) $last->format('Y'))) : [];
     $out = [];
     for ($day = $start; $day <= $last && count($out) < $limit; $day = $day->modify('+1 day')) {
@@ -313,6 +382,17 @@ function free_slots(array $o = [], ?DateTimeImmutable $now = null): array
             $cuts = $busy[$pl['doctor_id']] ?? [];
             if (isset($span[2])) {
                 $cuts[] = [strtotime("{$date} {$span[2]}"), strtotime("{$date} {$span[3]}")];
+            }
+            // The clinic's own hours, when set, cut the doctor's.
+            $open = $clinicHours[$pl['location_id']] ?? [];
+            if ($open !== []) {
+                if (!isset($open[$wd])) {
+                    continue;
+                }
+                $windows = [[max($windows[0][0], strtotime("{$date} {$open[$wd][0]}")), min($windows[0][1], strtotime("{$date} {$open[$wd][1]}"))]];
+                if (isset($open[$wd][2])) {
+                    $cuts[] = [strtotime("{$date} {$open[$wd][2]}"), strtotime("{$date} {$open[$wd][3]}")];
+                }
             }
             foreach ($offs as $t) {
                 if (time_off_applies($t, $pl['doctor_id'], $pl['location_id'])) {
@@ -467,6 +547,7 @@ function book_slot(string $slotId, array $person, string $reason, ?string $categ
             $aid = db_insert('appointments', [
                 'location_id' => $s['location_id'], 'doctor_id' => $s['doctor_id'], 'patient_id' => $pid, 'lead_id' => $leadId, 'category_slug' => $category, 'service_id' => $o['service_id'] ?? null,
                 'reason' => mb_substr($reason, 0, 255), 'starts_at' => $s['start'], 'ends_at' => $s['end'], 'status' => 'programat', 'source' => $source,
+                'cabinet' => db_value('SELECT cabinet FROM doctor_locations WHERE doctor_id = ? AND location_id = ?', [$s['doctor_id'], $s['location_id']]) ?: null,
                 'comfort' => $o['comfort'] ?? null, 'wants_sedation' => !empty($o['sedation']) ? 1 : 0,
                 'notes' => trim(($source === 'online' ? 'Programare făcută de pacient pe site.' : 'Programare făcută de pacient în chatul de pe site' . ($conversationId ? " (conversația #{$conversationId})" : '') . '.') . (!empty($o['notes']) ? "\n" . $o['notes'] : '')),
                 'created_at' => now_sql(), 'updated_at' => now_sql(),

@@ -276,6 +276,171 @@
     });
   }
 
+  // Calendar (day): drag an appointment to another time or column, stretch it from the bottom
+  // edge; the server answers ok (with the old place for „Anulați”), warn (ask „Mutați oricum?”)
+  // or block. A red line marks the time now.
+  var cal = document.querySelector("[data-cal]");
+  if (cal) {
+    var C = JSON.parse(cal.getAttribute("data-cal"));
+    var token = document.querySelector("[data-cal-csrf]").value;
+    var toast = document.querySelector("[data-cal-anunt]");
+    var toastTimer = null;
+    var pad = function (n) { return (n < 10 ? "0" : "") + n; };
+    var timeOf = function (row) {
+      var m = C.start * 60 + row * C.slot;
+      return pad(Math.floor(m / 60)) + ":" + pad(m % 60);
+    };
+    var rowHeight = function () { return cal.querySelector("[data-cal-row]").getBoundingClientRect().height; };
+    var colRects = function () {
+      return Array.prototype.map.call(cal.querySelectorAll("[data-cal-col]"), function (h) { return h.getBoundingClientRect(); });
+    };
+    var place = function (el, row, len, col) {
+      el.style.gridRow = row + 2 + " / span " + len;
+      el.style.gridColumn = String(col + 2);
+      el.setAttribute("data-rand", row);
+      el.setAttribute("data-lungime", len);
+      el.setAttribute("data-col", col);
+      var t = el.querySelector("[data-ora]");
+      if (t) t.textContent = timeOf(row);
+    };
+    var say = function (text, undo) {
+      clearTimeout(toastTimer);
+      toast.innerHTML = "";
+      var span = document.createElement("span");
+      span.className = "min-w-0 flex-1";
+      span.textContent = text;
+      toast.appendChild(span);
+      if (undo) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "shrink-0 rounded-control px-3 py-1.5 font-semibold underline underline-offset-4 hover:bg-white/10";
+        b.textContent = "Anulați";
+        b.addEventListener("click", function () {
+          toast.hidden = true;
+          undo();
+        });
+        toast.appendChild(b);
+      }
+      toast.hidden = false;
+      toastTimer = setTimeout(function () { toast.hidden = true; }, undo ? 6000 : 4000);
+    };
+    var send = function (fields, force) {
+      var fd = new FormData();
+      fd.append("_csrf", token);
+      Object.keys(fields).forEach(function (k) { fd.append(k, fields[k] === null || fields[k] === undefined ? "" : fields[k]); });
+      if (force) fd.append("force", "1");
+      return fetch(C.url, { method: "POST", body: fd, credentials: "same-origin" }).then(function (r) {
+        return r.json().catch(function () { return { error: "Răspuns neașteptat (" + r.status + ")." }; });
+      });
+    };
+    var move = function (el, row, len, col, old) {
+      var id = el.getAttribute("data-appt");
+      var fields = { id: id, start: C.date + " " + timeOf(row), minutes: len * C.slot };
+      if (C.by === "doctor") fields.doctor = C.cols[col];
+      else fields.cabinet = C.cols[col];
+      var go = function (force) {
+        send(fields, force).then(function (d) {
+          if (d.ok) {
+            place(el, row, len, col);
+            if (C.by === "doctor") el.setAttribute("data-medic", C.cols[col]);
+            if (!d.undo) return say("Salvat: " + d.label + ".");
+            say("Programarea a fost mutată: " + d.label + ".", function () {
+              send({ id: d.undo.id, start: d.undo.start, minutes: d.undo.minutes, doctor: d.undo.doctor, cabinet: d.undo.cabinet, undo: "1" }, true).then(function (u) {
+                if (u.ok) {
+                  place(el, old.row, old.len, old.col);
+                  say("Mutarea a fost anulată. Programarea e la locul ei.");
+                } else say(u.error || u.block || "Nu am putut anula mutarea. Reîncărcați pagina.");
+              });
+            });
+          } else if (d.warn) {
+            if (window.confirm("Atenție:\n• " + d.warn.join("\n• ") + "\n\nMutați oricum?")) go(true);
+            else place(el, old.row, old.len, old.col);
+          } else {
+            place(el, old.row, old.len, old.col);
+            say(d.block || d.error || "Programarea nu a fost mutată.");
+          }
+        }).catch(function () {
+          place(el, old.row, old.len, old.col);
+          say("Conexiunea s-a întrerupt; programarea nu a fost mutată.");
+        });
+      };
+      go(false);
+    };
+    var drag = null;
+    cal.addEventListener("pointerdown", function (e) {
+      var el = e.target.closest("[data-appt]");
+      if (!el || e.button !== 0) return;
+      // No native link dragging or text selection while moving an appointment (a click still opens it).
+      if (e.pointerType === "mouse") e.preventDefault();
+      drag = {
+        el: el, x: e.clientX, y: e.clientY, moved: false, resize: !!e.target.closest("[data-trage-jos]"),
+        row: +el.getAttribute("data-rand"), len: +el.getAttribute("data-lungime"), col: +el.getAttribute("data-col"),
+        h: rowHeight(), rects: colRects(),
+      };
+    });
+    cal.addEventListener("pointermove", function (e) {
+      if (!drag) return;
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (!drag.moved && Math.abs(dx) + Math.abs(dy) < 6) return;
+      if (!drag.moved) {
+        drag.moved = true;
+        drag.el.setPointerCapture(e.pointerId);
+        drag.el.style.zIndex = "30";
+        drag.el.style.opacity = "0.85";
+      }
+      e.preventDefault();
+      var steps = Math.round(dy / drag.h);
+      if (drag.resize) {
+        drag.nlen = Math.max(1, Math.min(C.rows - drag.row, drag.len + steps));
+        drag.nrow = drag.row;
+        drag.ncol = drag.col;
+      } else {
+        drag.nrow = Math.max(0, Math.min(C.rows - drag.len, drag.row + steps));
+        drag.nlen = drag.len;
+        drag.ncol = drag.col;
+        drag.rects.forEach(function (r, i) { if (e.clientX >= r.left && e.clientX < r.right) drag.ncol = i; });
+      }
+      place(drag.el, drag.nrow, drag.nlen, drag.ncol);
+    });
+    var end = function () {
+      if (!drag) return;
+      var d = drag;
+      drag = null;
+      d.el.style.zIndex = "";
+      d.el.style.opacity = "";
+      if (!d.moved) return;
+      // The click after a drag does not open the appointment.
+      d.el.addEventListener("click", function stop(ev) { ev.preventDefault(); d.el.removeEventListener("click", stop, true); }, true);
+      if (d.nrow === d.row && d.nlen === d.len && d.ncol === d.col) return;
+      move(d.el, d.nrow, d.nlen, d.ncol, { row: d.row, len: d.len, col: d.col });
+    };
+    cal.addEventListener("pointerup", end);
+    cal.addEventListener("dragstart", function (e) { e.preventDefault(); });
+    cal.addEventListener("pointercancel", function () {
+      if (drag) place(drag.el, drag.row, drag.len, drag.col);
+      drag = null;
+    });
+    // The line of the time now.
+    var now = cal.querySelector("[data-acum]");
+    if (now) {
+      // The clinic's time (from the server), not the computer's clock.
+      var loaded = Date.now();
+      var tick = function () {
+        var m = C.now + Math.floor((Date.now() - loaded) / 60000) - C.start * 60;
+        if (m < 0 || m >= C.rows * C.slot) {
+          now.hidden = true;
+          return;
+        }
+        now.hidden = false;
+        now.style.gridRow = String(Math.floor(m / C.slot) + 2);
+        now.firstChild.style.top = (m % C.slot) / C.slot * 100 + "%";
+        now.lastChild.style.top = "calc(" + (m % C.slot) / C.slot * 100 + "% - 4px)";
+      };
+      tick();
+      setInterval(tick, 60000);
+    }
+  }
+
   // Absențe: the doctor list only when the absence is a doctor's (not a closed clinic).
   var cineMedic = document.querySelector("[data-cine-medic]");
   if (cineMedic) {

@@ -18,9 +18,12 @@ $clinicNames = admin_clinic_names();
 $workLocs = $isNew ? array_keys($clinicNames) : array_map('intval', array_column(db_all('SELECT location_id FROM doctor_locations WHERE doctor_id = ?', [$doc['id']]), 'location_id'));
 // When the doctor works at each clinic (for the free times the site's chat offers).
 $schedules = [];
+$cabinetsAt = [];
+$cabinetCount = array_map('intval', array_column(db_all('SELECT id, cabinets FROM locations'), 'cabinets', 'id'));
 if (!$isNew) {
-    foreach (db_all('SELECT location_id, schedule FROM doctor_locations WHERE doctor_id = ?', [$doc['id']]) as $dl) {
+    foreach (db_all('SELECT location_id, schedule, cabinet FROM doctor_locations WHERE doctor_id = ?', [$doc['id']]) as $dl) {
         $schedules[(int) $dl['location_id']] = schedule_decode($dl['schedule']);
+        $cabinetsAt[(int) $dl['location_id']] = $dl['cabinet'] !== null ? (int) $dl['cabinet'] : null;
     }
 }
 $errors = [];
@@ -85,29 +88,16 @@ if (is_post()) {
     }
     $workLocs = array_values(array_filter(array_map('intval', is_array($_POST['locations'] ?? null) ? $_POST['locations'] : []), static fn ($lid) => isset($clinicNames[$lid])));
     $schedules = [];
+    $cabinetsAt = [];
     $sentSch = is_array($_POST['sch'] ?? null) ? $_POST['sch'] : [];
     foreach ($workLocs as $lid) {
-        foreach (WEEKDAYS as $day => $dayName) {
-            $from = (string) ($sentSch[$lid][$day][0] ?? '');
-            $to = (string) ($sentSch[$lid][$day][1] ?? '');
-            $bFrom = (string) ($sentSch[$lid][$day][2] ?? '');
-            $bTo = (string) ($sentSch[$lid][$day][3] ?? '');
-            if ($from === '' && $to === '') {
-                continue;
-            }
-            if (!preg_match('/^\d{2}:\d{2}$/', $from) || !preg_match('/^\d{2}:\d{2}$/', $to) || $from >= $to) {
-                $errors['form'] = "Programul de {$dayName} la {$clinicNames[$lid]}: scrieți ora de început și de sfârșit (de exemplu 09:00 și 17:00).";
-                continue;
-            }
-            $schedules[$lid][$day] = [$from, $to];
-            if ($bFrom !== '' || $bTo !== '') {
-                if (!preg_match('/^\d{2}:\d{2}$/', $bFrom) || !preg_match('/^\d{2}:\d{2}$/', $bTo) || !($from < $bFrom && $bFrom < $bTo && $bTo < $to)) {
-                    $errors['form'] = "Pauza de {$dayName} la {$clinicNames[$lid]} trebuie să fie în program (de exemplu 13:00–13:30).";
-                    continue;
-                }
-                $schedules[$lid][$day] = [$from, $to, $bFrom, $bTo];
-            }
+        $problem = null;
+        $schedules[$lid] = week_schedule_parse($sentSch[$lid] ?? [], " la {$clinicNames[$lid]}", $problem);
+        if ($problem !== null) {
+            $errors['form'] ??= $problem;
         }
+        $cab = (int) ($_POST['cabinet'][$lid] ?? 0);
+        $cabinetsAt[$lid] = $cab >= 1 && $cab <= (int) ($cabinetCount[$lid] ?? 1) ? $cab : null;
     }
     foreach (['public_name' => 'Scrieți numele afișat pe site.', 'first_name' => 'Scrieți prenumele.', 'last_name' => 'Scrieți numele de familie.', 'role_line' => 'Scrieți specialitatea.'] as $k => $msg) {
         if (mb_strlen($v[$k]) < 2) {
@@ -141,7 +131,7 @@ if (is_post()) {
         if ($photo !== null) {
             $row['photo_path'] = $photo['path'];
         }
-        $id = db_tx(static function () use ($row, $id, $cats, $doc, $workLocs, $schedules) {
+        $id = db_tx(static function () use ($row, $id, $cats, $doc, $workLocs, $schedules, $cabinetsAt) {
             if ($id === null) {
                 $base = slugify(preg_replace('/^dr\.?\s+/i', '', $row['public_name']) ?? $row['public_name']) ?: 'medic';
                 $slug = $base;
@@ -157,7 +147,7 @@ if (is_post()) {
             }
             db_run('DELETE FROM doctor_locations WHERE doctor_id = ?', [$id]);
             foreach ($workLocs as $lid) {
-                db_run('INSERT INTO doctor_locations (doctor_id, location_id, schedule) VALUES (?, ?, ?)', [$id, $lid, !empty($schedules[$lid]) ? json_encode($schedules[$lid]) : null]);
+                db_run('INSERT INTO doctor_locations (doctor_id, location_id, schedule, cabinet) VALUES (?, ?, ?, ?)', [$id, $lid, !empty($schedules[$lid]) ? json_encode($schedules[$lid]) : null, $cabinetsAt[$lid] ?? null]);
             }
             db_run('DELETE FROM doctor_categories WHERE doctor_id = ?', [$id]);
             $sent = is_array($_POST['cat'] ?? null) ? $_POST['cat'] : [];
@@ -196,17 +186,14 @@ foreach ($cats as $c) {
 }
 $workBlocks = '';
 foreach ($clinicNames as $lid => $n) {
-    $rows = '';
-    foreach (WEEKDAYS as $day => $dayName) {
-        $span = ($schedules[$lid][$day] ?? []) + ['', '', '', ''];
-        $t = static fn (int $i, string $label) => '<input type="time" step="300" name="sch[' . $lid . '][' . $day . '][' . $i . ']" value="' . e($span[$i]) . '" aria-label="' . e("{$dayName}, {$n}: {$label}") . '" class="' . e(input_classes('h-control-s min-w-0')) . '">';
-        $rows .= '<div class="grid grid-cols-[6.5rem_1fr_1fr] items-center gap-2"><span class="text-corp">' . e($dayName) . '</span>' . $t(0, 'de la') . $t(1, 'până la')
-            . '<span class="text-mic text-discret">pauză</span>' . $t(2, 'pauză de la') . $t(3, 'pauză până la') . '</div>';
+    $cabOptions = ['' => 'Oricare'];
+    for ($c = 1; $c <= (int) ($cabinetCount[$lid] ?? 1); $c++) {
+        $cabOptions[(string) $c] = "Cabinetul {$c}";
     }
     $workBlocks .= '<fieldset class="min-w-0 rounded-panou border border-linie p-4">'
         . '<legend class="px-1">' . checkbox_field('locations[]', '<strong>' . e($n) . '</strong>', ['id' => "field-locations-{$lid}", 'value' => (string) $lid, 'checked' => in_array($lid, $workLocs, true)]) . '</legend>'
-        . '<div class="mt-1 grid grid-cols-[6.5rem_1fr_1fr] gap-2 text-mic text-discret"><span></span><span>De la</span><span>Până la</span></div>'
-        . '<div class="mt-1 flex flex-col gap-2">' . $rows . '</div>'
+        . week_schedule_fields("sch[{$lid}]", $schedules[$lid] ?? [], ", {$n}")
+        . ((int) ($cabinetCount[$lid] ?? 1) > 1 ? '<div class="mt-3 max-w-xs">' . select_field("cabinet[{$lid}]", 'Cabinetul în care lucrează de obicei', $cabOptions, ['id' => "field-cabinet-{$lid}", 'value' => (string) ($cabinetsAt[$lid] ?? '')]) . '</div>' : '')
         . '<p class="mt-2 text-mic text-discret">Lăsați gol în zilele în care nu lucrează aici; pauza e opțională.</p></fieldset>';
 }
 // What the doctor receives: the next day with appointments, as an example.

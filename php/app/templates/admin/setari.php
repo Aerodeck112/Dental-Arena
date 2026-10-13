@@ -97,6 +97,18 @@ if (is_post()) {
             $r[$k] = is_string($raw) ? mb_substr(trim($raw), 0, $k === 'hours_text' ? 1000 : 190) : '';
         }
         $r['publish_hours'] = !empty($_POST['loc'][$id]['publish_hours']) ? 1 : 0;
+        // Opening hours by weekday: they cut the doctors' hours for online booking.
+        $problem = null;
+        $hours = week_schedule_parse($_POST['hours'][$id] ?? [], " la {$l['short_name']}", $problem);
+        if ($problem !== null) {
+            $errors["loc_{$id}_hours"] = $problem;
+        }
+        $r['hours_json'] = $hours !== [] ? json_encode($hours) : null;
+        if ($r['hours_text'] === '' && $hours !== []) {
+            $r['hours_text'] = str_replace(', ', "\n", schedule_text($hours));
+        }
+        $r['cabinets'] = max(1, min(20, (int) ($_POST['loc'][$id]['cabinets'] ?? 1)));
+        $r['sedation_units'] = max(1, min(10, (int) ($_POST['loc'][$id]['sedation_units'] ?? 1)));
         foreach (['name' => 'numele', 'short_name' => 'numele scurt', 'street' => 'strada', 'city' => 'localitatea', 'phone' => 'telefonul'] as $k => $label) {
             if ($r[$k] === '') {
                 $errors["loc_{$id}_{$k}"] = "{$l['short_name']}: scrieți {$label}.";
@@ -143,7 +155,7 @@ if (is_post()) {
             $consentChanged ? 'textele acordurilor' : null,
         ], static fn ($x) => $x !== null && $x !== 'nicio schimbare');
         foreach ($before['locations'] as $l) {
-            $c = changes_text($l, $locIn[(int) $l['id']], ['name' => 'numele', 'short_name' => 'numele scurt', 'street' => 'strada', 'city' => 'localitatea', 'county' => 'județul', 'postal_code' => 'codul poștal', 'phone' => 'telefonul', 'email' => 'e-mailul', 'hours_text' => 'programul', 'publish_hours' => 'programul pe site']);
+            $c = changes_text($l, $locIn[(int) $l['id']], ['name' => 'numele', 'short_name' => 'numele scurt', 'street' => 'strada', 'city' => 'localitatea', 'county' => 'județul', 'postal_code' => 'codul poștal', 'phone' => 'telefonul', 'email' => 'e-mailul', 'hours_text' => 'programul', 'publish_hours' => 'programul pe site', 'hours_json' => 'orele pe zile', 'cabinets' => 'cabinete', 'sedation_units' => 'aparate de inhalosedare']);
             if ($c !== 'nicio schimbare') {
                 $what[] = "{$l['short_name']}: {$c}";
             }
@@ -181,6 +193,13 @@ foreach ($locations as $l) {
         . $f('phone', 'Telefonul', ['type' => 'tel']) . $f('email', 'E-mailul clinicii', ['type' => 'email', 'optional' => true, 'hint' => 'Primește cererile pentru această clinică.'])
         . '</div><div class="mt-5 grid gap-4">'
         . text_area("loc[{$id}][hours_text]", 'Programul', ['id' => "field-loc_{$id}_hours_text", 'value' => (string) $l['hours_text'], 'rows' => 3, 'optional' => true, 'hint' => 'Câte un rând, de exemplu: Luni–Vineri: 09:00–19:00'])
+        . '<fieldset id="field-loc_' . $id . '_hours" tabindex="-1" class="min-w-0"><legend class="text-control font-medium">Orele clinicii, pe zile</legend>'
+        . '<p class="text-mic text-discret">Opțional. Completate, taie programul medicilor: pe site nu apar ore în care clinica e închisă. Dacă textul de mai sus e gol, se scrie din ele.</p>'
+        . week_schedule_fields("hours[{$id}]", schedule_decode($l['hours_json'] ?? null), ", {$l['short_name']}") . field_error("field-loc_{$id}_hours-error", $errors["loc_{$id}_hours"] ?? null) . '</fieldset>'
+        . '<div class="grid gap-5 sm:grid-cols-2">'
+        . text_field("loc[{$id}][cabinets]", 'Câte cabinete (scaune) are', ['id' => "field-loc_{$id}_cabinets", 'type' => 'number', 'min' => 1, 'max' => 20, 'value' => (string) ($l['cabinets'] ?? 1), 'hint' => 'Cu mai multe, calendarul se poate vedea și pe cabinete.'])
+        . text_field("loc[{$id}][sedation_units]", 'Câte aparate de inhalosedare', ['id' => "field-loc_{$id}_sedation_units", 'type' => 'number', 'min' => 1, 'max' => 10, 'value' => (string) ($l['sedation_units'] ?? 1), 'hint' => 'Programările cu inhalosedare peste acest număr sunt semnalate.'])
+        . '</div>'
         . checkbox_field("loc[{$id}][publish_hours]", 'Programul apare pe site', ['id' => "field-loc_{$id}_publish_hours", 'checked' => (int) $l['publish_hours'] === 1, 'description' => 'Bifați după ce ați verificat orele.'])
         . '</div></section>';
 }

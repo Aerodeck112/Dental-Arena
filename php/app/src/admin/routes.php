@@ -45,6 +45,7 @@ send_queue_after_response();
 $routes = [
     '#^/admin$#' => ['acasa', null],
     '#^/admin/calendar$#' => ['calendar', null],
+    '#^/admin/calendar/muta$#' => ['calendar-muta', null],
     '#^/admin/programari/(noua|\d+)$#' => ['programare', null],
     '#^/admin/pacienti$#' => ['pacienti', null],
     '#^/admin/pacienti/(nou|\d+)$#' => ['pacient', null],

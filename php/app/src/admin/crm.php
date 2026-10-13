@@ -25,6 +25,15 @@ const APPT_NEXT = [
     'sosit' => ['in-tratament' => 'Începe tratamentul'],
     'in-tratament' => ['finalizat' => 'Finalizat'],
 ];
+/** Going back a step, by status (a cancelled appointment kept after all, a visit reopened). */
+const APPT_BACK = [
+    'confirmat' => ['programat' => 'Înapoi la Programat'],
+    'sosit' => ['confirmat' => 'Înapoi la Confirmat'],
+    'in-tratament' => ['sosit' => 'Înapoi la „A sosit”'],
+    'finalizat' => ['in-tratament' => 'Redeschideți (În tratament)'],
+    'neprezentat' => ['programat' => 'Readuceți la Programat', 'sosit' => 'A venit totuși'],
+    'anulat' => ['programat' => 'Readuceți la Programat'],
+];
 /** The comfort answers, short, for the panel. */
 const COMFORT_SHORT = ['fara-emotii' => 'Fără emoții', 'emotii' => 'Are emoții', 'frica' => 'Mi-e frică'];
 const RECALL_STATUS = ['de-facut' => 'De sunat', 'contactat' => 'Contactat', 'programat' => 'Programat', 'refuzat' => 'Nu dorește', 'anulat' => 'Anulată'];
@@ -338,11 +347,21 @@ function can_see_appointment(array $a, array $user): bool
 }
 
 /** Moves an appointment to a status, stamping when it happened. */
-function set_appointment_status(int $id, string $status, array $user, ?string $reason = null, string $by = 'clinica'): void
+/**
+ * Changes an appointment's status, with its time stamp. Going back (APPT_BACK) clears the stamps
+ * of the later steps. Finishing a visit puts the patient on the recall list (RECALL_MONTHS), unless
+ * they already have a recall or a next appointment. Returns a note for the user, if any.
+ */
+function set_appointment_status(int $id, string $status, array $user, ?string $reason = null, string $by = 'clinica'): ?string
 {
     if (!isset(APPT_STATUS[$status])) {
-        return;
+        return null;
     }
+    $before = db_one('SELECT * FROM appointments WHERE id = ?', [$id]);
+    if ($before === null) {
+        return null;
+    }
+    $back = isset(APPT_BACK[$before['status']][$status]);
     $stamp = [
         'confirmat' => 'confirmed_at',
         'sosit' => 'arrived_at',
@@ -359,15 +378,58 @@ function set_appointment_status(int $id, string $status, array $user, ?string $r
         $row['cancel_reason'] = $reason !== null ? mb_substr($reason, 0, 255) : null;
         $row['cancelled_by'] = $by;
     }
+    if ($back) {
+        $order = ['programat', 'confirmat', 'sosit', 'in-tratament', 'finalizat'];
+        $later = array_slice($order, (int) array_search($status, $order, true) + 1);
+        foreach (['confirmat' => 'confirmed_at', 'sosit' => 'arrived_at', 'in-tratament' => 'started_at', 'finalizat' => 'completed_at'] as $st => $col) {
+            if (in_array($st, $later, true)) {
+                $row[$col] = null;
+            }
+        }
+        $row += ['cancelled_at' => null, 'cancel_reason' => null, 'cancelled_by' => null, 'no_show_at' => null];
+    }
     db_update('appointments', $row, 'id = :id', ['id' => $id]);
     if ($status === 'anulat') {
         // The patient's old link stops working.
         db_run('UPDATE appointments SET token_version = token_version + 1, reminder_sent_at = NULL WHERE id = ?', [$id]);
     }
+    if ($status === 'anulat' || $status === 'neprezentat') {
+        drop_pending_reminder($id);
+    }
     if ($status === 'anulat' || $status === 'sosit') {
         notify_appointment($status === 'anulat' ? 'programare-anulata' : 'sosit', $id);
     }
-    audit('programare-' . $status, "#{$id}" . ($by === 'pacient' ? ' (de pacient, din link)' : ''), $user['id'] ?? 0, (int) db_value('SELECT patient_id FROM appointments WHERE id = ?', [$id]));
+    audit($back ? 'programare-revenire' : 'programare-' . $status, "#{$id}" . ($back ? ': ' . (APPT_STATUS[$before['status']] ?? '') . ' → ' . APPT_STATUS[$status] : '') . ($by === 'pacient' ? ' (de pacient, din link)' : ''), $user['id'] ?? 0, (int) $before['patient_id']);
+    if ($status === 'finalizat' && $before['status'] !== 'finalizat') {
+        return auto_recall($before, $user);
+    }
+    return null;
+}
+
+/** After a finished visit: a recall for the check-up, if the patient has none and no next appointment. */
+function auto_recall(array $a, array $user): ?string
+{
+    $pid = (int) $a['patient_id'];
+    $active = "'" . implode("','", ['programat', 'confirmat']) . "'";
+    if (db_value("SELECT 1 FROM recalls WHERE patient_id = ? AND status IN ('de-facut', 'contactat') LIMIT 1", [$pid])
+        || db_value("SELECT 1 FROM appointments WHERE patient_id = ? AND status IN ({$active}) AND starts_at > ? LIMIT 1", [$pid, $a['ends_at']])) {
+        return null;
+    }
+    $months = RECALL_MONTHS[$a['category_slug'] ?? ''] ?? 6;
+    $rid = db_insert('recalls', [
+        'patient_id' => $pid,
+        'location_id' => $a['location_id'],
+        'doctor_id' => $a['doctor_id'],
+        'reason' => 'Control' . ($a['category_slug'] ? ' după ' . mb_strtolower(service_title($a['category_slug'])) : ' periodic'),
+        'due_date' => date('Y-m-d', strtotime("+{$months} months", strtotime($a['starts_at']))),
+        'status' => 'de-facut',
+        'source_appointment_id' => $a['id'],
+        'created_by' => $user['id'] ?? null,
+        'created_at' => now_sql(),
+        'updated_at' => now_sql(),
+    ]);
+    audit('rechemare-noua', "#{$rid} automată, peste {$months} " . ($months === 1 ? 'lună' : 'luni'), $user['id'] ?? 0, $pid);
+    return 'Pacientul a fost trecut pe lista de rechemări, pentru control peste ' . ($months === 1 ? 'o lună' : "{$months} luni") . '.';
 }
 
 function appt_status_chip(string $status): string

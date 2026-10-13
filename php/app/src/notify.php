@@ -635,6 +635,12 @@ function notify_doctor_today(string $staffEvent, array $a, array $vars): void
 }
 
 /** Patient + doctor notices of an appointment event (new, moved, cancelled, arrived). */
+/** A reminder already queued for an appointment that moved or was cancelled: it would tell the old time. */
+function drop_pending_reminder(int $appointmentId): void
+{
+    db_run("DELETE FROM messages WHERE appointment_id = ? AND event = 'reamintire' AND status = 'in-asteptare'", [$appointmentId]);
+}
+
 function notify_appointment(string $what, int $appointmentId): void
 {
     try {
