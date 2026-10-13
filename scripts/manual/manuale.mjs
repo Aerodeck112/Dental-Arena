@@ -1,5 +1,5 @@
 /**
- * Builds the three user manuals as PDF (docs/manuale): reception, doctors, administrator.
+ * Builds the four user manuals as PDF (docs/manuale): reception, doctors, administrator, VITIM.
  * Needs the screenshots from capturi.mjs (scripts/manual/.capturi), Playwright's Chromium and
  * poppler (pdftotext, pdfunite). Run: node scripts/manual/manuale.mjs
  *
@@ -29,29 +29,42 @@ const MANUALE = [
     fisier: "Manual-Receptie.pdf",
     rol: "recepție",
     scurt: "Manual pentru recepție",
-    intro: "Programări, pacienți, cereri de pe site, rechemări, facturi și încasări, acorduri pe tabletă, mesaje.",
-    capitole: [C.despre("recepție"), C.intrare(), C.ecranul(), C.azi("receptie"), C.calendar(), C.programari(), C.pacienti("receptie"), C.cereri(), C.rechemari(), C.facturi("receptie"), C.planuri("receptie"), C.documente("receptie"), C.tableta("receptie"), C.mesaje("receptie"), C.chat("receptie"), C.rapoarte("receptie"), C.intrebari("receptie")],
+    intro: "Calendarul și programările (inclusiv cele făcute de pacienți pe site), absențele, pacienții, cererile de pe site, rechemările, acordurile pe tabletă, mesajele.",
+    capitole: [C.despre("recepție"), C.intrare(), C.ecranul(), C.azi("receptie"), C.calendar(), C.programari(), C.absente("receptie"), C.programareOnline("receptie"), C.pacienti("receptie"), C.cereri(), C.rechemari(), C.planuri("receptie"), C.documente("receptie"), C.tableta("receptie"), C.mesaje("receptie"), C.chat("receptie"), C.rapoarte("receptie"), C.intrebari("receptie")],
   },
   {
     fisier: "Manual-Medici.pdf",
     rol: "medici",
     scurt: "Manual pentru medici",
-    intro: "Ziua de lucru, fișa pacientului, anamneza, odontograma, planurile de tratament, consultația cu AI, programul zilei pe WhatsApp.",
-    capitole: [C.despre("medici"), C.intrare(), C.ecranul(), C.azi("medic"), C.calendar(), C.programari(), C.pacienti("medic"), C.anamneza(), C.odontograma(), C.planuri("medic"), C.consultatieAi(), C.documente("medic"), C.programulZilei("medic"), C.mesaje("medic"), C.rapoarte("medic"), C.intrebari("medic")],
+    intro: "Ziua de lucru, calendarul, absențele, fișa pacientului, anamneza, odontograma, planurile de tratament, implanturile, consultația cu AI, programul zilei pe WhatsApp.",
+    capitole: [C.despre("medici"), C.intrare(), C.ecranul(), C.azi("medic"), C.calendar(), C.programari(), C.absente("medic"), C.pacienti("medic"), C.anamneza(), C.odontograma(), C.planuri("medic"), C.implanturi(), C.consultatieAi(), C.documente("medic"), C.programulZilei("medic"), C.mesaje("medic"), C.rapoarte("medic"), C.intrebari("medic")],
   },
   {
     fisier: "Manual-Administrator.pdf",
     rol: "administrator",
     scurt: "Manual pentru administrator",
-    intro: "Tot panoul: lucrul zilnic, partea medicală și administrarea (setări, echipă, prețuri, mesaje, marketing, AI, chat, tablete, GDPR, jurnal, întreținere).",
+    intro: "Tot ce ține de clinică: lucrul zilnic, partea medicală, rapoartele, echipa, prețurile și programarea online, fotografiile site-ului, marketingul, GDPR, jurnalul și ce primiți de la suportul tehnic.",
     capitole: [
-      C.despre("administrator"), C.intrare(), C.ecranul(),
+      C.despre("administrator"), C.intrare(), C.ecranul(), C.vitimAdmin(),
       parte("Lucrul de zi cu zi"),
-      C.azi("receptie"), C.calendar(), C.programari(), C.pacienti("medic"), C.cereri(), C.rechemari(), C.facturi("admin"), C.documente("admin"), C.tableta("admin"), C.mesaje("admin"), C.chat("admin"), C.rapoarte("admin"),
+      C.azi("admin"), C.calendar(), C.programari(), C.absente("admin"), C.programareOnline("admin"), C.pacienti("medic"), C.cereri(), C.rechemari(), C.documente("admin"), C.tableta("admin"), C.mesaje("admin"), C.chat("admin"), C.rapoarte("admin"),
       parte("Partea medicală"),
-      C.anamneza(), C.odontograma(), C.planuri("admin"), C.consultatieAi(),
+      C.anamneza(), C.odontograma(), C.planuri("admin"), C.implanturi(), C.consultatieAi(),
       parte("Administrarea"),
-      C.setari(), C.utilizatori(), C.echipa(), C.programulZilei("admin"), C.servicii(), C.fotografii(), C.setariMesaje(), C.marketing(), C.setariAi(), C.gdpr(), C.jurnal(), C.siteul(), C.intretinere(), C.intrebari("admin"),
+      C.echipa(), C.programulZilei("admin"), C.servicii(), C.fotografii(), C.marketing(), C.gdpr(), C.jurnal(), C.siteul(), C.intrebari("admin"),
+    ],
+  },
+  {
+    fisier: "Manual-VITIM.pdf",
+    rol: "suportul tehnic (VITIM)",
+    scurt: "Manual pentru suportul tehnic (VITIM)",
+    intro: "Configurarea panoului: setările firmei și ale clinicilor, conturile, mesajele (SMS, WhatsApp, e-mail), asistentul AI, programarea online, chatul, tabletele, actualizările și întreținerea.",
+    capitole: [
+      C.despre("suportul tehnic (VITIM)"), C.intrare(), C.rolVitim(),
+      parte("Configurarea"),
+      C.setari(), C.utilizatori(), C.setariMesaje(), C.setariAi(), C.setariProgramari(), C.setariChat(), C.tableta("vitim"), C.echipa(), C.servicii(),
+      parte("Întreținerea"),
+      C.intretinere(), C.jurnal(), C.siteul(), C.intrebari("vitim"),
     ],
   },
 ];

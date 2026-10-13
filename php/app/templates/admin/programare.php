@@ -181,7 +181,7 @@ if (is_post()) {
                 $errors['time'] = $check['block'];
             } elseif ($check['warn'] !== [] && post('suprapune') !== '1') {
                 $conflicts = $check['warn'];
-                $errors['time'] = 'Verificați ora (vedeți mai sus). Alegeți alta sau bifați „Programez oricum”.';
+                $errors['time'] = 'Ora aleasă are o problemă (vedeți lista de mai jos). Alegeți alta sau bifați „Programez oricum”.';
             }
         }
     }

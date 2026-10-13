@@ -1,5 +1,5 @@
 /**
- * The text of the three user manuals (reception, doctors, administrator). Each chapter is a
+ * The text of the four user manuals (reception, doctors, administrator, VITIM technical support). Each chapter is a
  * function returning HTML; the manuals pick and order them. Helpers: pasi() numbered steps,
  * img() a screenshot from .capturi, sfat()/atentie() boxes, tabel() a simple table.
  */
@@ -18,15 +18,17 @@ const b = (t) => `<b class="ui">${t}</b>`; // a label exactly as on screen
 export const despre = (rol) => ({
   titlu: "Despre acest manual",
   html: `
-<p>Panoul Dental Arena este programul în care clinica lucrează zilnic: programări, fișele pacienților, facturi și încasări, acorduri, mesaje către pacienți și cererile venite de pe site. Se deschide în browser (Chrome, Edge, Safari sau Firefox), pe calculator, tabletă sau telefon, la adresa:</p>
+<p>Panoul Dental Arena este programul în care clinica lucrează zilnic: calendarul și programările, fișele pacienților, acordurile, mesajele către pacienți și cererile venite de pe site (inclusiv programările făcute de pacienți direct pe site). Se deschide în browser (Chrome, Edge, Safari sau Firefox), pe calculator, tabletă sau telefon, la adresa:</p>
 <p class="adresa">https://dentalarena.ro/admin</p>
 <p>Acest manual este pentru <strong>${rol}</strong>. Fiecare capitol descrie un ecran: la ce folosește, pașii obișnuiți și ce e bine de știut. Imaginile sunt din panou, cu date de probă.</p>
 ${tabel(["Rolul", "Ce vede și ce face"], [
-  ["Recepție", "Programări, pacienți (fără anamneza completă), cereri, rechemări, facturi și încasări, documente și acorduri, mesaje."],
-  ["Medic", "Programările, fișa completă (anamneză, note clinice), odontograma, planurile de tratament, consultația cu AI."],
-  ["Administrator", "Tot ce văd ceilalți, plus setările, prețurile, echipa, conturile, marketingul, GDPR și jurnalul."],
+  ["Recepție", "Calendarul și programările, pacienții (fără anamneza completă), cererile de pe site, rechemările, absențele, documentele și acordurile, mesajele."],
+  ["Medic", "Programările, fișa completă (anamneză, note clinice), odontograma, planurile de tratament, implanturile, consultația cu AI, absențele proprii."],
+  ["Administrator", "Tot ce ține de clinică: ce văd recepția și medicii, plus rapoartele, prețurile, echipa, fotografiile site-ului, marketingul, GDPR și jurnalul."],
+  ["Suport tehnic (VITIM)", "Configurarea: setările (firma, clinicile, mesajele, AI, chatul, programările online, tabletele, actualizările) și conturile. Administratorul primește un rezumat cu tot ce schimbă VITIM."],
 ])}
-${sfat("Recepția și medicii văd doar clinicile bifate în contul lor (Cristești, Luduș sau amândouă). Administratorul le vede pe amândouă.")}`,
+${sfat("Recepția și medicii văd doar clinicile bifate în contul lor (Cristești, Luduș sau amândouă). Administratorul și VITIM le văd pe amândouă.")}
+${sfat("Partea financiară (facturi, încasări, soldul pacientului) e oprită în această perioadă de probă și se pornește în etapa a doua. Manualul ei vine atunci.")}`,
 });
 
 export const intrare = () => ({
@@ -39,16 +41,18 @@ ${pasi([
   `Scrieți adresa de e-mail și parola primite de la administrator, apoi apăsați ${b("Intrați")}.`,
   `La prima intrare, panoul vă duce la ${b("Contul meu")}: alegeți o parolă a dumneavoastră (cel puțin 10 caractere). De acum intrați cu ea.`,
 ])}
-${sfat("După 10 încercări greșite în 15 minute, intrarea se blochează pentru un sfert de oră. Dacă ați uitat parola, administratorul vă pune una nouă de început.")}
+${sfat("După 10 încercări greșite în 15 minute, intrarea se blochează pentru un sfert de oră. Dacă ați uitat parola, suportul tehnic (VITIM) vă pune una nouă de început.")}
 <h3>Ieșirea</h3>
 <p>Butonul ${b("Ieșire")} e jos, în meniul din stânga (pe telefon: în meniul de sus). Pe un calculator folosit de mai multe persoane, ieșiți de fiecare dată când plecați.</p>
 <h3>Contul meu</h3>
 <p>Din linkul ${b("Contul meu")} (sub numele dumneavoastră, în meniu):</p>
 <ul>
 <li><strong>Schimbați parola</strong>: parola de acum, apoi cea nouă de două ori.</li>
-<li><strong>Notificările mele</strong>: telefonul dumneavoastră și, pentru fiecare situație (programare nouă, cerere nouă de pe site, mesaj WhatsApp de la un pacient etc.), unde vreți să fiți anunțat: SMS, WhatsApp sau e-mail.</li>
+<li><strong>Notificările mele</strong>: telefonul dumneavoastră și, pentru fiecare situație (programare nouă, programare făcută online, cerere nouă de pe site, mesaj WhatsApp de la un pacient etc.), unde vreți să fiți anunțat: SMS, WhatsApp sau e-mail.</li>
+<li><strong>Aspectul panoului</strong>: ${b("Luminos")}, ${b("Întunecat")} (mai odihnitor seara) sau ${b("Ca sistemul (zi / noapte)")}.</li>
+<li><strong>Dispozitivele mele</strong>: ${b("Ieșiți de pe celelalte dispozitive")} închide contul pe orice alt calculator sau telefon (de exemplu unul pierdut). Pe cel de acum rămâneți în cont.</li>
 </ul>
-${img("cont", "Contul meu: parola și notificările.")}`,
+${img("cont", "Contul meu: parola, notificările, aspectul și dispozitivele.")}`,
 });
 
 export const ecranul = () => ({
@@ -58,6 +62,7 @@ export const ecranul = () => ({
 ${img("azi", "Pagina Azi: meniul în stânga, alegerea clinicii sus, programările zilei.")}
 <ul>
 <li><strong>Alegerea clinicii</strong> (${b("Cristești")} / ${b("Luduș")}): pe paginile Azi, Calendar și Rechemări arătați clinica la care lucrați. Panoul o ține minte.</li>
+<li><strong>Etichetele colorate</strong> de lângă numele unui pacient (de exemplu „VIP”) sunt puse de echipă, ca să-l recunoașteți ușor.</li>
 <li><strong>Bulina galbenă</strong> de lângă ${b("Cereri online")} arată câte cereri noi au venit de pe site.</li>
 <li><strong>Mesajele de confirmare</strong> apar sus, pe verde (s-a salvat) sau pe roșu (ce trebuie corectat). La un formular cu greșeli, lista de sus duce direct la câmpul de corectat.</li>
 <li><strong>Alertele medicale</strong> apar ca etichete roșii lângă numele pacientului (alergii, anticoagulante, diabet etc.). Eticheta galbenă înseamnă inhalosedare.</li>
@@ -80,44 +85,110 @@ ${tabel(["Starea", "Ce înseamnă", "Butonul care urmează"], [
   ["Finalizat", "Vizita s-a încheiat.", "—"],
   ["Nu s-a prezentat", `Apăsați ${b("Nu a venit")} dacă pacientul lipsește.`, "—"],
 ])}
-<p>Butonul ${b("⋯")} deschide programarea (pentru mutare, anulare sau rechemare). În dreapta: <strong>Cererile online noi</strong>${rol === "medic" ? "" : ", <strong>Încasat azi</strong>"} și câți pacienți sunt de sunat pentru control.</p>
+<p>Butonul ${b("⋯")} deschide programarea (pentru mutare, anulare sau rechemare). În dreapta: <strong>Cererile online noi</strong> și câți pacienți sunt de sunat pentru control.</p>
+<p>La ${b("Finalizat")}, pacientul intră singur pe lista de rechemări pentru control (de obicei peste 6 luni; 3 luni la parodontologie, o lună la ortodonție), dacă nu are deja o rechemare sau o programare viitoare.</p>
+${rol === "admin" ? `<p>Ca administrator, sus pe pagina Azi vedeți și ce a schimbat <strong>suportul tehnic (VITIM)</strong> în setări, până apăsați ${b("Am văzut")} (vezi capitolul despre VITIM).</p>` : ""}
 ${rol === "medic" ? sfat("Când recepția apasă „A sosit”, medicul care a cerut această notificare în Contul meu primește un mesaj.") : sfat("Când apăsați „A sosit”, medicul poate fi anunțat automat pe telefon (dacă a cerut asta în Contul meu).")}`,
 });
 
 export const calendar = () => ({
   titlu: "Calendarul",
   html: `
-<p>Calendarul arată ziua unei clinici, cu câte o coloană pentru fiecare medic, de la 8 la 20, pe sferturi de oră. Varianta ${b("Săptămână")} arată programările fiecărei zile, în ordine.</p>
-${img("calendar-zi", "Calendarul pe o zi, cu o coloană pentru fiecare medic.")}
+<p>Calendarul arată ziua unei clinici, cu câte o coloană pentru fiecare medic, de la 8 la 20, pe sferturi de oră. Sus alegeți clinica și vederea: ${b("Zi")}, ${b("Săptămână")} sau ${b("Listă")}.</p>
+${img("calendar-zi", "Calendarul pe o zi: orele în care medicul nu lucrează sunt gri, pauza e notată, absențele sunt roșii, iar sus apare lista absențelor zilei.")}
 <ul>
 <li>${b("‹")} ${b("Azi")} ${b("›")} mută ziua; câmpul de dată și ${b("Mergeți")} sar la orice zi.</li>
 <li>Un <strong>clic pe un loc liber</strong> deschide o programare nouă cu medicul, ziua și ora deja completate.</li>
 <li>Un <strong>clic pe o programare</strong> o deschide.</li>
+<li><strong>Gri</strong>: orele în care medicul nu lucrează la clinica asta, pauza lui sau orele în care clinica e închisă. <strong>Roșu</strong>: concediu, curs sau interval blocat (vezi capitolul despre absențe). Sus, banda galbenă arată absențele și sărbătorile legale din ziua sau săptămâna aleasă.</li>
+<li>Azi, o <strong>linie roșie</strong> arată ora de acum.</li>
 <li>Programările finalizate apar mai șterse; punctul galben arată un pacient cu emoții sau care vrea inhalosedare.</li>
 </ul>
+<h3>Mutarea prin tragere</h3>
+${pasi([
+  "Apăsați pe programare și, ținând apăsat, trageți-o la altă oră sau în coloana altui medic.",
+  "Ca să schimbați durata, trageți de marginea de jos a programării.",
+  `Jos apare „Programarea a fost mutată” cu butonul ${b("Anulați")}, câteva secunde. Dacă ați greșit, apăsați-l: programarea revine la locul ei.`,
+])}
+${img("calendar-mutare", "O programare mutată prin tragere, cu „Anulați” jos.")}
+${sfat("Pacientul primește noua oră abia după două minute, ca o mutare anulată imediat să nu-i trimită nimic. Peste concediul sau cursul medicului nu se poate muta; în afara programului, în pauză sau peste altă programare, panoul întreabă „Mutați oricum?”.")}
+<h3>Pe cabinete, listă, săptămână</h3>
+<p>La o clinică cu mai multe cabinete, ${b("Pe cabinete")} arată câte o coloană pe cabinet; o programare trasă în alt cabinet se mută acolo. ${b("Listă")} arată șapte zile la rând, cu ora, pacientul și telefonul, medicul, motivul și starea (bun de tipărit pentru ziua următoare). ${b("Săptămână")} arată pe scurt programările fiecărei zile.</p>
+${img("calendar-cabinete", "Calendarul pe cabinete.")}
+${img("calendar-lista", "Vederea Listă.")}
 ${img("calendar-saptamana", "Vederea pe săptămână.")}`,
 });
 
 export const programari = () => ({
-  titlu: "Programările: nouă, mutare, anulare",
+  titlu: "Programările: nouă, mutare, stare, anulare",
   html: `
 <h3>O programare nouă</h3>
 <p>Din ${b("Programare nouă")} (pe Azi, în Calendar sau în fișa pacientului), dintr-un clic pe un loc liber în calendar, sau din ${b("Faceți programarea")} într-o cerere de pe site.</p>
 ${pasi([
-  `<strong>Pacientul</strong>: căutați-l după nume, telefon sau numărul fișei. Dacă e nou, completați numele, prenumele și telefonul în chenarul ${b("Pacient nou")}. Dacă telefonul există deja, programarea se pune pe fișa existentă (nu se fac fișe dublate).`,
-  `<strong>Când și la cine</strong>: clinica, medicul, ziua, ora și durata.`,
+  `<strong>Pacientul</strong>: căutați-l după nume, telefonul sau numărul fișei. Dacă e nou, completați numele, prenumele și telefonul în chenarul ${b("Pacient nou")}. Dacă există deja un pacient cu același telefon <em>și același prenume</em>, programarea se pune pe fișa lui; altfel se face o fișă nouă (într-o familie, toți pot avea același telefon).`,
+  `<strong>Când și la cine</strong>: clinica, medicul, ziua, ora, durata și, la o clinică cu mai multe cabinete, cabinetul (gol = cabinetul obișnuit al medicului).`,
   `<strong>Pentru ce</strong>: serviciul, motivul (de exemplu „durere la 36”), cum se simte pacientul și dacă vrea inhalosedare.`,
   `Apăsați ${b("Faceți programarea")}.`,
 ])}
 ${img("programare-noua", "Formularul de programare nouă.")}
-${sfat("Același medic nu poate avea două programări suprapuse: panoul vă spune dacă ora e ocupată. Pacientul primește automat confirmarea pe SMS, WhatsApp sau e-mail (cum a ales) și o reamintire în ziua de dinainte.")}
-<h3>Mutarea sau schimbarea unei programări</h3>
-<p>Deschideți programarea (clic în calendar sau pe ${b("⋯")}), schimbați ziua, ora, medicul sau starea și apăsați ${b("Salvați")}. La mutare, pacientul primește noua dată.</p>
-${img("programare", "O programare deschisă: datele, starea, rechemarea și anularea.")}
+<h3>Când ora are o problemă</h3>
+<p>Înainte de salvare, panoul verifică ora aleasă:</p>
+${tabel(["Situația", "Ce face panoul"], [
+  ["Medicul e în concediu, la curs, sau clinica e închisă", "Nu salvează. Alegeți altă oră sau ștergeți întâi absența."],
+  ["Medicul are deja o programare atunci", "Avertizează."],
+  ["Pacientul are deja o programare atunci (la alt medic)", "Avertizează."],
+  ["În afara programului medicului sau al clinicii, în pauză, într-o sărbătoare legală", "Avertizează."],
+  ["Cabinetul e ocupat sau aparatele de inhalosedare sunt toate folosite", "Avertizează."],
+  ["Ora e în trecut", "Avertizează."],
+])}
+<p>La un avertisment, verificați lista și fie alegeți altă oră, fie bifați ${b("Programez oricum (de exemplu, o urgență)")} și salvați din nou.</p>
+${img("programare-avertisment", "Ora aleasă e în pauza medicului: „Programez oricum”.")}
+${sfat("Pacientul primește automat confirmarea pe SMS, WhatsApp sau e-mail (cum a ales), cu un link de unde poate confirma, anula sau pune programarea în calendarul telefonului, și o reamintire în ziua de dinainte.")}
+<h3>Starea, dintr-un clic</h3>
+<p>Sus pe pagina programării e starea, cu butoanele pentru pasul următor (${b("Confirmat")}, ${b("A sosit")}, ${b("Începe tratamentul")}, ${b("Finalizat")}, ${b("Nu a venit")}) și pentru întoarcere: o programare anulată se poate ${b("Readuce la Programat")}, iar o vizită încheiată se poate ${b("Redeschide")}. Panoul verifică dacă ora mai e liberă când readuceți o programare anulată.</p>
+${img("programare", "O programare deschisă: starea cu butoanele ei, datele, rechemarea și anularea.")}
+<h3>Mutarea</h3>
+<p>Cel mai simplu: trageți programarea în calendar (vezi capitolul Calendarul). Sau deschideți-o, schimbați ziua, ora, medicul sau cabinetul și apăsați ${b("Salvați")}. Pacientul primește noua oră, iar linkul vechi din mesaj nu mai merge.</p>
 <h3>Anularea</h3>
-<p>În chenarul ${b("Anulare")}: scrieți motivul (opțional) și apăsați ${b("Anulați programarea")}. Ora se eliberează, iar pacientul e anunțat.</p>
+<p>În chenarul ${b("Anulare")}: scrieți motivul (opțional) și apăsați ${b("Anulați programarea")}. Ora se eliberează, iar pacientul e anunțat. Și pacientul poate anula singur, din linkul primit, până cu câteva ore înainte; atunci clinica primește un e-mail.</p>
 <h3>Rechemarea la control</h3>
-<p>În chenarul ${b("Rechemare la control")} alegeți peste cât timp (de exemplu 6 luni) și motivul, apoi ${b("Puneți rechemarea")}. Pacientul apare pe lista de sunat la Rechemări când se apropie data.</p>`,
+<p>La ${b("Finalizat")}, rechemarea se pune singură. Dacă vreți altă dată sau alt motiv, în chenarul ${b("Rechemare la control")} alegeți peste cât timp și motivul, apoi ${b("Puneți rechemarea")}.</p>`,
+});
+
+export const absente = (rol) => ({
+  titlu: "Absențe și zile libere",
+  html: `
+<p>${b("Absențe și zile libere")} (în meniu) ține concediile, cursurile și orele blocate ale medicilor${rol === "medic" ? "" : ", și zilele în care o clinică e închisă"}. Sărbătorile legale (inclusiv Paștele și Rusaliile ortodoxe) sunt știute automat și apar jos în pagină.</p>
+${img("absente", "Absențele și zilele libere.")}
+${pasi([
+  rol === "medic" ? "Alegeți clinica (sau „La toate clinicile”) și tipul: concediu, formare / curs, interval blocat." : `Alegeți ${b("Un medic")} (și medicul) sau ${b("Clinica întreagă (închisă)")}, clinica și tipul: concediu, formare / curs, interval blocat, zi liberă.`,
+  "Ziua de început și, dacă e mai mult de o zi, ziua de sfârșit.",
+  "Pentru o parte din zi, ora de început și de sfârșit (de exemplu 14:00–18:00).",
+  `Motivul (îl văd doar colegii) și ${b("Salvați absența")}.`,
+])}
+<p>Din acel moment, orele dispar de pe site și din chat, apar roșii în calendar, iar o programare nouă peste ele nu se mai poate face. Dacă existau deja programări în acel interval, panoul le arată imediat, ca să le mutați (pacientul primește noua oră).</p>
+${sfat(rol === "medic" ? "Fiecare medic își poate pune și șterge singur absențele lui. Închiderile de clinică le pun recepția sau administratorul." : "Un medic își poate pune singur absențele lui, din contul lui. Coșul de lângă o absență o șterge, iar orele redevin libere.")}`,
+});
+
+export const programareOnline = (rol) => ({
+  titlu: "Programările făcute de pacienți pe site",
+  html: `
+<p>Pe site, pagina ${b("Programare")} îl lasă pe pacient să-și aleagă singur ora, dintre orele libere reale ale medicilor. Durează un minut, în patru pași: motivul și clinica, ziua și ora (orice medic sau unul anume), cum se simte (emoții, inhalosedare), numele și telefonul. Se poate programa și un copil.</p>
+${img("site-programare-ore", "Pe site: pacientul alege ziua și ora.")}
+<p>Programarea intră <strong>direct în calendar</strong>, ca „Programat”, cu sursa „online” și cu mențiunea „Programare făcută de pacient pe site”. Recepția (și cine a cerut în Contul meu) e anunțată. Pacientul primește confirmarea cu un <strong>link</strong> de unde poate:</p>
+<ul>
+<li><strong>Confirma</strong> programarea (în panou trece la „Confirmat”);</li>
+<li><strong>Anula</strong>, până cu câteva ore înainte (implicit 2; după aceea, doar la telefon). Clinica primește un e-mail, iar ora se eliberează;</li>
+<li>pune programarea în <strong>calendarul telefonului</strong> și deschide harta.</li>
+</ul>
+${img("site-link", "Linkul pacientului: confirmare, calendar, hartă, anulare.")}
+${tabel(["Ce vedeți în panou", "Ce faceți"], [
+  ["O programare nouă, sursa „online”", "Nimic obligatoriu. Dacă pacientul a scris că îi e frică sau vrea inhalosedare, pregătiți-vă."],
+  ["O cerere „Nu a găsit o oră potrivită și vrea să fie sunat”", "Sunați-l și faceți programarea din cerere."],
+  ["„Programare anulată de pacient”", "Ora e deja liberă; puteți suna pacientul pentru altă dată."],
+])}
+${sfat("Pe site apar doar orele în care medicul lucrează, nu are altă programare, nu e în concediu sau la curs, clinica e deschisă și nu e sărbătoare legală. De obicei, cel mai devreme peste două ore și cel mult 30 de zile înainte.")}
+${rol === "admin" ? sfat("Ce servicii apar ca motive pe site și cât durează fiecare se alege la Servicii și prețuri (vezi capitolul acela). Celelalte setări ale programării online le face VITIM.") : ""}`,
 });
 
 // ── Patients ─────────────────────────────────────────────────────────────────────────────
@@ -126,42 +197,62 @@ export const pacienti = (rol) => ({
   titlu: "Pacienții și fișa pacientului",
   html: `
 <h3>Căutarea</h3>
-<p>În ${b("Pacienți")} scrieți numele, telefonul sau numărul fișei. Fără căutare, lista arată pacienții recenți, cu ultima vizită și următoarea programare.</p>
+<p>În ${b("Pacienți")} scrieți numele, telefonul sau numărul fișei. Lista de etichete de lângă căutare arată doar pacienții cu o anumită etichetă (de exemplu „VIP”). Fără căutare, lista arată pacienții recenți, cu ultima vizită și următoarea programare.</p>
 ${img("pacienti", "Lista pacienților.")}
 <h3>Un pacient nou</h3>
-<p>${b("Adăugați unul nou")} deschide fișa nouă: numele, CNP-ul (opțional; panoul îl verifică, completează singur data nașterii și sexul și îl păstrează criptat), telefonul, e-mailul, adresa, clinica preferată, medicul, cum se simte la stomatolog, observații.</p>
+<p>${b("Pacient nou")} deschide fișa nouă: numele, CNP-ul (opțional; panoul îl verifică, completează singur data nașterii și sexul și îl păstrează criptat), telefonul, e-mailul, adresa, clinica preferată, medicul, cum se simte la stomatolog, observații.</p>
 <ul>
 <li><strong>Telefonul</strong>: alegeți dacă primește notificările pe ${b("SMS")}, pe ${b("WhatsApp")} sau deloc.</li>
 <li><strong>Oferte și noutăți</strong>: bifați doar canalele pentru care pacientul și-a dat acordul (SMS, WhatsApp, e-mail). Fără acord, nu primește oferte.</li>
-<li><strong>Minori</strong>: completați părintele sau reprezentantul legal; el semnează acordurile.</li>
+<li><strong>Minori</strong>: completați părintele sau tutorele; el semnează acordurile. Dacă tutorele e și el pacient, scrieți ${b("Nr. fișei tutorelui")}: fișele se leagă, iar pe fișa părintelui apare „În grija sa”.</li>
 </ul>
 ${img("pacient-nou", "Fișa nouă de pacient.")}
+<h3>Fișe dublate</h3>
+<p>La salvarea unei fișe noi, panoul caută pacienți cu același telefon, CNP, e-mail sau cu același nume (și aceeași dată a nașterii). Dacă găsește, arată lista: deschideți fișa existentă sau, dacă e altă persoană (de exemplu un membru al familiei cu același telefon), bifați ${b("Este altă persoană: creați fișa nouă")}.</p>
+${img("pacient-nou-dubluri", "Posibile fișe dublate, la o fișă nouă.")}
 <h3>Fișa</h3>
-<p>Sus: numele, numărul fișei, vârsta, telefonul și alertele. Butoanele ${b("Programare nouă")} și ${b("Sunați")} sunt mereu la îndemână. Filele: ${rol === "medic" ? `${b("Fișa")}, ${b("Odontogramă")}, ${b("Planuri de tratament")}, ${b("Documente și acorduri")}, ${b("Mesaje")}` : `${b("Fișa")}, ${b("Planuri de tratament")}, ${b("Facturi și plăți")}, ${b("Documente și acorduri")}, ${b("Mesaje")}`}.</p>
-${img(rol === "medic" ? "fisa-medic" : "fisa-receptie", rol === "medic" ? "Fișa văzută de medic: anamneza completă, programările, rechemările." : "Fișa văzută de recepție: alertele, datele, programările, rechemările, notele.")}
-<p>Pe fila ${b("Fișa")}: ${rol === "medic" ? "anamneza (alergii, medicamente, afecțiuni), " : "alertele medicale, "}datele pacientului, programările, rechemările și <strong>notele</strong>. ${rol === "medic" ? "O notă bifată „clinică” o văd doar medicii și administratorii." : "Notele clinice ale medicilor nu se văd la recepție."}</p>
+<p>Sus: numele, numărul fișei, vârsta, telefonul și alertele. Butoanele ${b("Programare nouă")} și ${b("Sunați")} sunt mereu la îndemână. Filele: ${rol === "medic" ? `${b("Fișa")}, ${b("Odontogramă")}, ${b("Planuri de tratament")}, ${b("Documente și acorduri")}, ${b("Mesaje")}` : `${b("Fișa")}, ${b("Planuri de tratament")}, ${b("Documente și acorduri")}, ${b("Mesaje")}`}.</p>
+${img(rol === "medic" ? "fisa-medic" : "fisa-receptie", rol === "medic" ? "Fișa văzută de medic: anamneza completă, programările, rechemările." : "Fișa văzută de recepție: alertele, datele, etichetele, programările, rechemările, notele.")}
+<p>Pe fila ${b("Fișa")}: ${rol === "medic" ? "anamneza (alergii, medicamente, afecțiuni), " : "alertele medicale, "}datele pacientului, ${rol === "medic" ? "implanturile, " : ""}etichetele, programările, rechemările și notele.</p>
+<h3>Etichetele</h3>
+<p>În chenarul ${b("Etichete")} scrieți o etichetă (sau alegeți una existentă) și ${b("Adăugați")}; ${b("×")} o scoate. Exemple: „VIP”, „Ortodonție în curs”, „Plătește la sfârșit”, „Preferă dimineața”.</p>
+${img("fisa-etichete", "Etichetele pacientului.", { mic: true })}
+<h3>Notele</h3>
+<p>${b("Notă nouă")} adaugă o notă cu data și autorul. ${rol === "medic" ? "Bifa „Notă clinică” (pusă implicit pentru medici) o ascunde de recepție. " : "Notele clinice ale medicilor nu se văd la recepție. "}Pioneza o <strong>fixează sus</strong> (de exemplu „Alergic la latex, anunțați medicul”). Autorul (sau administratorul) poate ${b("Modifica")} sau șterge nota lui.</p>
+${img("fisa-note", "Notele: una fixată sus.", { mic: true })}
+<h3>CNP-ul</h3>
+<p>În fișă, CNP-ul apare mascat (2••••••••••01). Butonul ${b("Arătați CNP-ul întreg")} îl arată două minute; fiecare afișare se trece în jurnal, cu cine și când.</p>
 ${rol === "medic" ? "" : sfat("Anamneza completă o completează și o văd medicii. Recepția vede doar alertele, ca să știe, de exemplu, că pacientul ia anticoagulante.")}`,
 });
 
 export const cereri = () => ({
   titlu: "Cererile de pe site",
   html: `
-<p>Tot ce trimit vizitatorii site-ului ajunge în ${b("Cereri online")}: cererile de programare, mesajele din pagina de contact și cererile din chatul de pe site. Bulina galbenă din meniu arată câte sunt noi; cine a cerut această notificare primește și un SMS, WhatsApp sau e-mail.</p>
-${img("cereri", "Lista cererilor, cu filtrele pentru stare, tip și clinică.")}
+<p>În ${b("Cereri online")} ajung cererile de programare (de la cei care preferă să fie sunați sau nu au găsit o oră potrivită), mesajele din pagina de contact și cererile din chatul de pe site. Bulina galbenă din meniu arată câte sunt noi; cine a cerut această notificare primește și un SMS, WhatsApp sau e-mail.</p>
+${img("cereri", "Lista cererilor, cu filtrele pentru stare, cine se ocupă, tip și clinică.")}
+<h3>O cerere, pas cu pas</h3>
 ${pasi([
   "Deschideți cererea: vedeți ce a cerut pacientul (serviciul, clinica, ziua și intervalul dorite, cum se simte, mesajul).",
-  `Sunați-l (${b("Sunați")}) sau scrieți-i un e-mail.`,
-  `Când ați stabilit ora, apăsați ${b("Faceți programarea")}: formularul se completează cu datele din cerere.`,
-  `Treceți cererea la ${b("Programat")} sau ${b("Închisă")} și, dacă e cazul, scrieți o ${b("Notă internă")} (o vedeți doar voi). Apăsați ${b("Salvați")}.`,
+  `Uitați-vă la ${b("Poate este deja pacient")}: dacă persoana are deja fișă, folosiți ${b("Programare pe această fișă")}, ca să nu faceți o fișă dublă.`,
+  `Sunați-l (${b("Sunați")}). După apel, la ${b("Am sunat")} apăsați rezultatul: ${b("A răspuns")}, ${b("Nu răspunde")}, ${b("Ocupat")} sau ${b("Sună el înapoi")}; puteți scrie și ce s-a vorbit. Primul apel trece cererea „În lucru” și v-o dă dumneavoastră.`,
+  `Când ați stabilit ora, apăsați ${b("Faceți programarea")}: formularul se completează cu datele din cerere, iar cererea trece singură la „Programat”.`,
+  `Dacă nu se ajunge la o programare, alegeți ${b("Închisă")} și <strong>motivul</strong> (prețul, distanța, a ales altă clinică, nu răspunde etc.), apoi ${b("Salvați")}.`,
 ])}
-${img("cerere", "O cerere deschisă.")}
+${img("cerere", "O cerere: cine se ocupă, posibilele fișe existente, istoricul apelurilor, starea.")}
+<ul>
+<li><strong>Cine se ocupă</strong>: ${b("Mi-o iau eu")} sau alegeți colega și ${b("Salvați")}. Filtrul ${b("Se ocupă: Eu")} arată doar cererile dumneavoastră.</li>
+<li><strong>Istoricul</strong>: fiecare apel, SMS, e-mail, notă, schimbare de stare sau de persoană, cu ora și cine a făcut-o. Pentru o notă, alegeți ${b("Notă")} la „Altceva”.</li>
+</ul>
+<h3>Tabloul</h3>
+<p>${b("Tablou")} (sus) arată cererile pe coloane: Nouă, În lucru, Programat, Închisă (ultimele 30 de zile), cu cine se ocupă și ultimul apel. Butoanele de pe fiecare card le mută în altă coloană; ${b("Închideți…")} deschide cererea, ca să alegeți motivul.</p>
+${img("cereri-tablou", "Tabloul cererilor.")}
 ${tabel(["Starea", "Când"], [
   ["Nouă", "A venit acum, nu s-a ocupat nimeni de ea."],
-  ["În lucru", "Ați sunat, așteptați un răspuns."],
+  ["În lucru", "Ați sunat sau ați scris, așteptați un răspuns."],
   ["Programat", "Pacientul are programare."],
-  ["Închisă", "Nu mai e nimic de făcut. După perioada din Setări (de obicei un an), se șterge singură."],
+  ["Închisă", "Nu mai e nimic de făcut, cu motivul ales. După perioada din setări (de obicei un an), se șterge singură."],
 ])}
-${sfat("Cererile cu tipul „Din chat” au venit de la asistentul AI de pe site; ora aleasă de pacient e scrisă în cerere, iar linkul „Conversația” arată tot ce a scris.")}`,
+${sfat("Cererile cu tipul „Din chat” au venit de la asistentul AI de pe site; ora aleasă de pacient e scrisă în cerere, iar linkul „Conversația” arată tot ce a scris. Motivele cererilor închise apar în Rapoarte, la „De ce nu s-au programat”.")}`,
 });
 
 export const rechemari = () => ({
@@ -176,7 +267,7 @@ ${img("rechemari", "Lista de sunat.")}
 <li>${b("Peste o lună")}: amână rechemarea.</li>
 <li>${b("Nu dorește")}: pacientul nu vrea control acum.</li>
 </ul>
-${sfat("Cu o săptămână înainte de data rechemării, pacientul primește singur un mesaj (dacă notificarea e pornită în Setări → Mesaje).")}`,
+${sfat("Rechemările se pun singure când o vizită trece la „Finalizat” (dacă pacientul nu are deja una sau o programare viitoare). Cu o săptămână înainte de data rechemării, pacientul primește singur un mesaj, dacă notificarea e pornită.")}`,
 });
 
 // ── Money ────────────────────────────────────────────────────────────────────────────────
@@ -253,9 +344,9 @@ ${img("tableta-semnare-jos", "Pe tabletă: chestionarul, ofertele și semnătura
 <h3>Ce rămâne în fișă</h3>
 <p>Linkul ${b("acordul semnat")} arată textul exact semnat, semnătura, ora și tableta, plus o <strong>amprentă digitală</strong>: panoul verifică la fiecare deschidere că documentul nu a fost schimbat. Se poate tipări sau salva ca PDF. Chestionarul completat apare în fișă și îl verifică medicul înainte să intre în anamneză.</p>
 ${img("acord-semnat", "Acordul semnat pe tabletă, verificat.", { mic: true })}
-${rol === "admin" ? `<h3>Asocierea tabletei (o singură dată)</h3>
+${rol === "vitim" ? `<h3>Asocierea tabletei (o singură dată)</h3>
 ${pasi([
-  `Pe tabletă, deschideți <span class="adresa-inline">dentalarena.ro/admin/tablete</span> și intrați cu contul de administrator.`,
+  `Pe tabletă, deschideți <span class="adresa-inline">dentalarena.ro/admin/tablete</span> și intrați cu contul VITIM.`,
   `Dați tabletei un nume (de exemplu „Recepție Luduș”), alegeți clinica și apăsați ${b("Asociați această tabletă")}.`,
   "Contul se închide singur pe tabletă, iar tableta deschide pagina de semnare. Puneți-o pe ecranul de pornire și activați „Acces ghidat” (iPad) sau „Fixarea aplicației” (Android), ca pacienții să nu poată ieși din ea.",
 ])}
@@ -270,12 +361,11 @@ export const mesaje = (rol) => ({
   html: `
 <p>Panoul trimite singur pacienților mesajele obișnuite, pe SMS, WhatsApp sau e-mail, cum a ales fiecare în fișă:</p>
 ${tabel(["Când", "Ce primește pacientul"], [
-  ["Imediat după programare", "Confirmarea: ziua, ora, clinica, medicul."],
-  ["La mutare sau anulare", "Noua dată, sau anunțul anulării."],
+  ["Imediat după programare", "Confirmarea: ziua, ora, clinica, medicul și un link de unde confirmă, anulează sau pune programarea în calendarul telefonului."],
+  ["La mutare sau anulare", "Noua dată (cu un link nou), sau anunțul anulării."],
   ["Cu o zi înainte", "Reamintirea programării."],
   ["După o vizită", "Mulțumiri și, eventual, linkul pentru o recenzie Google."],
   ["Cu o săptămână înainte de control", "Reamintirea controlului (rechemare)."],
-  ["La factură și plată", "Factura emisă și confirmarea plății (dacă sunt pornite)."],
   ["De ziua lui", "Urarea (doar cu acordul pentru oferte)."],
 ])}
 <h3>Mesajele unui pacient</h3>
@@ -300,10 +390,7 @@ ${img("chat-ore", "Pe site: asistentul propune orele libere ca butoane.")}
 <p>Meniul ${b("Chat pe site")} arată toate conversațiile: ce au întrebat vizitatorii, ce s-a întâmplat (doar întrebări, cerere, programare) și linkurile spre programare, fișă sau cerere.</p>
 ${img("chat", "Conversațiile din chat.")}
 ${sfat("Asistentul nu vede fișele pacienților, nu pune diagnostice și trimite urgențele la telefonul clinicii (sau 112). Conversațiile se șterg automat după perioada din setări.")}
-${rol === "admin" ? `<h3>Setarea chatului</h3>
-<p>${b("Setări")} → ${b("Chatul de pe site")}: pornit/oprit, modelul AI, modul programărilor (cerere sau direct, care cere SMS-urile pornite), durata unei programări online, cu câte ore înainte se poate programa, câte zile în avans, limita zilnică de conversații și după câte zile se șterg. În dreapta vedeți programul medicilor și primele ore libere calculate acum.</p>
-${img("setari-chat", "Setările chatului.")}
-${atentie("Chatul propune ore doar pentru medicii care au program completat (Echipa → medic → „Unde și când lucrează”). Sărbătorile legale sunt sărite automat.")}` : ""}`,
+${rol === "admin" ? sfat("Chatul îl pornește și îl setează suportul tehnic (VITIM).") : ""}`,
 });
 
 export const rapoarte = (rol) => ({
@@ -311,13 +398,14 @@ export const rapoarte = (rol) => ({
   html: `
 <p>${b("Rapoarte")} arată cifrele unei perioade (implicit luna curentă; scurtături: ${b("Luna aceasta")}, ${b("Luna trecută")}, ${b("Anul acesta")}), pe clinică.</p>
 ${rol === "admin" ? `<ul>
-<li><strong>Venit facturat și încasat</strong>: pe medic, pe categorie de servicii, pe metodă de plată și pe ultimele 12 luni.</li>
-<li><strong>Programări</strong>: pe medic, efectuate, anulate, rata neprezentărilor.</li>
+<li><strong>Programări</strong>: pe medic, efectuate, anulate, rata neprezentărilor, câte au venit de pe site.</li>
 <li><strong>Cereri de pe site</strong>: câte au venit, pe servicii, și câte au devenit programări (conversia).</li>
+<li><strong>De ce nu s-au programat</strong>: motivele cererilor închise fără programare.</li>
 <li><strong>Pacienți noi</strong> în perioadă.</li>
 </ul>
-${img("rapoarte", "Rapoartele (administrator).")}
-<p>Fiecare tabel are export CSV, pentru Excel.</p>` : rol === "medic" ? `<p>Medicul vede <strong>Producția mea</strong> (lucrările facturate pe numele lui), programările lui și neprezentările. Cifrele financiare ale clinicii le vede doar administratorul.</p>${img("rapoarte-medic", "Rapoartele, văzute de un medic.")}` : `<p>Recepția vede programările (pe medic, efectuate, neprezentări) și cererile de pe site. Cifrele financiare le vede administratorul.</p>`}`,
+${img("rapoarte", "Rapoartele.")}
+${img("rapoarte-pierdute", "De ce nu s-au programat cererile.", { mic: true })}
+<p>Fiecare tabel are export CSV, pentru Excel. Cifrele financiare (facturat, încasat, venit pe medic) apar aici când se pornește partea financiară.</p>` : rol === "medic" ? `<p>Medicul vede programările lui și neprezentările.</p>${img("rapoarte-medic", "Rapoartele, văzute de un medic.")}` : `<p>Recepția vede programările (pe medic, efectuate, neprezentări) și cererile de pe site.</p>`}`,
 });
 
 // ── Doctors ──────────────────────────────────────────────────────────────────────────────
@@ -335,7 +423,7 @@ ${sfat("Alergiile și afecțiunile bifate apar ca etichete roșii la fiecare pro
 </ul>
 ${img("chestionar", "Chestionarul pacientului, în așteptarea medicului.")}
 <h3>Notele</h3>
-<p>Jos în fișă, ${b("Notă nouă")}. Bifa „Notă clinică” (pusă implicit pentru medici) o ascunde de recepție. Notele nu se pot modifica după salvare: scrieți o notă nouă dacă trebuie corectat ceva.</p>`,
+<p>Jos în fișă, ${b("Notă nouă")}. Bifa „Notă clinică” (pusă implicit pentru medici) o ascunde de recepție. Pioneza fixează nota sus; autorul o poate modifica sau șterge (vezi capitolul despre fișă).</p>`,
 });
 
 export const odontograma = () => ({
@@ -358,7 +446,7 @@ ${img("odontograma-dinte", "Odontograma, cu dintele 36 deschis.")}
 export const planuri = (rol) => ({
   titlu: "Planurile de tratament",
   html: `
-<p>Fila ${b("Planuri de tratament")} arată planurile pacientului, cu starea, valoarea și cât s-a efectuat. ${rol === "receptie" ? "Medicii le fac; recepția le vede, le tipărește și le facturează." : ""}</p>
+<p>Fila ${b("Planuri de tratament")} arată planurile pacientului, cu starea, valoarea și cât s-a efectuat. ${rol === "receptie" ? "Medicii le fac; recepția le vede și le tipărește pentru pacient." : ""}</p>
 ${img("plan", "Un plan de tratament: faze, lucrări, prețuri, starea fiecărei lucrări.")}
 ${rol === "receptie" ? "" : `<h3>Un plan nou</h3>
 ${pasi([
@@ -374,7 +462,7 @@ ${tabel(["Starea planului", "Ce înseamnă"], [
   ["În curs", "Lucrările au început."],
   ["Finalizat / Respins / Anulat", "Planul s-a încheiat."],
 ])}
-<p>Fiecare lucrare are starea ei: ${b("Propus")} → ${b("Acceptat")} → ${b("Programat")} → ${b("Efectuat")} (sau ${b("Anulat")}). Lucrările efectuate apar bifate la emiterea facturii.</p>
+<p>Fiecare lucrare are starea ei: ${b("Propus")} → ${b("Acceptat")} → ${b("Programat")} → ${b("Efectuat")} (sau ${b("Anulat")}).</p>
 <p>${b("Tipăriți")} scoate planul cu devizul pe A4, de dat pacientului sau de semnat.</p>
 ${img("plan-tipar", "Planul tipărit (devizul).", { mic: true })}`,
 });
@@ -411,33 +499,47 @@ ${atentie("Pe WhatsApp, Meta cere un șablon aprobat (vezi capitolul despre mesa
 // ── Administrator ────────────────────────────────────────────────────────────────────────
 
 export const setari = () => ({
-  titlu: "Setări: firma, clinicile, facturarea, acordurile",
+  titlu: "Setări: firma, clinicile, modulele, acordurile",
   html: `
-<p>${b("Setări")} (doar administratorul). Sus sunt butoanele spre celelalte setări: Mesaje, Asistentul AI, Tablete de semnare, Chatul de pe site, Actualizare.</p>
+<p>${b("Setări")} (doar VITIM). Sus sunt butoanele spre celelalte setări: Mesaje, Asistentul AI, Tablete de semnare, Programări online, Chatul de pe site, Actualizare.</p>
 ${img("setari", "Setările generale.")}
 ${tabel(["Secțiunea", "Ce conține"], [
-  ["Datele firmei", "Denumirea, CUI, Nr. Reg. Com., sediul, IBAN și banca. Apar pe facturi și în paginile legale de pe site."],
+  ["Datele firmei", "Denumirea, CUI, Nr. Reg. Com., sediul, IBAN și banca. Apar în paginile legale de pe site (și pe facturi, din etapa a doua)."],
   ["Cererile de pe site", "E-mailul care primește cererile și câte zile se păstrează cererile închise (recomandat 365; apoi se șterg singure)."],
-  ["Clinicile", "Pentru Cristești și Luduș: numele, adresa, telefonul, e-mailul (primește cererile acelei clinici), programul și dacă programul apare pe site."],
-  ["Facturare", "Seriile și numerele facturilor și chitanțelor, cota TVA implicită (0 pentru servicii stomatologice), mențiunea despre TVA și termenul de plată."],
-  ["Textele acordurilor", "Textele celor 4 acorduri. {{pacient}}, {{firma}}, {{clinica}} și {{email}} se completează singure. La o schimbare, actualizați și versiunea."],
+  ["Module", "Partea financiară (facturi, încasări, sold, venituri în rapoarte): oprită în perioada de probă. Bifată, apar meniurile Facturi și Încasări și secțiunea Facturare."],
+  ["Textele acordurilor", "Textele celor 4 acorduri. {{pacient}}, {{firma}}, {{clinica}} și {{email}} se completează singure. La o schimbare, versiunea se schimbă singură."],
+  ["Clinicile", "Pentru Cristești și Luduș: numele, adresa, telefonul, e-mailul (primește cererile acelei clinici), programul ca text pe site, orele pe zile, câte cabinete și câte aparate de inhalosedare."],
 ])}
-${atentie("Numărul următor de factură se schimbă doar la începutul folosirii panoului (sau la o serie nouă). Verificați formularea despre TVA cu contabilul.")}`,
+${img("setari-module", "Modulele: partea financiară.", { mic: true })}
+<h3>Clinica: orele, cabinetele, inhalosedarea</h3>
+<ul>
+<li><strong>Orele clinicii, pe zile</strong> (cu o pauză opțională): taie programul medicilor, deci pe site nu apar ore în care clinica e închisă; în calendar, orele închise sunt gri. Dacă textul „Programul” e gol, se scrie singur din ele.</li>
+<li><strong>Cabinete</strong>: cu mai multe, calendarul se poate vedea și pe cabinete, iar o programare are cabinetul ei. Cabinetul obișnuit al fiecărui medic se alege la Echipa.</li>
+<li><strong>Aparate de inhalosedare</strong>: programările cu inhalosedare peste acest număr, la aceeași oră, sunt semnalate.</li>
+</ul>
+${img("setari-clinica", "Clinica: datele, orele pe zile, cabinetele, aparatele de inhalosedare.")}
+${atentie("Toate modificările din Setări ajung la administrator: pe pagina Azi și într-un e-mail de rezumat (vezi capitolul despre rolul VITIM).")}`,
 });
 
 export const utilizatori = () => ({
   titlu: "Conturile echipei",
   html: `
-<p>${b("Utilizatori")} arată conturile, cu rolul și clinicile fiecăruia.</p>
+<p>${b("Utilizatori")} (doar VITIM) arată conturile, cu rolul și clinicile fiecăruia.</p>
 ${img("utilizatori", "Conturile panoului.")}
 ${pasi([
-  `${b("Cont nou")}: numele, e-mailul (cu el intră în panou) și rolul: ${b("Administrator")} (vede tot), ${b("Recepție")} sau ${b("Medic")}.`,
-  "Bifați clinicile în care lucrează persoana (administratorul le vede pe amândouă).",
-  `Pentru un medic, alegeți ${b("Profilul de medic")}: programările lui apar la el și el primește notificările lor.`,
+  `${b("Cont nou")}: numele, e-mailul (cu el intră în panou) și rolul: ${b("Recepție")}, ${b("Medic")}, ${b("Administrator")} sau ${b("Suport tehnic (VITIM)")}.`,
+  "Bifați clinicile în care lucrează persoana (administratorul și VITIM le văd pe amândouă).",
+  `Pentru un medic, alegeți ${b("Profilul de medic")}: programările lui apar la el, își vede absențele și primește notificările lor.`,
   `Scrieți o ${b("Parola de început")} și spuneți-o persoanei. La prima intrare își alege una nouă.`,
 ])}
 ${img("utilizator", "Un cont: rolul, clinicile, profilul de medic.")}
-${sfat("Când cineva pleacă din echipă, debifați „Contul este activ”: nu mai poate intra, dar tot ce a făcut rămâne în jurnal. Dacă cineva și-a uitat parola, scrieți-i o parolă nouă de început.")}`,
+${tabel(["Rolul", "Pe scurt"], [
+  ["Recepție", "Lucrul zilnic, fără anamneza completă și fără administrare."],
+  ["Medic", "Fișa completă, odontograma, planurile, implanturile, consultația cu AI."],
+  ["Administrator", "Tot ce ține de clinică: rapoarte, prețuri, echipă, marketing, GDPR, jurnal. Nu vede Setările și Utilizatorii cât timp există un cont VITIM activ."],
+  ["Suport tehnic (VITIM)", "Tot, plus Setările și Utilizatorii. Ce schimbă ajunge la administrator."],
+])}
+${sfat("Când cineva pleacă din echipă, debifați „Contul este activ”: nu mai poate intra, dar tot ce a făcut rămâne în jurnal. Dacă cineva și-a uitat parola, scrieți-i o parolă nouă de început. Jos în pagina contului, „Închideți toate sesiunile contului” îl scoate din panou de pe orice dispozitiv (de exemplu un telefon pierdut).")}`,
 });
 
 export const echipa = () => ({
@@ -446,28 +548,31 @@ export const echipa = () => ({
 <p>${b("Echipa")} arată medicii, în ordinea de pe site. Un medic se deschide cu un clic; ${b("Medic nou")} adaugă unul.</p>
 ${img("medic-profil", "Profilul unui medic.")}
 ${tabel(["Chenarul", "Ce setați"], [
-  ["Pe site", "Numele afișat, specialitatea, prenumele și numele, textul „Despre medic”, ordinea și dacă apare pe site."],
-  ["Unde și când lucrează", "Clinicile bifate (medicul apare în calendarul lor) și programul pe zile la fiecare clinică. Din program, chatul de pe site propune orele libere."],
+  ["Pe site", "Numele afișat, specialitatea, prenumele și numele, textul „Despre medic”, ordinea, dacă apare pe site și dacă primește programări de pe site (și din chat)."],
+  ["Unde și când lucrează", "Clinicile bifate (medicul apare în calendarul lor), programul pe zile la fiecare clinică, cu o pauză opțională (de exemplu 13:00–14:00), și cabinetul în care lucrează de obicei. Din program se calculează orele libere de pe site."],
   ["Programul zilei, pe telefon", "Lista programărilor trimisă dimineața pe WhatsApp, SMS sau e-mail (vezi capitolul despre programul zilei)."],
   ["Portretul", "O fotografie verticală, cu fața în treimea de sus. Fără portret, pe site apar inițialele."],
-  ["Serviciile", "Ce face medicul: Nu / Da / Da, și apare la „Cine vă tratează” pe pagina serviciului."],
+  ["Serviciile", "Ce face medicul: Nu / Da / Da, și apare la „Cine vă tratează” pe pagina serviciului. Pe site, la programare, un motiv se oferă doar medicilor care fac acel serviciu."],
 ])}
-${img("medic-program", "Programul pe zile, la fiecare clinică.")}
-${sfat("Lăsați goale zilele în care medicul nu lucrează la acea clinică. Fără program, medicul nu primește programări online, dar recepția îl poate programa normal.")}`,
+${img("medic-program", "Programul pe zile, cu pauza, la fiecare clinică.")}
+${sfat("Lăsați goale zilele în care medicul nu lucrează la acea clinică. Fără program, medicul nu primește programări de pe site, dar recepția îl poate programa normal. Concediile și cursurile se pun la Absențe și zile libere, nu aici.")}`,
 });
 
 export const servicii = () => ({
   titlu: "Servicii și prețuri",
   html: `
-<p>${b("Servicii și prețuri")} arată cele 10 pagini de servicii ale site-ului, fiecare cu lista ei de prețuri. Ce schimbați aici apare pe site imediat și se folosește la planuri și facturi.</p>
+<p>${b("Servicii și prețuri")} arată cele 10 pagini de servicii ale site-ului, fiecare cu lista ei de prețuri. Ce schimbați aici apare pe site imediat și se folosește la planuri și la programări.</p>
 ${img("servicii-pagina", "Prețurile unei pagini de servicii.")}
 <ul>
 <li><strong>Descrierea scurtă</strong> apare pe prima pagină și pe pagina Servicii.</li>
-<li>Fiecare rând: numele serviciului, prețul, bifa „de la”, un al doilea preț (pentru „200–400 lei”), unitatea (de exemplu „/dinte”), bifa „pe site” și prețul reprezentativ (cel afișat pe cardul serviciului). Prețul gol înseamnă „Prețul îl aflați la telefon”.</li>
+<li>Fiecare rând: numele serviciului, prețul, bifa „de la”, un al doilea preț (pentru „200 / 400 lei”), unitatea (de exemplu „/dinte”), bifa „pe site” și prețul reprezentativ (cel afișat pe cardul serviciului). Prețul gol înseamnă „Prețul îl aflați la telefon”.</li>
+<li><strong>Durează</strong>: cât ține serviciul. Pe site, programarea pentru el ocupă atât.</li>
+<li><strong>Programare online</strong>: bifat, serviciul apare ca motiv pe pagina Programare de pe site, cu textul pentru pacient (de exemplu „Consultație sau control”) și o explicație scurtă. „Urgență” îl pune al doilea, evidențiat, cu telefoanele clinicilor.</li>
 <li>${b("Adăugați un serviciu")} pune un rând nou; săgețile îl mută; coșul îl șterge.</li>
 <li>La sfârșit, ${b("Salvați prețurile")}.</li>
 </ul>
-${sfat("Prețurile din planurile deja acceptate și din facturile emise nu se schimbă când modificați lista.")}`,
+${img("servicii-online", "Un serviciu oferit ca motiv de programare pe site.")}
+${sfat("Prețurile din planurile deja acceptate nu se schimbă când modificați lista. Pe site, la motive, apare la sfârșit și „Nu știu sigur”, programat ca o consultație.")}`,
 });
 
 export const fotografii = () => ({
@@ -563,29 +668,28 @@ export const siteul = () => ({
   html: `
 <p>Site-ul dentalarena.ro citește datele din panou la fiecare vizită, deci ce schimbați se vede imediat:</p>
 ${tabel(["Pe site", "Se schimbă din"], [
-  ["Prețurile și serviciile", "Servicii și prețuri"],
-  ["Medicii, poza, textul, cine apare la fiecare serviciu", "Echipa"],
+  ["Prețurile, serviciile, motivele de programare și durata lor", "Servicii și prețuri"],
+  ["Medicii, poza, textul, cine apare la fiecare serviciu, programul lor", "Echipa"],
+  ["Concediile, cursurile, zilele libere (orele dispar de pe site)", "Absențe și zile libere"],
   ["Fotografiile", "Fotografii site"],
-  ["Adresele, telefoanele, programul clinicilor; datele firmei", "Setări"],
-  ["Textele acordurilor", "Setări → Textele acordurilor"],
-  ["Chatul de pe site", "Setări → Chatul de pe site"],
+  ["Adresele, telefoanele, programul clinicilor; datele firmei; programarea online; chatul", "Setări (VITIM)"],
 ])}
-${img("site-acasa", "Prima pagină a site-ului.")}
-<p>Pagina ${b("Programare")} de pe site trimite cereri în ${b("Cereri online")}; chatul trimite cereri sau face programări (după setare).</p>
-${img("site-programare", "Formularul de programare de pe site.", { mic: true })}`,
+${img("site-acasa", "Prima pagină: la fiecare clinică, prima oră liberă.")}
+<p>Pagina ${b("Programare")} de pe site face programări direct în calendar (vezi capitolul despre programările făcute de pacienți); cine nu găsește o oră lasă o cerere. Chatul trimite cereri sau face programări (după setare).</p>
+${img("site-programare", "Pagina de programare de pe site.", { mic: true })}`,
 });
 
 export const intretinere = () => ({
   titlu: "Întreținere: Cron, actualizări, copii de siguranță",
   html: `
 <ul>
-<li><strong>Cron Job (obligatoriu)</strong>: în cPanel → Cron Jobs, la fiecare 5 minute: <span class="adresa-inline">php /home/CONT/dentalarena/cron.php</span>. El trimite mesajele, reamintirile, programul zilei al medicilor, urările și rechemările la timp. Fără el, acestea pleacă doar când cineva deschide panoul.</li>
+<li><strong>Cron Job (obligatoriu)</strong>: în cPanel → Cron Jobs, la fiecare 5 minute: <span class="adresa-inline">php /home/CONT/dentalarena/cron.php</span>. El trimite mesajele, reamintirile, programul zilei al medicilor, urările, rechemările și rezumatul pentru administrator la timp. Fără el, acestea pleacă doar când cineva deschide panoul.</li>
 <li><strong>Actualizări</strong>: din ${b("Setări")} → ${b("Actualizare")} (vezi mai jos).</li>
 <li><strong>Copii de siguranță</strong>: în cPanel → Backup, săptămânal: baza de date și folderul dentalarena/storage (documentele pacienților). Păstrați o copie și în afara găzduirii.</li>
 <li><strong>Parolele</strong>: fiecare om are contul lui; nu folosiți conturi comune. Dezactivați imediat contul cuiva care pleacă.</li>
 </ul>
 <h3>Actualizarea site-ului din panou</h3>
-<p>Orice modificare a site-ului sau a panoului vine ca o arhivă ZIP (dentalarena-php.zip). O instalați singur, din ${b("Setări")} → ${b("Actualizare")}:</p>
+<p>Orice modificare a site-ului sau a panoului vine ca o arhivă ZIP (dentalarena-php.zip). O instalați din ${b("Setări")} → ${b("Actualizare")}:</p>
 ${pasi([
   "Faceți o copie a bazei de date din cPanel → Backup (recomandat).",
   `Alegeți arhiva și apăsați ${b("Încărcați și verificați")}. Se încarcă pe bucăți, deci poate fi oricât de mare.`,
@@ -601,13 +705,100 @@ export const intrebari = (rol) => ({
   titlu: "Întrebări frecvente",
   html: `
 <dl class="faq">
-<dt>Nu pot intra în panou.</dt><dd>Verificați e-mailul și parola (atenție la majuscule). După 10 încercări greșite așteptați 15 minute. Dacă tot nu merge, administratorul vă pune o parolă nouă de început.</dd>
-<dt>Nu văd o clinică sau un pacient.</dt><dd>Contul vede doar clinicile bifate de administrator. Pacienții altei clinici nu apar.</dd>
-${rol !== "medic" ? `<dt>Pacientul spune că n-a primit confirmarea.</dt><dd>Verificați în fișă telefonul, canalul (SMS / WhatsApp / fără mesaje) și fila Mesaje: acolo vedeți dacă a plecat, s-a livrat sau a eșuat. Un mesaj eșuat se poate reîncerca din pagina Mesaje.</dd>
-<dt>Am greșit o factură.</dt><dd>Factura emisă nu se modifică. Administratorul o anulează cu motiv, apoi emiteți una corectă.</dd>
-<dt>Tableta nu deschide pagina de semnare.</dt><dd>Apare „Tableta nu este asociată”: administratorul o asociază din Setări → Tablete de semnare. Dacă pacientul scrie de mai multe ori un cod greșit, tableta așteaptă câteva minute.</dd>` : `<dt>Dictarea nu pornește.</dt><dd>Folosiți Chrome, Edge sau Safari, pe adresa cu https, și permiteți accesul la microfon când browserul îl cere.</dd>
-<dt>Nu primesc programul zilei pe WhatsApp.</dt><dd>Administratorul verifică în Echipa → profilul dumneavoastră canalul, mobilul și ora, și în Setări → Mesaje șablonul WhatsApp aprobat. Până la aprobare primiți SMS.</dd>`}
+<dt>Nu pot intra în panou.</dt><dd>Verificați e-mailul și parola (atenție la majuscule). După 10 încercări greșite așteptați 15 minute. Dacă tot nu merge, VITIM vă pune o parolă nouă de început.</dd>
+<dt>Nu văd o clinică sau un pacient.</dt><dd>Contul vede doar clinicile bifate pe el. Pacienții altei clinici nu apar.</dd>
+${rol === "medic" ? `<dt>Dictarea nu pornește.</dt><dd>Folosiți Chrome, Edge sau Safari, pe adresa cu https, și permiteți accesul la microfon când browserul îl cere.</dd>
+<dt>Nu primesc programul zilei pe WhatsApp.</dt><dd>În Echipa → profilul dumneavoastră se verifică canalul, mobilul și ora, iar în Setări → Mesaje șablonul WhatsApp aprobat. Până la aprobare primiți SMS.</dd>
+<dt>Plec în concediu. Ce fac?</dt><dd>Puneți concediul la Absențe și zile libere. Orele dispar de pe site, iar recepția vede programările de mutat.</dd>` : rol === "vitim" ? `<dt>Administratorul nu vede Setările.</dt><dd>Așa trebuie: cât timp există un cont VITIM activ, Setările și Utilizatorii sunt doar ale lui VITIM. Dacă se dezactivează contul VITIM, administratorul le vede din nou.</dd>
+<dt>Pe site nu apar ore libere.</dt><dd>Verificați: programarea online e pornită (Setări → Programări online), serviciile au bifa „Programare online”, medicii au program la Echipa și bifa „primește programări de pe site”, iar clinica nu are orele închise în ziua respectivă.</dd>
+<dt>Mesajele nu pleacă.</dt><dd>Setări → Mesaje: modul trebuie să fie „Trimitere reală”, conturile completate, iar Cron Job-ul să ruleze la 5 minute. Pagina Mesaje arată de ce a eșuat fiecare.</dd>` : `<dt>Pacientul spune că n-a primit confirmarea.</dt><dd>Verificați în fișă telefonul, canalul (SMS / WhatsApp / fără mesaje) și fila Mesaje: acolo vedeți dacă a plecat, s-a livrat sau a eșuat. Un mesaj eșuat se poate reîncerca din pagina Mesaje.</dd>
+<dt>Am mutat o programare din greșeală.</dt><dd>Apăsați imediat „Anulați” jos în calendar: pacientul nu primește nimic. Dacă a trecut, mutați-o înapoi; pacientul primește ora corectă.</dd>
+<dt>Tableta nu deschide pagina de semnare.</dt><dd>Apare „Tableta nu este asociată”: VITIM o asociază din Setări → Tablete de semnare. Dacă pacientul scrie de mai multe ori un cod greșit, tableta așteaptă câteva minute.</dd>`}
 <dt>Lucrez de pe telefon. Merge?</dt><dd>Da. Panoul se adaptează la telefon; meniul se deschide din colțul de sus.</dd>
-<dt>Cine vede ce am făcut?</dt><dd>Fiecare acțiune importantă (fișe deschise, modificări, facturi, exporturi) e trecută în jurnal, pe care îl vede administratorul.</dd>
+<dt>Cine vede ce am făcut?</dt><dd>Fiecare acțiune importantă (fișe deschise, CNP afișat, modificări, exporturi) e trecută în jurnal, pe care îl vede administratorul.</dd>
 </dl>`,
+});
+
+// ── Stage 6: implants, VITIM, online booking settings ────────────────────────────────────
+
+export const implanturi = () => ({
+  titlu: "Implanturile: etapele fiecărui caz",
+  html: `
+<p>Pe fila ${b("Fișa")}, chenarul ${b("Implanturi")} urmărește fiecare caz, de la plan la lucrarea finală și controalele anuale, ca niciun pacient să nu fie uitat între etape.</p>
+${pasi([
+  `${b("Caz nou")}: dinții (în numerotarea FDI, de exemplu 36 sau 36, 46), sistemul de implant, medicul și observații. ${b("Adăugați cazul")}.`,
+  `După fiecare etapă, alegeți-o în listă (de obicei e deja aleasă etapa următoare), data și apăsați ${b("Notați etapa")}.`,
+])}
+${img("fisa-implant", "Un caz de implant, cu etapele lui.")}
+${tabel(["Etapa", "Pasul următor, de obicei"], [
+  ["Planificat", "Inserarea."],
+  ["Implant inserat", "Descoperirea, după aproximativ 3 luni (osteointegrare)."],
+  ["Descoperit, bont de vindecare", "Amprenta, după aproximativ 3 săptămâni."],
+  ["Amprentă luată", "Lucrarea finală, după aproximativ 2 săptămâni."],
+  ["Lucrarea finală pusă", "Controlul, peste un an."],
+  ["Control anual", "Următorul control, peste un an; sau Încheiat."],
+])}
+<p>Meniul ${b("Implanturi")} arată toate cazurile în curs (pentru un medic, implicit ale lui), cu etapa de acum, ce urmează și când. Cele cu data trecută sunt roșii: sunați pacientul.</p>
+${img("implanturi", "Toate cazurile de implant în curs.")}`,
+});
+
+export const vitimAdmin = () => ({
+  titlu: "Suportul tehnic (VITIM) și ce primiți de la el",
+  html: `
+<p>Configurarea panoului o face <strong>VITIM</strong>, cu contul lui de suport tehnic: setările (firma, clinicile, mesajele, AI, chatul, programările online, tabletele, actualizările) și conturile echipei. De aceea, ca administrator, nu vedeți în meniu ${b("Setări")} și ${b("Utilizatori")}. Restul panoului îl vedeți tot.</p>
+<h3>Ce a schimbat VITIM</h3>
+<ul>
+<li>Pe pagina ${b("Azi")}, un chenar galben arată fiecare modificare făcută de VITIM: ce setare, ce valoare era și ce a devenit. Apăsați ${b("Am văzut")} după ce le-ați citit.</li>
+<li>Primiți și un <strong>e-mail cu rezumatul</strong>, după ce VITIM a terminat (10 minute fără alte modificări): unul pentru o sesiune de lucru, nu câte unul la fiecare clic.</li>
+<li>Toate rămân și în ${b("Jurnal")}.</li>
+</ul>
+${img("azi-vitim", "Pe pagina Azi: ce a schimbat VITIM.")}
+${sfat("Pentru un cont nou, o parolă uitată, o setare de mesaje sau o actualizare, scrieți-i lui VITIM. Partea financiară (facturi, încasări) o pornește tot VITIM, la începutul etapei a doua.")}`,
+});
+
+export const rolVitim = () => ({
+  titlu: "Rolul VITIM în panou",
+  html: `
+<p>Contul <strong>Suport tehnic (VITIM)</strong> vede tot panoul și are, în plus, ${b("Setări")} și ${b("Utilizatori")}. Administratorul clinicii nu le mai vede cât timp există un cont VITIM activ.</p>
+${tabel(["Doar VITIM", "Unde"], [
+  ["Datele firmei, clinicile (adresă, ore pe zile, cabinete, inhalosedare), textele acordurilor, modulele", "Setări"],
+  ["Conturile echipei, rolurile, parolele de început, sesiunile", "Utilizatori"],
+  ["SMS, WhatsApp, e-mail: conturile, textele, modul de probă", "Setări → Mesaje"],
+  ["Cheia Anthropic, modelul AI", "Setări → Asistentul AI"],
+  ["Programarea online pe site", "Setări → Programări online"],
+  ["Chatul de pe site", "Setări → Chatul de pe site"],
+  ["Tabletele de semnare", "Setări → Tablete de semnare"],
+  ["Actualizarea site-ului dintr-o arhivă ZIP", "Setări → Actualizare"],
+])}
+<h3>Administratorul este anunțat</h3>
+<p>Tot ce schimbați în setări și conturi se scrie în jurnal cu valoarea veche și cea nouă (fără parole sau chei) și ajunge la administrator: pe pagina lui ${b("Azi")} și într-un e-mail de rezumat, trimis după 10 minute fără alte modificări.</p>
+${img("azi-vitim", "Ce vede administratorul pe pagina Azi.")}
+${atentie("Partea financiară e oprită în perioada de probă. O porniți din Setări → Module → „Partea financiară”, când clinica trece la etapa a doua.")}`,
+});
+
+export const setariProgramari = () => ({
+  titlu: "Programările online",
+  html: `
+<p>${b("Setări")} → ${b("Programări online")}: cum își aleg pacienții ora pe site și în chat.</p>
+${img("setari-programari", "Setările programărilor online, motivele de pe site, primele ore libere și programul medicilor.")}
+${tabel(["Setarea", "Ce face"], [
+  ["Pacienții își aleg singuri ora pe site", "Pornit: pagina Programare arată orele libere reale. Oprit: pacientul lasă o cerere și îl sunați."],
+  ["Orele se arată din … în …", "Grila orelor: la 15 minute, 9:00, 9:15, 9:30…"],
+  ["Cel mai devreme, față de acum", "Ca recepția și medicul să afle din timp (implicit 2 ore)."],
+  ["Cu câte zile înainte", "Cât de departe în viitor se poate programa (implicit 30)."],
+  ["Pauză între programări", "Timp pentru curățenie și sterilizare după fiecare pacient."],
+  ["Durata, când serviciul nu are una", "Pentru motivele fără durată."],
+  ["Anulare din link cu cel puțin … ore înainte", "După aceea, pacientul anulează doar la telefon."],
+  ["Dimineața se termină la", "Pentru împărțirea orelor în „Dimineața” și „După-amiaza”."],
+])}
+<p>În pagină se văd și <strong>motivele de pe site</strong> (se aleg la Servicii și prețuri → serviciu → „Programare online”), <strong>primele ore libere</strong> calculate acum și <strong>programul fiecărui medic</strong>.</p>
+${sfat("Orele libere vin din programul medicilor (Echipa), minus programările, pauzele, absențele, orele în care clinica e închisă și sărbătorile legale. Un medic fără program sau fără bifa „primește programări de pe site” nu apare.")}`,
+});
+
+export const setariChat = () => ({
+  titlu: "Chatul de pe site",
+  html: `
+<p>${b("Setări")} → ${b("Chatul de pe site")}: pornit/oprit, modelul AI, modul programărilor (<strong>cerere</strong>, confirmată de recepție la telefon, sau <strong>direct în calendar</strong>, după un cod primit prin SMS, care cere SMS-urile pornite), limita zilnică de conversații și după câte zile se șterg. Durata programărilor, cât de devreme și cu câte zile înainte se iau din Programări online.</p>
+${img("setari-chat", "Setările chatului.")}
+${atentie("Chatul propune ore doar pentru medicii care au program completat (Echipa → medic → „Unde și când lucrează”). Cheia API Anthropic trebuie salvată înainte, în Setări → Asistentul AI.")}`,
 });
