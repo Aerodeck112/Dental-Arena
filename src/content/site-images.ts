@@ -23,8 +23,8 @@ const IMG = {
   canapea: { src: "/images/clinica/floare-canapea.jpg", width: 1430, height: 953, alt: "O gerberă galbenă în fața canapelei din sala de așteptare" },
   plaja: { src: "/images/clinica/cabinet-plaja.jpg", width: 1500, height: 2000, alt: "Cabinetul cu o plajă pictată pe perete, pentru copii" },
   radiografie: { src: "/images/clinica/radiografie-tableta.jpg", width: 938, height: 656, alt: "Medicul îi arată pacientului radiografia pe o tabletă" },
-  cristesti: { src: "/images/clinica/cristesti-fatada.jpg", width: 2000, height: 1334, alt: "Fațada clinicii Dental Arena din Cristești" },
-  ludusSeara: { src: "/images/clinica/ludus-seara.jpg", width: 1440, height: 1800, alt: "Clinica Dental Arena din Luduș, seara" },
+  cristestiSeara: { src: "/images/clinica/cristesti-seara.jpg", width: 1440, height: 1800, alt: "Clinica Dental Arena din Cristești, seara" },
+  ludus: { src: "/images/clinica/ludus-fatada.jpg", width: 2000, height: 1334, alt: "Fațada clinicii Dental Arena din Luduș" },
 } satisfies Record<string, SiteImageDefault>;
 
 const service = (slug: string, name: string, d: SiteImageDefault): SiteImageSlot => ({
@@ -41,13 +41,12 @@ export const SITE_IMAGE_SLOTS: readonly SiteImageSlot[] = [
   { key: "acasa.confort", group: "Acasă", label: "Secțiunea „Fără frică”", hint: "Lângă întrebarea „Cum vă simțiți când vă gândiți la dentist?”. Fotografie verticală.", default: IMG.asteptare },
   { key: "acasa.copii", group: "Acasă", label: "Secțiunea pentru copii", hint: "Fotografie verticală din cabinetul pentru copii.", default: IMG.plaja },
   { key: "acasa.tehnologie", group: "Acasă", label: "Secțiunea „Cum decurge prima vizită”", hint: "Un medic cu un pacient, de preferat orizontală.", default: IMG.radiografie },
-  { key: "clinica.cristesti", group: "Clinicile", label: "Clinica din Cristești", hint: "Fațada sau interiorul clinicii din Cristești.", default: IMG.cristesti },
-  { key: "clinica.ludus", group: "Clinicile", label: "Clinica din Luduș", hint: "Fațada sau interiorul clinicii din Luduș.", default: IMG.ludusSeara },
+  { key: "clinica.cristesti", group: "Clinicile", label: "Clinica din Cristești", hint: "Fațada sau interiorul clinicii din Cristești.", default: IMG.cristestiSeara },
+  { key: "clinica.ludus", group: "Clinicile", label: "Clinica din Luduș", hint: "Fațada sau interiorul clinicii din Luduș.", default: IMG.ludus },
   { key: "despre.principala", group: "Despre noi", label: "Fotografia principală", hint: "Prima fotografie din pagina „Despre noi”. Orizontală.", default: IMG.receptieLarg },
   { key: "despre.secundara", group: "Despre noi", label: "A doua fotografie", hint: "O fotografie de atmosferă. Orizontală.", default: IMG.canapea },
   service("consultatie-profilaxie", "Consultație și profilaxie", IMG.radiografie),
   service("stomatologie-generala", "Stomatologie generală", IMG.receptie),
-  service("inhalosedare", "Inhalosedare", IMG.asteptare),
   service("implantologie", "Implantologie", IMG.muschi),
   service("chirurgie-dento-alveolara", "Chirurgie dento-alveolară", IMG.radiografie),
   service("protetica-dentara", "Protetică dentară", IMG.receptieLarg),

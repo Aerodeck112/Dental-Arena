@@ -192,7 +192,7 @@ if ($path === '/tableta/semnare') {
     $consents = '';
     foreach ($types as $t) {
         $paras = '';
-        foreach (preg_split('/\n{2,}/', trim(consent_text_for($t, $p))) ?: [] as $para) {
+        foreach (preg_split('/\n{2,}/', trim(consent_text_for($t, $p, $device && $device['location_id'] ? (int) $device['location_id'] : null))) ?: [] as $para) {
             $paras .= '<p class="mt-3 whitespace-pre-line first:mt-0">' . e($para) . '</p>';
         }
         $consents .= '<article class="rounded-panou border border-linie">'
@@ -201,7 +201,9 @@ if ($path === '/tableta/semnare') {
             . '<div class="border-t border-linie p-3">' . $toggle('accept[]', 'Am citit și sunt de acord', in_array($t, $accepted, true), $t) . '</div></article>';
     }
 
-    $parts = $section('Acordurile', 'Citiți fiecare text și bifați dacă sunteți de acord.', ($errors['acorduri'] ?? null ? '<p role="alert" class="mb-4 rounded-panou bg-carmin-pal p-3 font-medium text-carmin">' . e($errors['acorduri']) . '</p>' : '') . '<div class="flex flex-col gap-5">' . $consents . '</div>', 'pas-acorduri');
+    // Each clinic is its own company: the patient sees which one the consents are given to.
+    $co = location_company($device && $device['location_id'] ? (int) $device['location_id'] : ($p['preferred_location_id'] ? (int) $p['preferred_location_id'] : null));
+    $parts = $section('Acordurile', 'Citiți fiecare text și bifați dacă sunteți de acord.' . ($co['legalName'] !== '' ? ' Acordurile sunt date către ' . $co['legalName'] . ($co['cui'] !== '' ? ' (CUI ' . $co['cui'] . ')' : '') . '.' : ''), ($errors['acorduri'] ?? null ? '<p role="alert" class="mb-4 rounded-panou bg-carmin-pal p-3 font-medium text-carmin">' . e($errors['acorduri']) . '</p>' : '') . '<div class="flex flex-col gap-5">' . $consents . '</div>', 'pas-acorduri');
 
     if ($withHistory) {
         $flags = '';

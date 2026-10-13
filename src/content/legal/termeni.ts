@@ -18,7 +18,7 @@ export const TERMENI: LegalDoc = {
       blocks: [
         {
           kind: "p",
-          text: "Site-ul este administrat de {{legalName}}, cu sediul în {{registeredAddress}}, CUI {{cui}}, nr. de înregistrare la Registrul Comerțului {{regCom}}, e-mail {{email}}. Clinica are două puncte de lucru: Cristești (str. Principală 536J/1, telefon 0265 326 316) și Luduș (str. Gheorghe Barițiu nr. 6, telefon 0365 430 125).",
+          text: "Dental Arena are două clinici, fiecare cu firma ei: {{operatori}}. Clinica din Cristești este pe str. Principală 536J/1 (telefon 0265 326 316), iar cea din Luduș pe str. Gheorghe Barițiu nr. 6 (telefon 0365 430 125). E-mail: {{email}}.",
         },
       ],
     },

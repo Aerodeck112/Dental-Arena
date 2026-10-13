@@ -48,7 +48,7 @@ if ($startsAt === $a['starts_at'] && $endsAt === $a['ends_at'] && $doc === (int)
     $out(['ok' => true, 'label' => $label(), 'undo' => null]);
 }
 $isUndo = post('undo') === '1';
-$check = appointment_checks($doc, $loc, $startsAt, $endsAt, (int) $a['patient_id'], (int) $a['id'], $cabinet, (int) $a['wants_sedation'] === 1);
+$check = appointment_checks($doc, $loc, $startsAt, $endsAt, (int) $a['patient_id'], (int) $a['id'], $cabinet);
 if ($check['block'] !== null) {
     $out(['block' => $check['block']]);
 }

@@ -30,6 +30,8 @@ export type ClinicInfo = {
   photo: { src: string; alt: string; width: number; height: number };
   /** A second photo for „Cum ne găsiți”, when there is one. */
   directionsPhoto?: { src: string; alt: string; width: number; height: number };
+  /** Each clinic is its own company: it signs the consents and issues the invoices. */
+  company: { legalName: string; cui: string };
 };
 
 export const CLINICS: Record<ClinicSlug, ClinicInfo> = {
@@ -43,15 +45,22 @@ export const CLINICS: Record<ClinicSlug, ClinicInfo> = {
     postalCode: "547185",
     phone: "0265 326 316",
     area: "lângă Târgu Mureș",
+    company: { legalName: "S.C. Dental Arena S.R.L.", cui: "RO30570968" },
     mapsLink:
       "https://www.google.com/maps/search/?api=1&query=Dental%20Arena%2C%20str.%20Principal%C4%83%20536J%2F1%2C%20Criste%C8%99ti%2C%20Mure%C8%99",
     mapsEmbed:
       "https://maps.google.com/maps?q=str.%20Principal%C4%83%2C%20536J%2F1%20Criste%C8%99ti&t=m&z=16&output=embed&iwloc=near",
     photo: {
-      src: "/images/clinica/cristesti-fatada.jpg",
-      alt: "Fațada clinicii Dental Arena din Cristești, cu firma „Dental Arena, clinică stomatologică” deasupra vitrinei",
-      width: 2000,
-      height: 1334,
+      src: "/images/clinica/cristesti-seara.jpg",
+      alt: "Clinica Dental Arena din Cristești seara: casa albă cu coloana îmbrăcată în lemn și aleea luminată",
+      width: 1440,
+      height: 1800,
+    },
+    directionsPhoto: {
+      src: "/images/clinica/cristesti-zi.jpg",
+      alt: "Clinica Dental Arena din Cristești ziua, văzută de la poarta din fier forjat",
+      width: 1500,
+      height: 2000,
     },
   },
   ludus: {
@@ -64,21 +73,16 @@ export const CLINICS: Record<ClinicSlug, ClinicInfo> = {
     postalCode: "545202",
     phone: "0365 430 125",
     area: null,
+    company: { legalName: "S.C. Dental Arena Ludus S.R.L.", cui: "RO30611278" },
     mapsLink:
       "https://www.google.com/maps/search/?api=1&query=Dental%20Arena%2C%20str.%20Gheorghe%20Bari%C8%9Biu%20nr.%206%2C%20Ludu%C8%99%2C%20Mure%C8%99",
     mapsEmbed:
       "https://maps.google.com/maps?q=str.%20Gheorghe%20Bari%C8%9Biu%2C%20nr.%206%2C%20Ludu%C8%99%2C%20Mure%C8%99&t=m&z=16&output=embed&iwloc=near",
     photo: {
-      src: "/images/clinica/ludus-seara.jpg",
-      alt: "Clinica Dental Arena din Luduș seara: casa albă cu coloana îmbrăcată în lemn și aleea luminată",
-      width: 1440,
-      height: 1800,
-    },
-    directionsPhoto: {
-      src: "/images/clinica/ludus-zi.jpg",
-      alt: "Clinica Dental Arena din Luduș ziua, văzută de la poarta din fier forjat",
-      width: 1500,
-      height: 2000,
+      src: "/images/clinica/ludus-fatada.jpg",
+      alt: "Fațada clinicii Dental Arena din Luduș, cu firma „Dental Arena, clinică stomatologică” deasupra vitrinei",
+      width: 2000,
+      height: 1334,
     },
   },
 };
@@ -109,7 +113,7 @@ export const SITE = {
   /** <title> of the home page (absolute, no template). */
   homeTitle: "Dental Arena, clinică stomatologică în Cristești și Luduș",
   defaultDescription:
-    "Clinică stomatologică de familie în Cristești, lângă Târgu Mureș, și în Luduș. Consultații, implanturi, ortodonție, stomatologie pentru copii și tratament sub inhalosedare.",
+    "Clinică stomatologică de familie în Cristești, lângă Târgu Mureș, și în Luduș. Consultații, implanturi, ortodonție, stomatologie pentru copii și tratamente fără durere.",
   /** Default share image: the reception hand-over (a real clinic photo). */
   ogImage: { src: "/images/clinica/receptie.jpg", width: 1430, height: 953, alt: "Recepția clinicii Dental Arena" },
 } as const;

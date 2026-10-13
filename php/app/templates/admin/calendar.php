@@ -93,7 +93,7 @@ $block = static function (array $a) use ($movable): string {
     };
     return '<a href="/admin/programari/' . (int) $a['id'] . '" class="' . e(cn('block h-full overflow-hidden rounded-control border-l-4 border px-2 py-1 text-mic leading-tight shadow-sm hover:shadow-float', $cls, $movable($a) ? 'cursor-grab' : '')) . '" draggable="false">'
         . '<span class="font-semibold cifre" data-ora>' . e(hm($a['starts_at'])) . '</span> <span class="font-semibold">' . e(patient_name($a)) . '</span>'
-        . ((int) $a['wants_sedation'] === 1 || in_array($a['comfort'], ['emotii', 'frica'], true) ? ' <span aria-label="emoții" class="inline-block size-2 rounded-full bg-mustar"></span>' : '')
+        . (in_array($a['comfort'], ['emotii', 'frica'], true) ? ' <span aria-label="emoții" class="inline-block size-2 rounded-full bg-mustar"></span>' : '')
         . '<span class="block truncate text-discret">' . e($a['reason'] ?: service_title($a['category_slug'])) . '</span></a>';
 };
 
@@ -211,7 +211,7 @@ if ($view === 'zi') {
                 . '<td class="cifre px-3 py-2 font-semibold"><a class="text-link underline-offset-4 hover:underline" href="/admin/programari/' . (int) $a['id'] . '">' . e(hm($a['starts_at']) . '–' . hm($a['ends_at'])) . '</a></td>'
                 . '<td class="px-3 py-2"><a class="font-semibold underline-offset-4 hover:underline" href="/admin/pacienti/' . (int) $a['patient_id'] . '">' . e(patient_name($a)) . '</a><span class="block text-mic text-discret">' . e(format_phone((string) $a['phone'])) . '</span></td>'
                 . '<td class="px-3 py-2">' . e($docs[(int) $a['doctor_id']] ?? '') . ($a['cabinet'] ? '<span class="block text-mic text-discret">Cabinetul ' . (int) $a['cabinet'] . '</span>' : '') . '</td>'
-                . '<td class="px-3 py-2">' . e($a['reason'] ?: service_title($a['category_slug'])) . ((int) $a['wants_sedation'] === 1 ? '<span class="block text-mic text-discret">cu inhalosedare</span>' : '') . '</td>'
+                . '<td class="px-3 py-2">' . e($a['reason'] ?: service_title($a['category_slug'])) . '</td>'
                 . '<td class="px-3 py-2">' . appt_status_chip($a['status']) . '</td></tr>';
         }
         $off = in_array($key, $holidays, true) ? ' · sărbătoare legală' : '';

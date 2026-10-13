@@ -1,13 +1,16 @@
 <?php
 /**
- * The panel's accounts. Four roles: suport tehnic (VITIM, the IT who configures: everything, with
+ * The panel's accounts. Five roles: suport tehnic (VITIM, the IT who configures: everything, with
  * the settings and the accounts), administrator (everything else; the settings and the accounts too
- * while there is no technical account), recepție and medic (the clinics ticked on their account). Passwords are stored with
+ * while there is no technical account), administrator medic (an administrator who is also one of
+ * the doctors: both at once), recepție and medic (the clinics ticked on their account). Passwords are stored with
  * password_hash; ten wrong passwords in 15 minutes lock the login for that address and network.
  */
 declare(strict_types=1);
 
-const ROLES = ['admin' => 'Administrator', 'receptie' => 'Recepție', 'medic' => 'Medic', 'tehnic' => 'Suport tehnic (VITIM)'];
+const ROLES = ['admin' => 'Administrator', 'admin-medic' => 'Administrator medic', 'receptie' => 'Recepție', 'medic' => 'Medic', 'tehnic' => 'Suport tehnic (VITIM)'];
+/** The roles that administer (see everything, both clinics). */
+const ADMIN_ROLES = ['admin', 'admin-medic', 'tehnic'];
 /** What each role may do beyond the clinics ticked on the account. */
 const PERMISSIONS = [
     'medical' => ['admin', 'medic'],          // anamneza, odontograma, note clinice
@@ -29,7 +32,9 @@ function can(string $permission, ?array $user = null): bool
     if ($user === null || (in_array($permission, FINANCE_PERMISSIONS, true) && !finance_on())) {
         return false;
     }
-    return $user['role'] === 'tehnic' || in_array($user['role'], PERMISSIONS[$permission] ?? ['admin'], true);
+    // The administrator medic has what the administrator has and what the doctor has.
+    $roles = $user['role'] === 'admin-medic' ? ['admin', 'medic'] : [$user['role']];
+    return $user['role'] === 'tehnic' || array_intersect($roles, PERMISSIONS[$permission] ?? ['admin']) !== [];
 }
 
 function finance_on(): bool
@@ -66,7 +71,14 @@ function current_user(): ?array
 function is_admin(?array $u = null): bool
 {
     $u ??= current_user();
-    return $u !== null && in_array($u['role'], ['admin', 'tehnic'], true);
+    return $u !== null && in_array($u['role'], ADMIN_ROLES, true);
+}
+
+/** A doctor's account: the doctor, or the administrator who is also a doctor. */
+function is_doctor(?array $u = null): bool
+{
+    $u ??= current_user();
+    return $u !== null && in_array($u['role'], ['medic', 'admin-medic'], true);
 }
 
 function is_tech(?array $u = null): bool

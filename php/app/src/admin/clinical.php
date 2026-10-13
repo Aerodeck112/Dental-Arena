@@ -382,16 +382,16 @@ function format_size(int $bytes): string
 const CONSENT_TYPES = [
     'gdpr' => 'Prelucrarea datelor personale și de sănătate',
     'tratament' => 'Consimțământ informat pentru tratament',
-    'inhalosedare' => 'Consimțământ pentru inhalosedare',
     'foto' => 'Fotografii și radiografii',
 ];
+/** Consents no longer asked for: the ones already signed stay in the patient's file and can be seen. */
+const CONSENT_RETIRED = ['inhalosedare' => 'Consimțământ pentru inhalosedare (nu mai practicăm)'];
 const CONSENT_METHODS = ['hartie' => 'Semnat pe hârtie', 'tableta' => 'Semnat pe tabletă', 'verbal' => 'Acord verbal, notat de personal'];
 
 /** The default texts; {{pacient}}, {{firma}}, {{clinica}} and {{email}} are filled when printing. */
 const CONSENT_DEFAULTS = [
     'gdpr' => "Subsemnatul/Subsemnata {{pacient}} sunt de acord ca {{firma}} să prelucreze datele mele de identificare și de contact și datele privind sănătatea mea (anamneza, investigațiile, radiografiile, tratamentele efectuate), pentru acordarea îngrijirilor stomatologice, pentru evidența medicală prevăzută de lege și pentru facturare.\n\nAm fost informat(ă) că:\n– la date au acces doar persoanele din clinică ce au nevoie de ele pentru tratament sau facturare;\n– datele medicale și cele financiare se păstrează cât prevede legea;\n– pot cere oricând accesul la date, corectarea, restricționarea, portabilitatea sau ștergerea lor, în limitele legii, la {{email}};\n– pot depune plângere la Autoritatea Națională de Supraveghere a Prelucrării Datelor cu Caracter Personal (www.dataprotection.ro).",
     'tratament' => "Subsemnatul/Subsemnata {{pacient}} declar că medicul mi-a explicat, pe înțelesul meu: diagnosticul, tratamentul propus, alternativele, beneficiile, riscurile și complicațiile posibile (de exemplu durere, sângerare, umflătură, reacții la anestezic), durata și costul estimat, precum și ce se poate întâmpla dacă nu fac tratamentul.\n\nAm putut pune întrebări și am primit răspunsuri. Am declarat corect bolile, alergiile și medicamentele mele.\n\nSunt de acord cu tratamentul de mai jos și cu anestezia locală necesară. Știu că îmi pot retrage acordul înainte de începerea oricărei proceduri.\n\nTratamentul: ______________________________________________",
-    'inhalosedare' => "Subsemnatul/Subsemnata {{pacient}} sunt de acord cu sedarea conștientă prin inhalare (protoxid de azot și oxigen) în timpul tratamentului stomatologic.\n\nMedicul mi-a explicat că rămân conștient(ă) și pot comunica, că efectul trece la scurt timp după oprirea gazului, ce efecte neplăcute pot apărea (de exemplu greață sau amețeală) și în ce situații sedarea nu se face. Am declarat corect bolile, medicamentele și, după caz, o posibilă sarcină.\n\nVoi respecta indicațiile primite înainte și după procedură.",
     'foto' => "Subsemnatul/Subsemnata {{pacient}} sunt de acord ca {{firma}} să realizeze fotografii și radiografii ale dinților și feței mele, pentru diagnostic și pentru documentarea tratamentului în fișa mea.\n\n[  ] Sunt de acord și ca imaginile, fără numele meu și fără elemente după care pot fi recunoscut(ă), să fie folosite în prezentări profesionale.\n\nPot retrage oricând acest acord, fără ca tratamentul să fie afectat.",
 ];
 
@@ -401,17 +401,25 @@ function consent_text(string $type): string
     return is_string($custom) && trim($custom) !== '' ? $custom : (CONSENT_DEFAULTS[$type] ?? '');
 }
 
-/** A consent's text for one patient: {{pacient}}, {{firma}}, {{clinica}}, {{email}} filled in. */
-function consent_text_for(string $type, array $p): string
+/**
+ * A consent's text for one patient: {{pacient}}, {{firma}}, {{clinica}}, {{email}} filled in. The
+ * company is the one of the clinic where it is signed (the tablet's clinic, or the clinic chosen
+ * for printing); without one, the patient's clinic. Each clinic is its own company, so every text
+ * ends by naming the one the patient gives the consent to (it is kept with the signature).
+ */
+function consent_text_for(string $type, array $p, ?int $locationId = null): string
 {
-    $clinic = $p['preferred_location_id'] ? db_one('SELECT short_name FROM locations WHERE id = ?', [(int) $p['preferred_location_id']]) : null;
-    $company = setting('company');
+    $locationId ??= $p['preferred_location_id'] ? (int) $p['preferred_location_id'] : null;
+    $clinic = $locationId ? db_one('SELECT short_name FROM locations WHERE id = ?', [$locationId]) : null;
+    $company = location_company($locationId);
+    $firma = $company['legalName'] !== '' ? $company['legalName'] : 'Dental Arena';
+    $clinica = 'Dental Arena' . ($clinic ? ' ' . $clinic['short_name'] : '');
     return strtr(consent_text($type), [
         '{{pacient}}' => trim($p['last_name'] . ' ' . $p['first_name']),
-        '{{firma}}' => $company['legalName'] !== '' ? $company['legalName'] : 'Dental Arena',
-        '{{clinica}}' => 'Dental Arena' . ($clinic ? ' ' . $clinic['short_name'] : ''),
+        '{{firma}}' => $firma,
+        '{{clinica}}' => $clinica,
         '{{email}}' => content('site.email'),
-    ]);
+    ]) . "\n\nAcordul este dat către {$firma}" . ($company['cui'] !== '' ? " (CUI {$company['cui']})" : '') . ", pentru clinica {$clinica}.";
 }
 
 /** The version printed under a consent (the date its text last changed). */
@@ -546,7 +554,7 @@ function patient_header(array $p, array $user, string $active, string $extraActi
         $on = $slug === $active;
         $nav .= '<a href="' . e($href) . '"' . ($on ? ' aria-current="page"' : '') . ' class="' . e(cn('inline-flex min-h-control shrink-0 items-center border-b-2 px-3 text-control', $on ? 'border-actiune font-semibold text-cerneala' : 'border-transparent text-discret hover:text-cerneala')) . '">' . e($label) . '</a>';
     }
-    $chips = alert_chips($alerts, 'text-corp') . comfort_chip($p['comfort'], (bool) $p['prefers_sedation']);
+    $chips = alert_chips($alerts, 'text-corp') . comfort_chip($p['comfort']);
     return '<p class="mb-4"><a href="/admin/pacienti" class="inline-flex min-h-control items-center gap-1 text-link underline underline-offset-4">' . icon('chevron-left', 18) . 'Pacienți</a></p>'
         . admin_header(patient_name($p), $lead, $actions)
         . ($p['anonymized_at'] !== null ? '<p class="-mt-4 mb-6 rounded-panou bg-adancit p-4 text-corp">Fișă anonimizată la ' . e(format_datetime($p['anonymized_at'])) . '. Datele medicale și financiare se păstrează, fără datele de identificare.</p>' : '')
@@ -609,7 +617,7 @@ function print_page(string $title, string $body, string $back): void
 /** The seller block of the printed documents. */
 function seller_block(?array $clinic = null): string
 {
-    $c = setting('company');
+    $c = location_company($clinic ? (int) $clinic['id'] : null);
     $missing = static fn (string $v) => trim($v) !== '' ? e($v) : '<span class="text-carmin print:text-cerneala">[de completat în Setări]</span>';
     return '<p class="font-semibold">' . $missing($c['legalName']) . '</p>'
         . '<p>CUI ' . $missing($c['cui']) . ' · Reg. Com. ' . $missing($c['regCom']) . '</p>'
@@ -770,7 +778,7 @@ function send_tech_digest(?DateTimeImmutable $now = null): int
     $lines = implode("\n", array_map(static fn ($c) => '- ' . tech_change_line($c), array_reverse($rows)));
     $body = "Bună ziua,\n\nSuportul tehnic (VITIM) a făcut aceste modificări în panoul Dental Arena:\n\n{$lines}\n\nLe vedeți și pe pagina Azi din panou: " . absolute_url('/admin') . "\n";
     $n = 0;
-    foreach (db_all("SELECT * FROM users WHERE role = 'admin' AND active = 1") as $u) {
+    foreach (db_all("SELECT * FROM users WHERE role IN ('admin', 'admin-medic') AND active = 1") as $u) {
         if (filter_var($u['email'], FILTER_VALIDATE_EMAIL)) {
             $n += (int) (bool) queue_message(['event' => 'staff-configurare', 'user_id' => (int) $u['id'], 'channel' => 'email', 'to_address' => $u['email'], 'subject' => 'Dental Arena: ce a configurat VITIM', 'body' => $body]);
         }

@@ -366,6 +366,7 @@ export async function getHomeAvailability(count = 3, only?: ClinicSlug): Promise
 export async function getLegalValues() {
   const [clinic, gdpr, booking] = await Promise.all([getSettings("clinic"), getSettings("gdpr"), getSettings("booking")]);
   return {
+    operatori: `${clinic.legalName} (CUI ${clinic.cui}, Reg. Com. ${clinic.regCom}, sediul în ${clinic.registeredAddress})`,
     legalName: clinic.legalName,
     cui: clinic.cui,
     regCom: clinic.regCom,

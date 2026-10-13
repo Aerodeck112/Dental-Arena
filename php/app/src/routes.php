@@ -23,6 +23,8 @@ const OLD_ADDRESSES = [
     '/cookies' => '/politica-cookies',
     '/termeni-conditii' => '/termeni-si-conditii',
     '/programari' => '/programare',
+    // October 2026: inhalation sedation is no longer offered; old links go to the services.
+    '/inhalosedare' => '/servicii',
     '/cabinet' => '/admin',
     '/crm' => '/admin',
     '/wp-admin' => '/admin',

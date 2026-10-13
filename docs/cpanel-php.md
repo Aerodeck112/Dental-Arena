@@ -69,7 +69,7 @@ Arhiva `dentalarena-php.zip` conține:
 6. **Instalarea:** deschideți **https://dentalarena.ro/admin/instalare**, ca la A.5, dar alegeți
    **Site-ul public**.
 7. **În panou (/admin):**
-   - **Setări**: datele firmei (denumire, CUI, Reg. Com., sediu, IBAN), e-mailul care primește
+   - **Setări**: firma fiecărei clinici (denumire, CUI, Reg. Com., sediu, IBAN), e-mailul care primește
      cererile, adresele, telefoanele și programul clinicilor (bifați „Programul apare pe site”);
    - **Servicii și prețuri**: verificați prețurile;
    - **Fotografii site** și **Echipa**: fotografiile;
@@ -232,7 +232,7 @@ furnizorul în Politica de confidențialitate și spuneți-i pacientului când �
 
 ## Semnarea acordurilor pe tabletă (etapa 5)
 
-Pacientul semnează acordurile (GDPR, tratament, inhalosedare, fotografii) pe o tabletă la recepție,
+Pacientul semnează acordurile (GDPR, tratament, fotografii) pe o tabletă la recepție,
 cu degetul, după un **cod din 6 cifre** primit de la recepționeră.
 
 **O singură dată, pe tabletă:** deschideți pe tabletă `https://dentalarena.ro/admin/tablete`,
@@ -305,7 +305,7 @@ Politica de confidențialitate.
 ## Programarea online pe site, absențe și zile libere (etapa 6a)
 
 Pe pagina **Programare**, pacientul își alege singur ora, în 4 pași: motivul și clinica → ziua și
-ora (orice medic sau unul anume) → cum se simte (emoții, inhalosedare) → numele și telefonul.
+ora (orice medic sau unul anume) → cum se simte (fără emoții, emoții, frică) → numele și telefonul.
 Programarea intră direct în calendar, cu sursa „online”, iar pacientul primește confirmarea (SMS și
 e-mail) cu un **link** de unde o confirmă, o anulează (până cu N ore înainte) sau o adaugă în
 calendarul telefonului. Dacă recepția mută sau anulează programarea, linkul vechi nu mai merge. Cine
@@ -329,13 +329,17 @@ nu găsește o oră apasă „Prefer să mă sunați” și lasă o cerere.
 
 ## Contul VITIM (suport tehnic) și partea financiară
 
-Panoul are patru roluri: **Suport tehnic (VITIM)**, Administrator, Recepție, Medic.
+Panoul are cinci roluri: **Suport tehnic (VITIM)**, Administrator, **Administrator medic**, Recepție, Medic.
 
 - **VITIM** configurează: Setări (firma, clinicile, mesaje SMS/WhatsApp/e-mail, asistentul AI,
   chatul, programările online, tabletele, actualizările) și Utilizatori. Vede și tot restul.
 - **Administratorul** vede tot ce ține de clinică (pacienți, calendar, rapoarte, prețuri, echipa,
   fotografii, marketing, GDPR, jurnal), dar nu mai vede Setări și Utilizatori cât timp există un cont
   VITIM activ. Fără cont VITIM, administratorul le are pe toate (ca la instalare).
+- **Administratorul medic** este administratorul care e și medic: are tot ce are administratorul,
+  plus partea de medic (anamneză, odontogramă, planuri, note, implanturi, consultația cu AI). Contul se
+  leagă obligatoriu de profilul lui de medic (Utilizatori → cont → Profilul de medic), ca programările
+  și notificările lui să ajungă la el.
 - Ca să treceți contul existent pe rolul nou: Utilizatori → contul VITIM → Rolul: **Suport tehnic
   (VITIM)** → Salvați. Din acel moment, Setările și Utilizatorii le vede doar VITIM.
 - **Ce a schimbat VITIM ajunge la administrator**: pe pagina **Azi** apare un chenar cu fiecare
@@ -354,7 +358,7 @@ Rapoarte; ce s-a emis deja rămâne în baza de date.
 - În vederea pe zi, o programare se **trage** la altă oră, la alt medic sau în alt cabinet și se
   **lungește** de marginea de jos. Câteva secunde apare „Anulați”. Pacientul primește noua oră abia
   după două minute, deci o mutare anulată nu trimite nimic. Peste o absență nu se poate muta; în
-  afara programului, peste altă programare sau cu inhalosedarea ocupată, calendarul întreabă
+  afara programului sau peste altă programare, calendarul întreabă
   „Mutați oricum?”.
 - Vederi: **Zi** (pe medici sau pe cabinete), **Săptămână**, **Listă** (șapte zile, cu telefonul și
   starea). O linie roșie arată ora de acum.
@@ -362,7 +366,7 @@ Rapoarte; ce s-a emis deja rămâne în baza de date.
   o vizită redeschisă). La **Finalizat**, pacientul intră singur pe lista de rechemări (la 6 luni,
   3 la parodontologie, 1 la ortodonție), dacă nu are deja o rechemare sau o programare viitoare.
 - Setări (VITIM) → clinica: **orele clinicii pe zile** (taie programul medicilor pe site),
-  **câte cabinete** și **câte aparate de inhalosedare** are. La Echipa → medic: cabinetul obișnuit.
+  **câte cabinete** are și **firma clinicii**. La Echipa → medic: cabinetul obișnuit.
 
 **Cererile**
 - Pe fiecare cerere: **cine se ocupă**, **istoricul** (apel cu rezultat: a răspuns, nu răspunde,
@@ -456,3 +460,25 @@ din copia bazei de date nu mai pot fi citite.
 - **Fotografiile nu se încarcă din panou**: activați extensia `gd` (Select PHP Version → Extensions)
   sau măriți `upload_max_filesize` (MultiPHP INI Editor), de exemplu la 16M.
 - **Pagina /admin/instalare apare din nou**: fișierul `dentalarena/config.php` lipsește; puneți-l înapoi din copia de siguranță.
+
+## Două firme, fără inhalosedare, Administrator medic, Facebook (octombrie 2026)
+
+- **Fiecare clinică este o firmă**: Cristești = S.C. Dental Arena S.R.L. (CUI RO30570968), Luduș =
+  S.C. Dental Arena Ludus S.R.L. (CUI RO30611278). Datele firmei se completează în Setări → clinica →
+  **Firma clinicii** (denumire, CUI, Reg. Com., sediu, bancă, IBAN). Firma apare pe acordurile semnate
+  la acea clinică (pe tabletă: firma clinicii tabletei; tipărit: firma clinicii alese), la sfârșitul
+  fiecărui acord, pe facturi, în subsolul site-ului și în Politica de confidențialitate / Termeni
+  (ambele firme, fiecare cu clinica ei). Cu partea financiară pornită, fiecare clinică are **seria ei**
+  de facturi și de chitanțe (Cristești DA/DAC, Luduș DAL/DALC), numerotate separat.
+- **Inhalosedarea nu se mai practică**: a dispărut de pe site (pagina, prețul, întrebările, bifa de la
+  programare) și din panou (programare, calendar, fișă, setări, acorduri). Adresa veche
+  `/inhalosedare` duce la `/servicii`. Acordurile de inhalosedare semnate înainte rămân în fișă, ca
+  istoric, și se pot deschide; nu se mai pot cere.
+- **Administrator medic**: rol nou (vezi mai sus).
+- **Fotografiile clinicilor** au fost inversate: casa albă cu coloana din lemn este Cristești, fațada
+  cu vitrina este Luduș.
+- **Postările de pe Facebook** apar pe prima pagină, în „Ce mai facem” (pluginul de pagină Facebook).
+  Se încarcă doar după acordul vizitatorului (butonul „Afișați postările” sau cookie-urile Facebook
+  din banner), ca harta Google. Adresa paginii și afișarea se schimbă din Setări → **Pagina de
+  Facebook**; pagina trebuie să fie publică.
+- Actualizarea aplică singură migrarea `011_two_companies.sql`.

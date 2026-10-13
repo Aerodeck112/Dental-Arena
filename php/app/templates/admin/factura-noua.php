@@ -271,7 +271,12 @@ $form = '<form method="post" novalidate class="flex flex-col gap-8" data-factura
     . '<button type="submit" class="' . e(btn('primary', 'l', 'ml-auto')) . '">' . icon('receipt', 20) . 'Emiteți factura</button></div>'
     . '</form>';
 
+// Each clinic is its own company, with its own series: the next number of each clinic allowed here.
+$seriesText = implode('; ', array_map(static function (int $l) use ($names): string {
+    $ser = location_series($l)['invoice'];
+    return $names[$l] . ': seria ' . $ser . ', următorul număr ' . doc_number($ser, peek_sequence('factura:' . $ser));
+}, $allowed));
 $body = '<p class="mb-4"><a href="/admin/pacienti/' . $id . '/financiar" class="inline-flex min-h-control items-center gap-1 text-link underline underline-offset-4">' . icon('chevron-left', 18) . e(patient_name($p)) . '</a></p>'
-    . admin_header('Factură nouă', 'Pentru ' . patient_name($p) . ', fișa nr. ' . (int) $p['file_number'] . '. Seria ' . $cfg['invoiceSeries'] . ', următorul număr: ' . doc_number($cfg['invoiceSeries'], peek_sequence('factura:' . $cfg['invoiceSeries'])) . '.')
+    . admin_header('Factură nouă', 'Pentru ' . patient_name($p) . ', fișa nr. ' . (int) $p['file_number'] . '. ' . $seriesText . '.')
     . '<div class="max-w-5xl">' . $form . '</div>';
 admin_page('Factură nouă', $body, $user);

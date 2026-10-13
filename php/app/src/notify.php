@@ -450,12 +450,12 @@ function users_of_doctor(?int $doctorId): array
 /** Reception and administrators who see a clinic (a request without a clinic: everyone). */
 function front_desk_users(?int $locationId): array
 {
-    $rows = db_all("SELECT * FROM users WHERE active = 1 AND role IN ('admin', 'receptie')");
+    $rows = db_all("SELECT * FROM users WHERE active = 1 AND role IN ('admin', 'admin-medic', 'receptie')");
     if ($locationId === null) {
         return $rows;
     }
     $at = array_map('intval', array_column(db_all('SELECT user_id FROM user_locations WHERE location_id = ?', [$locationId]), 'user_id'));
-    return array_values(array_filter($rows, static fn ($u) => $u['role'] === 'admin' || in_array((int) $u['id'], $at, true)));
+    return array_values(array_filter($rows, static fn ($u) => in_array($u['role'], ['admin', 'admin-medic'], true) || in_array((int) $u['id'], $at, true)));
 }
 
 // ── The doctors' programme of the day ────────────────────────────────────────

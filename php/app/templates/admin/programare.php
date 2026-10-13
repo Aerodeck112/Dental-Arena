@@ -24,7 +24,7 @@ if (!$isNew && is_post() && post('op') === 'stare') {
     if (isset(APPT_STATUS[$st], $allowedNext[$st]) && $st !== $appt['status']) {
         if (in_array($appt['status'], ['anulat', 'neprezentat'], true) && in_array($st, APPT_ACTIVE, true)) {
             // Back in the calendar: the time may have been given to someone else meanwhile.
-            $check = appointment_checks((int) $appt['doctor_id'], (int) $appt['location_id'], $appt['starts_at'], $appt['ends_at'], (int) $appt['patient_id'], (int) $appt['id'], $appt['cabinet'] !== null ? (int) $appt['cabinet'] : null, (int) $appt['wants_sedation'] === 1);
+            $check = appointment_checks((int) $appt['doctor_id'], (int) $appt['location_id'], $appt['starts_at'], $appt['ends_at'], (int) $appt['patient_id'], (int) $appt['id'], $appt['cabinet'] !== null ? (int) $appt['cabinet'] : null);
             if ($check['block'] !== null) {
                 flash($check['block'], 'eroare');
                 redirect($back ?? "/admin/programari/{$appt['id']}");
@@ -76,7 +76,6 @@ $v = [
     'category' => (string) ($appt['category_slug'] ?? ($lead['category_slug'] ?? '')),
     'reason' => (string) ($appt['reason'] ?? ($recall['reason'] ?? '')),
     'comfort' => (string) ($appt['comfort'] ?? ($lead['comfort'] ?? ($patient['comfort'] ?? ''))),
-    'sedation' => (string) (int) ($appt['wants_sedation'] ?? ($patient['prefers_sedation'] ?? (($lead['comfort'] ?? '') === 'frica' ? 1 : 0))),
     'notes' => (string) ($appt['notes'] ?? ($lead ? trim(($lead['message'] ?? '') . ($lead['preferred_time'] ? "\nInterval dorit: " . (TIME_WINDOWS[$lead['preferred_time']] ?? '') : '')) : '')),
     'status' => (string) ($appt['status'] ?? 'programat'),
     'cabinet' => (string) ($appt['cabinet'] ?? ''),
@@ -122,7 +121,6 @@ if (is_post()) {
     foreach (['location', 'doctor', 'date', 'time', 'duration', 'cabinet', 'category', 'reason', 'comfort', 'notes', 'status', 'p_last', 'p_first', 'p_phone', 'p_email'] as $k) {
         $v[$k] = post($k);
     }
-    $v['sedation'] = post('sedation') === '1' ? '1' : '0';
     $loc = admin_int($v['location']);
     if ($loc === null || !in_array($loc, $allowed, true)) {
         $errors['location'] = 'Alegeți clinica.';
@@ -173,10 +171,10 @@ if (is_post()) {
         $startsAt = $d->format('Y-m-d H:i:s');
         $endsAt = $d->modify("+{$dur} minutes")->format('Y-m-d H:i:s');
         $moved = $isNew || $appt['starts_at'] !== $startsAt || $appt['ends_at'] !== $endsAt || (int) $appt['doctor_id'] !== $doc || (int) $appt['location_id'] !== $loc
-            || (string) ($appt['cabinet'] ?? '') !== (string) ($cabinet ?? '') || ((int) $appt['wants_sedation'] === 0 && $v['sedation'] === '1');
+            || (string) ($appt['cabinet'] ?? '') !== (string) ($cabinet ?? '');
         if (in_array($v['status'], APPT_ACTIVE, true) && $moved) {
             // A doctor away or a clinic closed: the absence has to go first. The rest only warns.
-            $check = appointment_checks($doc, $loc, $startsAt, $endsAt, $patient !== null ? (int) $patient['id'] : ($appt !== null ? (int) $appt['patient_id'] : null), $appt ? (int) $appt['id'] : null, $cabinet, $v['sedation'] === '1');
+            $check = appointment_checks($doc, $loc, $startsAt, $endsAt, $patient !== null ? (int) $patient['id'] : ($appt !== null ? (int) $appt['patient_id'] : null), $appt ? (int) $appt['id'] : null, $cabinet);
             if ($check['block'] !== null) {
                 $errors['time'] = $check['block'];
             } elseif ($check['warn'] !== [] && post('suprapune') !== '1') {
@@ -196,7 +194,6 @@ if (is_post()) {
                     'file_number' => next_file_number(),
                     'search_text' => patient_search_text($row),
                     'comfort' => $v['comfort'] ?: null,
-                    'prefers_sedation' => (int) $v['sedation'],
                     'created_by' => $user['id'],
                     'created_at' => now_sql(),
                     'updated_at' => now_sql(),
@@ -212,7 +209,6 @@ if (is_post()) {
                 'ends_at' => $endsAt,
                 'cabinet' => $cabinet,
                 'comfort' => $v['comfort'] ?: null,
-                'wants_sedation' => (int) $v['sedation'],
                 'notes' => mb_substr($v['notes'], 0, 4000) ?: null,
                 'updated_by' => $user['id'],
                 'updated_at' => now_sql(),
@@ -300,7 +296,7 @@ if ($patient !== null) {
     $patientBlock = '<input type="hidden" name="pacient" value="' . (int) $patient['id'] . '">'
         . '<div class="flex flex-wrap items-center gap-3"><p><a href="/admin/pacienti/' . (int) $patient['id'] . '" class="text-h3 font-semibold text-link underline-offset-4 hover:underline">' . e(patient_name($patient)) . '</a>'
         . '<span class="block text-mic text-discret">Fișa nr. ' . (int) $patient['file_number'] . ($patient['phone'] !== '' ? ' · <span class="telefon">' . e(format_phone($patient['phone'])) . '</span>' : '') . '</span></p>'
-        . alert_chips($alerts) . comfort_chip($patient['comfort'], (bool) $patient['prefers_sedation']) . '</div>'
+        . alert_chips($alerts) . comfort_chip($patient['comfort']) . '</div>'
         . ($isNew ? '<p class="mt-2"><a href="' . e(admin_url('/admin/programari/noua', ['clinica' => $v['location'], 'data' => $v['date'], 'ora' => $v['time'], 'cerere' => $lead['id'] ?? null])) . '" class="text-mic text-link underline">Alt pacient</a></p>' : '');
 } else {
     $patientBlock = '<p class="text-mic text-discret">Căutați pacientul după nume, telefon sau numărul fișei' . ($lead ? '' : '') . ', sau completați datele unui pacient nou mai jos.</p>'
@@ -381,7 +377,6 @@ $body = admin_header($isNew ? 'Programare nouă' : 'Programarea din ' . short_da
     . text_field('reason', 'Motivul', ['value' => $v['reason'], 'optional' => true, 'hint' => 'De exemplu: durere la 36, control după extracție'])
     . '</div><div class="mt-5 flex flex-col gap-5">'
     . radio_group('comfort', 'Cum se simte pacientul', ['' => 'Nu știm'] + COMFORT_SHORT, ['inline' => true, 'value' => $v['comfort']])
-    . checkbox_field('sedation', 'Cu inhalosedare', ['checked' => $v['sedation'] === '1', 'description' => 'Se pregătește aparatul.'])
     . text_area('notes', 'Observații de recepție', ['value' => $v['notes'], 'rows' => 3, 'optional' => true])
     . (!$isNew ? select_field('status', 'Starea', APPT_STATUS, ['value' => $v['status']]) : '')
     . '</div></section>'

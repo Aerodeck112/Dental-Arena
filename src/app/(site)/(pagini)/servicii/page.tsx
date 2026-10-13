@@ -12,7 +12,7 @@ export const revalidate = 300;
 export const metadata = pageMetadata({
   title: "Servicii stomatologice în Cristești și Luduș",
   description:
-    "Servicii stomatologice în Cristești și Luduș: consultație, carii, implanturi, extracții, coroane, aparat dentar, copii, albire și inhalosedare, cu prețuri.",
+    "Servicii stomatologice în Cristești și Luduș: consultație, carii, implanturi, extracții, coroane, aparat dentar, copii și albire, cu prețuri.",
   path: "/servicii",
 });
 

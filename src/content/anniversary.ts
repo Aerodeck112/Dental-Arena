@@ -42,8 +42,8 @@ export const ANNIVERSARY = {
       height: 2000,
     },
     second: {
-      src: "/images/clinica/ludus-seara.jpg",
-      alt: "Clinica Dental Arena din Luduș seara, cu aleea luminată",
+      src: "/images/clinica/cristesti-seara.jpg",
+      alt: "Clinica Dental Arena din Cristești seara, cu aleea luminată",
       width: 1440,
       height: 1800,
     },

@@ -12,11 +12,11 @@ export const COMFORT_STORAGE_KEY = "da-confort";
 export const HOME = {
   title: SITE.homeTitle,
   description:
-    "Clinică stomatologică în Cristești, lângă Târgu Mureș, și în Luduș: implanturi, ortodonție, copii, tratament fără frică sub inhalosedare. Programare online.",
+    "Clinică stomatologică în Cristești, lângă Târgu Mureș, și în Luduș: implanturi, ortodonție, copii, tratamente fără durere. Programare online.",
 
   hero: {
     lines: ["Fără durere,", "fără frică,", "cu precizie."],
-    lead: "Clinică stomatologică în Cristești, lângă Târgu Mureș, și în Luduș. Dacă vă e teamă de dentist, putem lucra cu inhalosedare: rămâneți conștient, doar mult mai relaxat.",
+    lead: "Clinică stomatologică în Cristești, lângă Târgu Mureș, și în Luduș. Dacă vă e teamă de dentist, spuneți-ne: medicul vă explică fiecare pas, iar tratamentele se fac fără durere.",
     image: {
       src: "/images/clinica/receptie.jpg",
       alt: "La recepția Dental Arena, asistenta în uniformă verde îi dă unui pacient documentele vizitei",
@@ -54,9 +54,8 @@ export const HOME = {
         value: "frica" as ComfortAnswer,
         label: "Mi-e frică",
         reply:
-          "Putem lucra sub inhalosedare: rămâneți conștient, colaborați cu medicul și vă reveniți în 3–5 minute. Se poate folosi și la copii.",
-        cta: "Programați-vă cu inhalosedare",
-        link: { href: "/inhalosedare", label: "Despre inhalosedare" },
+          "Spuneți-ne la programare. Medicul vă explică fiecare pas înainte să înceapă, lucrăm cu anestezie locală și facem pauze când aveți nevoie.",
+        cta: "Programați-vă",
       },
     ],
     image: {
@@ -84,7 +83,7 @@ export const HOME = {
     title: "Copiii",
     body: [
       "Dantura copiilor trebuie îngrijită din timp: o carie netratată la dinții de lapte se complică și afectează creșterea dinților definitivi. Prevenim cariile prin fluorizare și prin sigilarea șanțurilor de pe dinți.",
-      "Iar pentru a învinge frica micuților de dentist, avem o metodă de sedare conștientă și sigură: inhalosedarea. Copiii se întorc la noi cu plăcere și fără frică.",
+      "Iar pentru a învinge frica micuților de dentist, lucrăm cu multă răbdare și le explicăm totul pe înțelesul lor. Copiii se întorc la noi cu plăcere și fără frică.",
     ],
     /** The three prices shown, by Service.code. */
     priceCodes: ["PED-FLUOR", "PED-SIGILARE", "PED-OBT-TEMP"],
@@ -104,7 +103,7 @@ export const HOME = {
       { title: "Programarea", text: "Alegeți online o oră liberă sau sunați la clinica la care veniți. Vă confirmăm programarea." },
       { title: "Consultația", text: "Medicul vă examinează și, dacă e nevoie, face o radiografie. Vă spune pe înțeles ce a găsit." },
       { title: "Planul de tratament", text: "Primiți planul cu etapele și prețul fiecăreia, înainte să începem orice tratament." },
-      { title: "Tratamentul", text: "Lucrăm fără durere. Dacă vă e teamă, putem lucra sub inhalosedare." },
+      { title: "Tratamentul", text: "Lucrăm fără durere. Dacă vă e teamă, spuneți-ne: mergem în ritmul dumneavoastră." },
     ],
   },
 

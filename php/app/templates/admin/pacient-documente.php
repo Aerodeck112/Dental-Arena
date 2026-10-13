@@ -69,7 +69,7 @@ if (is_post() && $writable) {
             $c = db_one('SELECT * FROM consents WHERE id = ? AND patient_id = ? AND withdrawn_at IS NULL', [(int) post('id'), $pid]);
             if ($c) {
                 db_update('consents', ['withdrawn_at' => now_sql(), 'withdrawn_by' => $user['id']], 'id = :id', ['id' => $c['id']]);
-                audit('acord-retras', CONSENT_TYPES[$c['type']] ?? $c['type'], null, $pid);
+                audit('acord-retras', CONSENT_TYPES[$c['type']] ?? CONSENT_RETIRED[$c['type']] ?? $c['type'], null, $pid);
                 flash('Acordul a fost trecut ca retras.');
             }
             redirect($base);
@@ -96,7 +96,8 @@ foreach ($consents as $c) {
     $latest[$c['type']] ??= $c;
 }
 $consentRows = '';
-foreach (CONSENT_TYPES as $type => $label) {
+foreach (CONSENT_TYPES + array_intersect_key(CONSENT_RETIRED, $latest) as $type => $label) {
+    $retired = !isset(CONSENT_TYPES[$type]);
     $c = $latest[$type] ?? null;
     $state = $c === null ? '<span class="text-mustar-text">Nesemnat</span>'
         : ($c['withdrawn_at'] !== null ? '<span class="text-carmin">Retras ' . e(format_date($c['withdrawn_at'])) . '</span>'
@@ -105,7 +106,7 @@ foreach (CONSENT_TYPES as $type => $label) {
                     : ($c['document_id'] ? ' · <a class="text-link underline" href="/admin/documente/' . (int) $c['document_id'] . '">copia scanată</a>' : '')));
     $consentRows .= '<li class="flex flex-wrap items-center justify-between gap-3 border-t border-linie py-3 first:border-t-0">'
         . '<div class="min-w-0"><p class="font-semibold">' . e($label) . '</p><p class="text-mic">' . $state . '</p></div>'
-        . '<div class="flex flex-wrap items-center gap-2"><a href="/admin/pacienti/' . $pid . '/acord/' . $type . '" class="' . e(btn('secondary', 's')) . '">' . icon('printer', 16) . 'Formularul</a>'
+        . '<div class="flex flex-wrap items-center gap-2">' . ($retired ? '' : '<a href="/admin/pacienti/' . $pid . '/acord/' . $type . '" class="' . e(btn('secondary', 's')) . '">' . icon('printer', 16) . 'Formularul</a>')
         . ($c !== null && $c['withdrawn_at'] === null && $writable ? '<form method="post" data-confirma="Pacientul își retrage acordul?">' . csrf_field() . '<input type="hidden" name="op" value="retrage"><input type="hidden" name="id" value="' . (int) $c['id'] . '"><button type="submit" class="' . e(btn('text', 's')) . '">Retras</button></form>' : '')
         . '</div></li>';
 }
@@ -122,7 +123,7 @@ $consentForm = $writable ? '<details class="mt-4 rounded-panou border border-lin
 $session = db_one("SELECT * FROM consent_sessions WHERE patient_id = ? AND status = 'asteptare' AND expires_at > ? ORDER BY id DESC LIMIT 1", [$pid, now_sql()]);
 $hasTablet = (bool) db_value('SELECT 1 FROM kiosk_devices WHERE revoked_at IS NULL LIMIT 1');
 if ($session !== null) {
-    $what = array_map(static fn ($t) => CONSENT_TYPES[$t] ?? $t, array_filter(explode(',', (string) $session['types'])));
+    $what = array_map(static fn ($t) => CONSENT_TYPES[$t] ?? CONSENT_RETIRED[$t] ?? $t, array_filter(explode(',', (string) $session['types'])));
     if ((int) $session['with_history'] === 1) {
         $what[] = 'chestionarul medical';
     }

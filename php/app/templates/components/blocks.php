@@ -254,12 +254,12 @@ function doctor_figure(array $d, string $sizes = '(min-width: 1280px) 232px, (mi
         . '</figcaption></figure>';
 }
 
-/** „Vă e teamă?”: the mustard note that leads to inhalosedare. */
-function comfort_note(string $title = 'Vă e teamă?', string $text = 'Intervenția se poate face sub inhalosedare: rămâneți conștient, doar mult mai relaxat.', string $class = ''): string
+/** „Vă e teamă?”: the mustard note that leads to the booking, where the patient can say so. */
+function comfort_note(string $title = 'Vă e teamă?', string $text = 'Spuneți-ne la programare. Medicul vă explică fiecare pas înainte să înceapă, lucrăm cu anestezie locală și facem pauze când aveți nevoie.', string $class = ''): string
 {
     return '<aside aria-label="' . e($title) . '" class="' . e(cn('rounded-panou bg-mustar-pal p-5 text-cerneala', $class)) . '">'
         . '<p class="flex items-center gap-2.5 text-h3 font-semibold"><span aria-hidden="true" class="inline-block size-2.5 shrink-0 rounded-full bg-mustar ring-1 ring-mustar-text"></span>' . e($title) . '</p>'
         . '<p class="mt-2 text-corp">' . e($text) . '</p>'
-        . '<a href="/inhalosedare" class="mt-1 inline-flex min-h-control items-center font-medium underline decoration-1 underline-offset-[0.2em] hover:decoration-2">Despre inhalosedare</a>'
+        . '<a href="' . e(booking_href(['confort' => 'frica'])) . '" class="mt-1 inline-flex min-h-control items-center font-medium underline decoration-1 underline-offset-[0.2em] hover:decoration-2">Programați-vă și spuneți-ne</a>'
         . '</aside>';
 }

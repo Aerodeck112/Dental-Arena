@@ -3,7 +3,8 @@
  * (menus are <details>, „Sunați” and „Meniu” fall back to links); with it:
  *  - header menus close on Esc, on a click outside and after following a link
  *  - „Meniu” and „Sunați” (phone bar) open as dialogs
- *  - the cookie banner (cookie da_consent = {v:1, harti, at}) and the Google maps after consent
+ *  - the cookie banner (cookie da_consent = {v:1, harti, facebook, at}), and the Google maps and the
+ *    Facebook posts after consent
  *  - „Cum vă simțiți când vă gândiți la dentist?” on the home page
  *  - the price search on /preturi
  *  - forms: no double sending, focus on the error list or the confirmation
@@ -76,11 +77,12 @@
     }
     return null;
   }
-  function writeConsent(harti) {
-    var state = { v: 1, harti: harti, at: new Date().toISOString() };
+  function writeConsent(harti, facebook) {
+    var state = { v: 1, harti: harti, facebook: facebook, at: new Date().toISOString() };
     var secure = location.protocol === "https:" ? "; Secure" : "";
     document.cookie = COOKIE + "=" + encodeURIComponent(JSON.stringify(state)) + "; Path=/; Max-Age=" + 180 * 86400 + "; SameSite=Lax" + secure;
     applyMaps();
+    applyFacebook();
   }
 
   var banner = document.getElementById("cookie-uri");
@@ -105,15 +107,15 @@
       if (!b) return;
       var what = b.getAttribute("data-cookie");
       if (what === "accept") {
-        writeConsent(true);
+        writeConsent(true, true);
         closeBanner();
       } else if (what === "refuse") {
-        writeConsent(false);
+        writeConsent(false, false);
         closeBanner();
       } else if (what === "settings") {
         showSettings(true);
       } else if (what === "save") {
-        writeConsent(banner.querySelector('input[name="harti"]').checked);
+        writeConsent(banner.querySelector('input[name="harti"]').checked, banner.querySelector('input[name="facebook"]').checked);
         closeBanner();
       }
     });
@@ -123,6 +125,7 @@
     returnFocus = document.activeElement;
     var c = readConsent();
     banner.querySelector('input[name="harti"]').checked = !!(c && c.harti);
+    banner.querySelector('input[name="facebook"]').checked = !!(c && c.facebook);
     banner.hidden = false;
     showSettings(true);
     banner.focus();
@@ -149,10 +152,34 @@
     var b = e.target.closest && e.target.closest("[data-incarca-harta]");
     if (!b) return;
     var box = b.closest("[data-harta]");
-    if (b.hasAttribute("data-mereu")) writeConsent(true);
+    if (b.hasAttribute("data-mereu")) writeConsent(true, !!(readConsent() || {}).facebook);
     else if (box) loadMap(box);
   });
   applyMaps();
+
+  // Facebook posts ([data-facebook] with data-src, home page): the Page Plugin, sized to its box,
+  // only after consent; „Afișați postările” records that consent.
+  function loadFacebook(box) {
+    if (box.querySelector("iframe")) return;
+    var f = document.createElement("iframe");
+    f.src = box.getAttribute("data-src") + "&width=" + Math.max(180, Math.min(500, Math.floor(box.clientWidth)));
+    f.title = box.getAttribute("data-title") || "Facebook";
+    f.loading = "lazy";
+    f.setAttribute("allow", "encrypted-media; clipboard-write; picture-in-picture; web-share");
+    f.className = "absolute inset-0 h-full w-full border-0";
+    box.innerHTML = "";
+    box.appendChild(f);
+  }
+  function applyFacebook() {
+    var c = readConsent();
+    if (!c || !c.facebook) return;
+    Array.prototype.forEach.call(document.querySelectorAll("[data-facebook]"), loadFacebook);
+  }
+  document.addEventListener("click", function (e) {
+    if (!(e.target.closest && e.target.closest("[data-incarca-facebook]"))) return;
+    writeConsent(!!(readConsent() || {}).harti, true);
+  });
+  applyFacebook();
 
   // ── „Cum vă simțiți…” (home) ────────────────────────────────────────────────
   var comfort = document.querySelector("[data-confort]");

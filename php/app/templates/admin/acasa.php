@@ -8,12 +8,12 @@
 declare(strict_types=1);
 
 purge_old_leads();
-if ($user['role'] === 'admin' && is_post() && post('op') === 'vitim-vazut') {
+if (in_array($user['role'], ['admin', 'admin-medic'], true) && is_post() && post('op') === 'vitim-vazut') {
     csrf_check();
     db_update('users', ['changes_seen_id' => max((int) $user['changes_seen_id'], (int) post('pana'))], 'id = :id', ['id' => $user['id']]);
     redirect('/admin');
 }
-$techNews = $user['role'] === 'admin' ? tech_changes((int) $user['changes_seen_id'], 15) : [];
+$techNews = in_array($user['role'], ['admin', 'admin-medic'], true) ? tech_changes((int) $user['changes_seen_id'], 15) : [];
 $names = admin_clinic_names();
 $allowed = array_values(array_filter(allowed_location_ids($user), static fn ($id) => isset($names[$id])));
 $clinicId = current_clinic_id($user);
@@ -56,7 +56,7 @@ foreach ($appts as $a) {
     $rows .= '<li class="' . e(cn('grid gap-3 border-t border-linie py-4 first:border-t-0 sm:grid-cols-[4.5rem_1fr_auto] sm:items-center', $muted ? 'opacity-60' : '')) . '">'
         . '<p class="font-display text-[1.75rem] leading-none cifre">' . e(hm($a['starts_at'])) . '<span class="block pt-1 font-sans text-mic text-discret">până la ' . e(hm($a['ends_at'])) . '</span></p>'
         . '<div class="min-w-0"><p><a href="/admin/pacienti/' . (int) $a['patient_id'] . '" class="text-h3 font-semibold text-cerneala underline-offset-4 hover:underline">' . e(patient_name($a)) . '</a></p>'
-        . (($chips = alert_chips($alerts) . comfort_chip($a['comfort'], (bool) $a['wants_sedation'])) !== '' ? '<p class="mt-1 flex flex-wrap gap-1.5">' . $chips . '</p>' : '')
+        . (($chips = alert_chips($alerts) . comfort_chip($a['comfort'])) !== '' ? '<p class="mt-1 flex flex-wrap gap-1.5">' . $chips . '</p>' : '')
         . '<p class="mt-1 text-mic text-discret">' . e(implode(', ', array_filter([$docs[(int) $a['doctor_id']] ?? '', $a['reason'] ?: service_title($a['category_slug'])]))) . '</p></div>'
         . '<form method="post" action="/admin/programari/' . $id . '" class="flex flex-wrap items-center gap-2 sm:justify-end">' . csrf_field()
         . '<input type="hidden" name="op" value="stare"><input type="hidden" name="inapoi" value="/admin">'

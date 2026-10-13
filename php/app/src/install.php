@@ -84,7 +84,7 @@ function run_install(array $in): array
     return ['ok' => true, 'errors' => []];
 }
 
-/** The data of the current site: clinics, the 10 services with their prices, the team. */
+/** The data of the current site: clinics, the services with their prices, durations and online reasons, the team. */
 function seed_database(PDO $pdo): void
 {
     $seed = data_file('seed');
@@ -100,9 +100,10 @@ function seed_database(PDO $pdo): void
     foreach (content('clinicOrder') as $slug) {
         $c = content("clinics.{$slug}");
         $ins(
-            'INSERT INTO locations (slug, name, short_name, street, city, county, postal_code, phone, email, hours_text, publish_hours, sort_order) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
-            [$slug, $c['name'], $c['shortName'], $c['street'], $c['city'], $c['county'], $c['postalCode'], $c['phone'], content('site.email'), "Luni–Vineri: 09:00–19:00", 0, $order++],
+            'INSERT INTO locations (slug, name, short_name, street, city, county, postal_code, phone, email, hours_text, publish_hours, sort_order, legal_name, cui, invoice_series, receipt_series) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+            [$slug, $c['name'], $c['shortName'], $c['street'], $c['city'], $c['county'], $c['postalCode'], $c['phone'], content('site.email'), "Luni–Vineri: 09:00–19:00", 0, $order, $c['company']['legalName'], $c['company']['cui'], $order === 1 ? 'DA' : 'DA' . strtoupper(substr($slug, 0, 1)), $order === 1 ? 'DAC' : 'DA' . strtoupper(substr($slug, 0, 1)) . 'C'],
         );
+        $order++;
     }
     $catIds = [];
     foreach ($seed['categories'] as $c) {
@@ -112,7 +113,7 @@ function seed_database(PDO $pdo): void
     foreach ($seed['services'] as $s) {
         $sort[$s['category']] = ($sort[$s['category']] ?? 0) + 1;
         $ins(
-            'INSERT INTO services (category_id, code, name, price_min, price_max, price_from, unit, representative, public_visible, sort_order, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+            'INSERT INTO services (category_id, code, name, price_min, price_max, price_from, unit, representative, public_visible, sort_order, updated_at, duration_minutes, bookable_online, online_label, online_hint, urgent) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
             [
                 $catIds[$s['category']],
                 $s['code'],
@@ -125,6 +126,11 @@ function seed_database(PDO $pdo): void
                 $s['publicVisible'] ? 1 : 0,
                 $sort[$s['category']],
                 $now,
+                (int) ($s['durationMinutes'] ?? 30),
+                !empty($s['online']) ? 1 : 0,
+                $s['online']['label'] ?? null,
+                $s['online']['hint'] ?? null,
+                !empty($s['urgent']) ? 1 : 0,
             ],
         );
     }

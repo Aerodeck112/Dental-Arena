@@ -26,7 +26,6 @@ export const metadata = pageMetadata({
   absoluteTitle: true,
 });
 
-const SEDATION_CODE = "INH-ORA";
 
 const LINK =
   "inline-flex min-h-control items-center font-medium text-link underline decoration-1 underline-offset-[0.2em] hover:decoration-2";
@@ -36,7 +35,7 @@ export default async function HomePage() {
   const [doctors, index, prices, locations, img] = await Promise.all([
     getPublicDoctors(),
     getServiceIndex(),
-    getPricesByCodes([...HOME.children.priceCodes, SEDATION_CODE]),
+    getPricesByCodes([...HOME.children.priceCodes]),
     getPublicLocations(),
     getSiteImages([
       "acasa.principala",
@@ -47,11 +46,10 @@ export default async function HomePage() {
       "clinica.cristesti",
       "clinica.ludus",
       "serviciu.implantologie",
-      "serviciu.inhalosedare",
+      "serviciu.ortodontie",
     ] as const),
   ]);
   const childPrices = HOME.children.priceCodes.map((c) => prices.get(c)).filter((p): p is PublicPrice => !!p);
-  const sedation = prices.get(SEDATION_CODE);
   const { hero, comfort, children: kids, visit } = HOME;
 
   return (
@@ -123,7 +121,7 @@ export default async function HomePage() {
             rows={index}
             featured={[
               { slug: "implantologie", image: img["serviciu.implantologie"] },
-              { slug: "inhalosedare", image: img["serviciu.inhalosedare"] },
+              { slug: "ortodontie", image: img["serviciu.ortodontie"] },
             ]}
             className="mt-12"
           />
@@ -138,7 +136,7 @@ export default async function HomePage() {
               {comfort.question}
             </h2>
             <p className="mt-6 mb-10 max-w-[46ch] text-lead text-discret">{comfort.intro}</p>
-            <ComfortQuestion headingId="confort" sedationPrice={sedation?.price ?? null} />
+            <ComfortQuestion headingId="confort" />
           </div>
           <div className="relative min-h-[22rem] lg:col-span-5">
             <SitePhoto image={img["acasa.confort"]} sizes="(min-width: 1024px) 42vw, 100vw" />

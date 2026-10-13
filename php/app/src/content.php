@@ -79,10 +79,32 @@ function clinics(): array
             $c['phone'] = $r['phone'];
             $c['email'] = $r['email'] !== '' ? $r['email'] : $c['email'];
             $c['hoursText'] = ((int) $r['publish_hours'] === 1 && trim((string) $r['hours_text']) !== '') ? trim((string) $r['hours_text']) : null;
+            if (trim((string) ($r['legal_name'] ?? '')) !== '') {
+                $c['company'] = ['legalName' => (string) $r['legal_name'], 'cui' => (string) $r['cui']];
+            }
         }
         $cache[$slug] = $c;
     }
     return $cache;
+}
+
+/** The clinic's Facebook page (Setări → Site; until then the one in the content). */
+function facebook_url(): string
+{
+    $url = trim((string) (setting('facebook')['url'] ?? ''));
+    return $url !== '' ? $url : (string) content('site.facebookUrl');
+}
+
+/** The Facebook Page Plugin of the home page, or null when it is turned off. */
+function facebook_posts_src(): ?string
+{
+    if (empty(setting('facebook')['show_posts'])) {
+        return null;
+    }
+    return 'https://www.facebook.com/plugins/page.php?' . http_build_query([
+        'href' => facebook_url(), 'tabs' => 'timeline', 'height' => 640, 'small_header' => 'true',
+        'adapt_container_width' => 'true', 'hide_cover' => 'false', 'show_facepile' => 'false', 'locale' => 'ro_RO',
+    ]);
 }
 
 /** „str. Principală 536J/1, Cristești, Mureș” */
@@ -95,6 +117,8 @@ function clinic_address(array $c): string
 
 const SETTING_DEFAULTS = [
     'company' => ['legalName' => '', 'cui' => '', 'regCom' => '', 'registeredAddress' => '', 'bank' => '', 'iban' => ''],
+    // The Facebook page: its posts on the home page (after consent) and the link in the footer.
+    'facebook' => ['url' => '', 'show_posts' => true],
     'notify_email' => 'office@dentalarena.ro',
     'lead_retention_days' => 365,
     'invoicing' => [
@@ -132,12 +156,47 @@ function setting_save(string $key, mixed $value): void
     db_run('INSERT INTO settings (k, v) VALUES (?, ?) ON DUPLICATE KEY UPDATE v = VALUES(v)', [$key, json_encode($value, JSON_UNESCAPED_UNICODE)]);
 }
 
-/** The values the legal pages fill in ({{legalName}}, {{cui}}, …). */
+/**
+ * The company that owns a clinic (each clinic is its own company: Cristești and Luduș). A clinic
+ * without its own company data falls back to the company in Setări.
+ *
+ * @return array{legalName:string,cui:string,regCom:string,registeredAddress:string,bank:string,iban:string}
+ */
+function location_company(?int $locationId): array
+{
+    $c = array_merge(SETTING_DEFAULTS['company'], (array) setting('company'));
+    $l = $locationId ? db_one('SELECT legal_name, cui, reg_com, registered_address, bank, iban FROM locations WHERE id = ?', [$locationId]) : null;
+    if ($l === null || trim((string) $l['legal_name']) === '') {
+        return $c;
+    }
+    return ['legalName' => (string) $l['legal_name'], 'cui' => (string) $l['cui'], 'regCom' => (string) $l['reg_com'], 'registeredAddress' => (string) $l['registered_address'], 'bank' => (string) $l['bank'], 'iban' => (string) $l['iban']];
+}
+
+/** Every clinic's company, in words, for the legal pages: „S.C. … S.R.L. (CUI …), pentru clinica din Cristești, și …”. */
+function companies_text(): string
+{
+    $parts = [];
+    try {
+        foreach (db_all('SELECT id, short_name FROM locations ORDER BY sort_order, id') as $l) {
+            $c = location_company((int) $l['id']);
+            $missing = static fn (string $v) => trim($v) !== '' ? $v : '[de completat]';
+            $parts[] = $missing($c['legalName']) . ' (CUI ' . $missing($c['cui']) . ($c['regCom'] !== '' ? ', Reg. Com. ' . $c['regCom'] : '') . ($c['registeredAddress'] !== '' ? ', sediul în ' . $c['registeredAddress'] : '') . '), pentru clinica din ' . $l['short_name'];
+        }
+    } catch (Throwable $e) {
+        app_log('warning', 'companies_text: ' . $e->getMessage());
+    }
+    return $parts === [] ? '[de completat]' : (count($parts) > 1 ? implode(', ', array_slice($parts, 0, -1)) . ' și ' . end($parts) : $parts[0]);
+}
+
+/** The values the legal pages fill in ({{operatori}}, {{legalName}}, {{cui}}, …). */
 function legal_values(): array
 {
-    $c = setting('company');
+    // {{legalName}} and the rest: the company of the first clinic (the texts now use {{operatori}}).
+    $first = INSTALLED ? db_value('SELECT id FROM locations ORDER BY sort_order, id LIMIT 1') : null;
+    $c = location_company($first !== null ? (int) $first : null);
     $days = (string) setting('lead_retention_days');
     return [
+        'operatori' => companies_text(),
         'legalName' => $c['legalName'],
         'cui' => $c['cui'],
         'regCom' => $c['regCom'],

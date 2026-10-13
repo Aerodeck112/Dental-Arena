@@ -2,7 +2,6 @@ import { chirurgieDentoAlveolara } from "./chirurgie-dento-alveolara";
 import { consultatieProfilaxie } from "./consultatie-profilaxie";
 import { esteticaDentara } from "./estetica-dentara";
 import { implantologie } from "./implantologie";
-import { inhalosedare } from "./inhalosedare";
 import { ortodontie } from "./ortodontie";
 import { parodontologie } from "./parodontologie";
 import { pedodontie } from "./pedodontie";
@@ -19,7 +18,6 @@ export { SERVICE_SLUGS, type ServiceContent, type ServiceFaq, type ServiceImage,
 export const SERVICES: Record<ServiceSlug, ServiceContent> = {
   "consultatie-profilaxie": consultatieProfilaxie,
   "stomatologie-generala": stomatologieGenerala,
-  inhalosedare,
   implantologie,
   "chirurgie-dento-alveolara": chirurgieDentoAlveolara,
   "protetica-dentara": proteticaDentara,

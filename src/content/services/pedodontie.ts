@@ -5,13 +5,13 @@ export const pedodontie: ServiceContent = {
   title: "Pedodonție",
   seoTitle: "Dentist pentru copii în Cristești și Luduș",
   description:
-    "Dentist pentru copii în Cristești și Luduș: fluorizare, sigilare și plombe pentru dinții de lapte. Pentru copiii cu frică, tratament sub inhalosedare.",
+    "Dentist pentru copii în Cristești și Luduș: fluorizare, sigilare și plombe pentru dinții de lapte. Pentru copiii cu frică, multă răbdare.",
   lead: "Copiii se întorc la noi cu plăcere și fără frică. Prevenim cariile din timp, ca dinții definitivi să crească sănătoși.",
   summary: "Stomatologie pentru copii, care se întorc de fiecare dată cu plăcere și fără frică.",
   body: [
     "La Dental Arena Clinic oferim și servicii de stomatologie pentru copii. Dantura lor trebuie îngrijită și nu este recomandat să așteptați până la apariția durerilor. Caria netratată apărută la dinții de lapte se complică și afectează creșterea dinților definitivi.",
     "Există tratamente cu ajutorul cărora se pot preveni cariile: fluorizarea și sigilarea șanțurilor și fosetelor, adică a adânciturilor de pe suprafața dinților.",
-    "Iar pentru a învinge frica micuților de dentist, avem o metodă de sedare conștientă și sigură: inhalosedarea.",
+    "Iar pentru a învinge frica micuților de dentist, lucrăm cu multă răbdare și le explicăm totul pe înțelesul lor.",
   ],
   image: {
     src: "/images/clinica/cabinet-plaja.jpg",
@@ -25,11 +25,11 @@ export const pedodontie: ServiceContent = {
   // Răspunsuri scrise din textele site-ului actual; de verificat de clinică.
   faqs: [
     { question: "De la ce vârstă îmi aduc copilul la dentist?", answer: "Dantura copiilor trebuie îngrijită din timp, de la apariția dinților de lapte. O carie netratată la dinții de lapte se complică și poate afecta dinții definitivi." },
-    { question: "Ce faceți dacă copilului îi e frică de dentist?", answer: "Lucrăm cu răbdare, iar pentru copiii cărora le e frică avem inhalosedarea: o metodă de sedare conștientă și sigură." },
+    { question: "Ce faceți dacă copilului îi e frică de dentist?", answer: "Lucrăm cu răbdare, explicăm pe înțelesul copilului fiecare pas și nu grăbim nimic. Prima vizită poate fi doar una de cunoaștere." },
     { question: "Cum previn cariile la copii?", answer: "Prin fluorizare și prin sigilarea șanțurilor de pe dinți, alături de periajul corect și controlul periodic." },
   ],
   ctaTitle: "Programați o consultație pentru copilul dumneavoastră",
   bookingCode: "CON-CONSULT",
   comfortNote: true,
-  related: ["inhalosedare", "ortodontie"],
+  related: ["ortodontie", "consultatie-profilaxie"],
 };

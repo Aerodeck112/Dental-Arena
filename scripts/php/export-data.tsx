@@ -45,9 +45,10 @@ write("content.json", {
 });
 
 // The first data the installer writes into MySQL; afterwards the clinic edits it in /admin.
+// Inhalation sedation is no longer offered (October 2026): not in the PHP site's first data.
 write("seed.json", {
-  categories: CATEGORIES,
-  services: SERVICES.map((s) => ({
+  categories: CATEGORIES.filter((c) => c.slug !== "inhalosedare"),
+  services: SERVICES.filter((s) => s.category !== "inhalosedare").map((s) => ({
     code: s.code,
     category: s.category,
     name: s.name,
@@ -57,6 +58,9 @@ write("seed.json", {
     unit: s.unit ?? null,
     representative: !!s.representative,
     publicVisible: s.publicVisible !== false,
+    durationMinutes: s.durationMinutes,
+    online: s.online ?? null,
+    urgent: !!s.urgent,
   })),
   doctors: DOCTORS.map((d) => ({
     slug: d.slug,

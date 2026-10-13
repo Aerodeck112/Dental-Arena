@@ -33,7 +33,6 @@ export type DentalArtName =
 export const SERVICE_ART: Record<ServiceSlug, DentalArtName> = {
   "consultatie-profilaxie": "consult",
   "stomatologie-generala": "plomba",
-  inhalosedare: "masca",
   implantologie: "implant",
   "chirurgie-dento-alveolara": "clesti",
   "protetica-dentara": "coroana",

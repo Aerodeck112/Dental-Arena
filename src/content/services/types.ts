@@ -6,7 +6,6 @@
 export const SERVICE_SLUGS = [
   "consultatie-profilaxie",
   "stomatologie-generala",
-  "inhalosedare",
   "implantologie",
   "chirurgie-dento-alveolara",
   "protetica-dentara",
@@ -64,9 +63,9 @@ export type ServiceContent = {
   ctaTitle: string;
   /** Preferred booking reason (Service.code) for „Programați o consultație”. */
   bookingCode: string;
-  /** Pass the comfort answer along (inhalosedare). */
+  /** Pass the comfort answer along to the booking. */
   bookingComfort?: "frica";
-  /** Show the „Vă e teamă?” comfort note (every page except Inhalosedare itself). */
+  /** Show the „Vă e teamă?” comfort note. */
   comfortNote: boolean;
   related: ServiceSlug[];
 };

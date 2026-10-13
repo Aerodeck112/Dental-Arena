@@ -274,12 +274,12 @@ function alert_chips(array $alerts, string $size = 'text-mic'): string
     return $out;
 }
 
-function comfort_chip(?string $comfort, bool $sedation = false): string
+function comfort_chip(?string $comfort): string
 {
-    if (($comfort === null || $comfort === '' || $comfort === 'fara-emotii') && !$sedation) {
+    if ($comfort === null || $comfort === '' || $comfort === 'fara-emotii') {
         return '';
     }
-    $label = $sedation ? 'Inhalosedare' : ($comfort === 'frica' ? 'Mi-e frică' : 'Emoții');
+    $label = $comfort === 'frica' ? 'Mi-e frică' : 'Emoții';
     return '<span class="inline-flex items-center gap-1.5 rounded-chip bg-mustar-pal px-2 py-0.5 text-mic font-medium text-mustar-text"><span aria-hidden="true" class="inline-block size-2 rounded-full bg-mustar ring-1 ring-mustar-text"></span>' . e($label) . '</span>';
 }
 
@@ -536,7 +536,7 @@ function lead_log(int $leadId, string $kind, ?string $outcome, ?string $body, ?a
 /** The accounts that can take care of requests (reception and administrators, not VITIM). */
 function lead_handlers(): array
 {
-    return array_column(db_all("SELECT id, name FROM users WHERE active = 1 AND role IN ('admin', 'receptie') ORDER BY name"), 'name', 'id');
+    return array_column(db_all("SELECT id, name FROM users WHERE active = 1 AND role IN ('admin', 'admin-medic', 'receptie') ORDER BY name"), 'name', 'id');
 }
 
 /**

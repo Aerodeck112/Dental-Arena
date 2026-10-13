@@ -62,7 +62,7 @@ function catalog(): array
     return $cache;
 }
 
-/** @return array<string,array> prices by service code (home page: children's prices, sedation). */
+/** @return array<string,array> prices by service code (home page: children's prices). */
 function prices_by_code(array $codes): array
 {
     if ($codes === []) {

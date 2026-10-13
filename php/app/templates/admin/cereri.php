@@ -11,7 +11,7 @@ if (is_post() && post('op') === 'muta') {
     $l = db_one('SELECT * FROM leads WHERE id = ?', [(int) post('id')]);
     $to = post('status');
     if ($l !== null && can_see_lead($l, $user) && in_array($to, ['nou', 'in-lucru', 'programat'], true) && $to !== $l['status']) {
-        db_update('leads', ['status' => $to, 'assigned_to' => $l['assigned_to'] ?? ($to === 'in-lucru' && in_array($user['role'], ['admin', 'receptie'], true) ? $user['id'] : null), 'updated_at' => now_sql(), 'updated_by' => $user['id']], 'id = :id', ['id' => $l['id']]);
+        db_update('leads', ['status' => $to, 'assigned_to' => $l['assigned_to'] ?? ($to === 'in-lucru' && in_array($user['role'], ['admin', 'admin-medic', 'receptie'], true) ? $user['id'] : null), 'updated_at' => now_sql(), 'updated_by' => $user['id']], 'id = :id', ['id' => $l['id']]);
         lead_log((int) $l['id'], 'stare', $to, null, $user);
         audit('stare-cerere', "#{$l['id']}: {$l['status']} → {$to}");
     }

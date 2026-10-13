@@ -8,12 +8,11 @@ require_once APP_DIR . '/src/booking.php';
 
 $home = content('home');
 $img = [];
-foreach (['acasa.principala', 'acasa.secundara', 'acasa.confort', 'acasa.copii', 'acasa.tehnologie', 'serviciu.implantologie', 'serviciu.inhalosedare'] as $slot) {
+foreach (['acasa.principala', 'acasa.secundara', 'acasa.confort', 'acasa.copii', 'acasa.tehnologie', 'serviciu.implantologie', 'serviciu.ortodontie'] as $slot) {
     $img[$slot] = site_image($slot);
 }
-$prices = prices_by_code([...$home['children']['priceCodes'], 'INH-ORA']);
+$prices = prices_by_code($home['children']['priceCodes']);
 $childPrices = array_values(array_filter(array_map(static fn ($c) => $prices[$c] ?? null, $home['children']['priceCodes'])));
-$sedation = $prices['INH-ORA']['price'] ?? null;
 $doctors = public_doctors();
 // The first free time at each clinic, for a consultation (online booking on).
 $first = [];
@@ -35,7 +34,7 @@ $h2 = 'font-display text-[clamp(2.5rem,1.6rem+2.8vw,4.25rem)] leading-[1.02] tex
 $link = 'inline-flex min-h-control items-center font-medium text-link underline decoration-1 underline-offset-[0.2em] hover:decoration-2';
 $tile = 'apasat flex min-h-[4.5rem] flex-col items-start justify-center rounded-control border border-linie-control bg-suprafata px-3 py-2 text-control text-cerneala transition-colors duration-150 hover:border-cerneala hover:bg-menta-pal';
 
-$body = capture(function () use ($home, $img, $childPrices, $sedation, $doctors, $h2, $link, $tile, $first, $online): void {
+$body = capture(function () use ($home, $img, $childPrices, $doctors, $h2, $link, $tile, $first, $online): void {
     ?>
 <section aria-labelledby="titlu-acasa" class="px-3 pt-1 sm:px-4">
   <div class="relative isolate grid overflow-hidden rounded-mare bg-padure text-white lg:min-h-[min(88svh,920px)] lg:grid-cols-12">
@@ -98,7 +97,7 @@ $body = capture(function () use ($home, $img, $childPrices, $sedation, $doctors,
         <a href="/servicii" class="<?= $link ?>">Toate serviciile</a>
       </p>
     </div>
-    <?php service_grid([['slug' => 'implantologie', 'image' => $img['serviciu.implantologie']], ['slug' => 'inhalosedare', 'image' => $img['serviciu.inhalosedare']]], 'mt-12'); ?>
+    <?php service_grid([['slug' => 'implantologie', 'image' => $img['serviciu.implantologie']], ['slug' => 'ortodontie', 'image' => $img['serviciu.ortodontie']]], 'mt-12'); ?>
   </div>
 </section>
 
@@ -118,7 +117,7 @@ $body = capture(function () use ($home, $img, $childPrices, $sedation, $doctors,
         <div id="confort-raspuns" aria-live="polite" class="mt-6 min-h-0">
           <?php foreach ($home['comfort']['answers'] as $a) { ?>
           <div data-raspuns="<?= e($a['value']) ?>" hidden class="<?= e(cn('da-rise rounded-panou p-5 sm:p-6', $a['value'] === 'fara-emotii' ? 'bg-menta-pal' : 'bg-mustar-pal')) ?>">
-            <p class="text-corp text-cerneala masura"><?= e($a['reply']) ?><?php if ($a['value'] === 'frica' && $sedation) { ?> <span class="font-semibold whitespace-nowrap cifre"><?= e($sedation) ?></span>.<?php } ?></p>
+            <p class="text-corp text-cerneala masura"><?= e($a['reply']) ?></p>
             <div class="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2">
               <a href="<?= e(booking_href(['confort' => $a['value']])) ?>" class="<?= e(btn('primary', 'l')) ?>"><?= e($a['cta']) ?></a>
               <?php if (!empty($a['link'])) { ?>
@@ -198,6 +197,28 @@ $body = capture(function () use ($home, $img, $childPrices, $sedation, $doctors,
     </div>
   </div>
 </section>
+
+<?php if (($fbSrc = facebook_posts_src()) !== null) { ?>
+<section aria-labelledby="facebook" class="pt-sectiune">
+  <div class="<?= CONTAINER ?> grid gap-12 lg:grid-cols-12 lg:items-start">
+    <div class="lg:col-span-5">
+      <h2 id="facebook" class="<?= $h2 ?>">Ce mai facem</h2>
+      <p class="mt-5 max-w-[46ch] text-lead text-discret">Noutăți din clinică, sfaturi și zilele noastre, de pe pagina Dental Arena de Facebook.</p>
+      <a href="<?= e(facebook_url()) ?>" target="_blank" rel="noopener noreferrer" class="<?= e(btn('secondary', 'l', 'mt-8')) ?>"><?= icon('external-link', 18) ?>Urmăriți-ne pe Facebook<span class="sr-only"> (se deschide într-o filă nouă)</span></a>
+    </div>
+    <div class="lg:col-span-6 lg:col-start-7">
+      <?php // site.js loads the posts into [data-facebook] once the visitor agrees, like the maps. ?>
+      <div data-facebook data-src="<?= e($fbSrc) ?>" data-title="Postările Dental Arena pe Facebook" class="relative mx-auto h-[640px] w-full max-w-[500px] overflow-hidden rounded-foto border border-linie bg-suprafata">
+        <div class="flex size-full flex-col items-start justify-end gap-3 bg-adancit p-5 sm:p-6">
+          <?= icon('message-square', 28, 'text-discret') ?>
+          <p class="max-w-[34ch] text-corp text-cerneala">Postările vin de la Facebook, care poate seta cookie-uri, de aceea le afișăm doar dacă sunteți de acord.</p>
+          <button type="button" data-incarca-facebook class="<?= e(btn('secondary')) ?>">Afișați postările</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<?php } ?>
 
 <section aria-labelledby="clinicile" class="py-sectiune">
   <div class="<?= CONTAINER ?>">

@@ -8,7 +8,7 @@ import { cn } from "@/lib/cn";
  */
 export function ComfortNote({
   title = "Vă e teamă?",
-  text = "Intervenția se poate face sub inhalosedare: rămâneți conștient, doar mult mai relaxat.",
+  text = "Spuneți-ne la programare. Medicul vă explică fiecare pas înainte să înceapă, lucrăm cu anestezie locală și facem pauze când aveți nevoie.",
   className,
 }: {
   title?: string;
@@ -23,10 +23,10 @@ export function ComfortNote({
       </p>
       <p className="mt-2 text-corp">{text}</p>
       <Link
-        href="/inhalosedare"
+        href="/programare?confort=frica"
         className="mt-1 inline-flex min-h-control items-center font-medium underline decoration-1 underline-offset-[0.2em] hover:decoration-2"
       >
-        Despre inhalosedare
+        Programați-vă și spuneți-ne
       </Link>
     </aside>
   );

@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     template: "%s | Dental Arena",
   },
   description:
-    "Clinică stomatologică de familie în Cristești, lângă Târgu Mureș, și în Luduș. Consultații, implanturi, ortodonție, stomatologie pentru copii și tratament sub inhalosedare.",
+    "Clinică stomatologică de familie în Cristești, lângă Târgu Mureș, și în Luduș. Consultații, implanturi, ortodonție, stomatologie pentru copii și tratamente fără durere.",
   applicationName: "Dental Arena",
   icons: {
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],

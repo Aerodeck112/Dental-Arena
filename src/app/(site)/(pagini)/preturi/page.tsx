@@ -12,7 +12,7 @@ export const revalidate = 300;
 export const metadata = pageMetadata({
   title: "Prețuri stomatologie: lista completă",
   description:
-    "Prețuri stomatologie în Cristești și Luduș: consultație, obturații, tratament de canal, implant dentar, coroane, aparat dentar, albire și inhalosedare.",
+    "Prețuri stomatologie în Cristești și Luduș: consultație, obturații, tratament de canal, implant dentar, coroane, aparat dentar și albire.",
   path: "/preturi",
 });
 

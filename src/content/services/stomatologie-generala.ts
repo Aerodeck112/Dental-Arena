@@ -17,7 +17,7 @@ export const stomatologieGenerala: ServiceContent = {
   // Răspunsuri scrise din textele site-ului actual; de verificat de clinică.
   faqs: [
     { question: "Când este nevoie de tratament de canal?", answer: "Când nervul dintelui (pulpa dentară) se inflamează sau se infectează, de obicei din cauza unei carii profunde, a unor plombe întinse, a fisurilor în smalț sau a unui traumatism." },
-    { question: "Doare tratamentul unei carii?", answer: "Tratamentele se fac fără durere, cu anestezie locală. Dacă vă e teamă, putem lucra și sub inhalosedare." },
+    { question: "Doare tratamentul unei carii?", answer: "Tratamentele se fac fără durere, cu anestezie locală. Dacă vă e teamă, spuneți-ne: medicul vă explică fiecare pas." },
     { question: "Cum previn cariile?", answer: "Prin control stomatologic periodic, folosirea regulată a aței dentare și periajul corect al dinților." },
   ],
   ctaTitle: "Programați o consultație",

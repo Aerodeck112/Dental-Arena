@@ -17,6 +17,22 @@ function invoicing(): array
     return setting('invoicing');
 }
 
+/**
+ * The invoice and receipt series of a clinic: each company numbers its own documents. A clinic
+ * without its own series uses the one in Setări → Facturare.
+ *
+ * @return array{invoice:string,receipt:string}
+ */
+function location_series(?int $locationId): array
+{
+    $cfg = invoicing();
+    $l = $locationId ? db_one('SELECT invoice_series, receipt_series FROM locations WHERE id = ?', [$locationId]) : null;
+    return [
+        'invoice' => trim((string) ($l['invoice_series'] ?? '')) !== '' ? (string) $l['invoice_series'] : (string) $cfg['invoiceSeries'],
+        'receipt' => trim((string) ($l['receipt_series'] ?? '')) !== '' ? (string) $l['receipt_series'] : (string) $cfg['receiptSeries'],
+    ];
+}
+
 /** „DA-000012” */
 function doc_number(?string $series, ?int $number): string
 {
@@ -183,7 +199,7 @@ function create_invoice(array $d, array $user): array
                 throw new DomainException('O linie din plan a fost deja facturată între timp. Reîncărcați pagina.');
             }
         }
-        $series = $cfg['invoiceSeries'];
+        $series = location_series((int) $d['location_id'])['invoice'];
         $number = next_sequence("factura:{$series}");
         $issued = now_sql();
         $id = db_insert('invoices', [
@@ -283,7 +299,7 @@ function insert_payment(array $p, array $user): int
     $series = null;
     $number = null;
     if ($p['method'] === 'numerar') {
-        $series = invoicing()['receiptSeries'];
+        $series = location_series((int) $p['location_id'])['receipt'];
         $number = next_sequence("chitanta:{$series}");
     }
     $id = db_insert('payments', [

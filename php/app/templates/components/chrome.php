@@ -177,6 +177,7 @@ function site_footer(): void
         <h2 class="font-display text-nume"><?= e($c['shortName']) ?></h2>
         <p class="mt-2 text-corp"><?= e(clinic_address($c)) ?><?= $c['area'] ? '<span class="block">' . e($c['area']) . '</span>' : '' ?></p>
         <?= phone_link($c, "{$link} telefon text-h3 font-semibold") ?>
+        <?php if (!empty($c['company']['legalName'])) { ?><p class="mt-2 text-legal text-discret"><?= e($c['company']['legalName']) ?><?= $c['company']['cui'] !== '' ? ' · CUI ' . e($c['company']['cui']) : '' ?></p><?php } ?>
       </li>
       <?php } ?>
     </ul>
@@ -184,7 +185,7 @@ function site_footer(): void
       <div class="lg:col-span-4">
         <a href="mailto:<?= e($site['email']) ?>" class="<?= $link ?> text-corp font-medium"><?= e($site['email']) ?></a>
         <ul class="flex flex-wrap gap-x-6">
-          <li><a href="<?= e($site['facebookUrl']) ?>" target="_blank" rel="noopener noreferrer" class="<?= $link ?>">Facebook<span class="sr-only"> (se deschide într-o filă nouă)</span></a></li>
+          <li><a href="<?= e(facebook_url()) ?>" target="_blank" rel="noopener noreferrer" class="<?= $link ?>">Facebook<span class="sr-only"> (se deschide într-o filă nouă)</span></a></li>
           <li><a href="<?= e($site['instagramUrl']) ?>" target="_blank" rel="noopener noreferrer" class="<?= $link ?>">Instagram<span class="sr-only"> (se deschide într-o filă nouă)</span></a></li>
         </ul>
       </div>
@@ -255,7 +256,7 @@ function cookie_banner(): void
   class="da-rise fixed inset-x-3 z-50 max-h-[calc(100dvh-7rem)] overflow-y-auto outline-none bottom-[calc(5.5rem+env(safe-area-inset-bottom))] md:bottom-6 md:left-margine md:right-auto md:w-[34rem] rounded-panou border border-linie bg-suprafata p-5 text-cerneala shadow-float sm:p-6">
   <h2 id="cookie-uri-titlu" class="text-h3 font-semibold">Cookie-uri</h2>
   <p id="cookie-uri-text" class="mt-2 text-corp">
-    Folosim doar cookie-urile fără de care site-ul nu funcționează. Harta Google de pe pagina de contact poate seta cookie-uri proprii, de aceea o încărcăm doar cu acordul dumneavoastră.
+    Folosim doar cookie-urile fără de care site-ul nu funcționează. Harta Google și postările de pe Facebook pot seta cookie-uri proprii, de aceea le încărcăm doar cu acordul dumneavoastră.
     <a href="/politica-cookies" class="text-link underline underline-offset-[0.2em] hover:decoration-2">Politica cookies</a>
   </p>
   <fieldset data-cookie-panel hidden class="mt-4 flex flex-col gap-3 border-t border-linie pt-4">
@@ -270,6 +271,10 @@ function cookie_banner(): void
     <label class="flex items-start gap-3">
       <input type="checkbox" name="harti" class="mt-1 size-5 shrink-0 accent-actiune">
       <span><span class="block font-semibold">Hărți Google</span><span class="block text-mic text-discret">Afișează harta fiecărei clinici. Google poate seta atunci cookie-uri proprii.</span></span>
+    </label>
+    <label class="flex items-start gap-3">
+      <input type="checkbox" name="facebook" class="mt-1 size-5 shrink-0 accent-actiune">
+      <span><span class="block font-semibold">Postări Facebook</span><span class="block text-mic text-discret">Afișează pe prima pagină postările clinicii. Facebook poate seta atunci cookie-uri proprii.</span></span>
     </label>
   </fieldset>
   <div class="mt-5 flex flex-wrap items-center gap-3">

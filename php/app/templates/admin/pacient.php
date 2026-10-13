@@ -37,7 +37,6 @@ $v = [
     'preferred_location_id' => (string) ($p['preferred_location_id'] ?? (current_clinic_id($user) ?? '')),
     'primary_doctor_id' => (string) ($p['primary_doctor_id'] ?? ''),
     'comfort' => $p['comfort'] ?? '',
-    'prefers_sedation' => (string) ($p['prefers_sedation'] ?? 0),
     'notes' => $p['notes'] ?? '',
 ];
 
@@ -161,7 +160,6 @@ if (is_post()) {
     foreach (['marketing_sms', 'marketing_whatsapp', 'marketing_email'] as $k) {
         $v[$k] = post($k) === '1' ? '1' : '0';
     }
-    $v['prefers_sedation'] = post('prefers_sedation') === '1' ? '1' : '0';
     if (mb_strlen($v['last_name']) < 2) {
         $errors['last_name'] = 'Scrieți numele de familie.';
     }
@@ -233,7 +231,6 @@ if (is_post()) {
             'preferred_location_id' => $loc !== null && isset($names[$loc]) ? $loc : null,
             'primary_doctor_id' => $doc !== null && isset(doctor_short_names()[$doc]) ? $doc : null,
             'comfort' => isset(COMFORT_LABELS[$v['comfort']]) ? $v['comfort'] : null,
-            'prefers_sedation' => (int) $v['prefers_sedation'],
             'notes' => mb_substr($v['notes'], 0, 4000) ?: null,
             'updated_at' => now_sql(),
         ];
@@ -315,7 +312,6 @@ $personal = '<form method="post" novalidate class="flex flex-col gap-5">' . csrf
     . select_field('primary_doctor_id', 'Medicul curant', $doctorOptions, ['value' => $v['primary_doctor_id']])
     . '</div>'
     . radio_group('comfort', 'Cum se simte la dentist', ['' => 'Nu știm'] + COMFORT_SHORT, ['inline' => true, 'value' => $v['comfort']])
-    . checkbox_field('prefers_sedation', 'Preferă inhalosedare', ['checked' => $v['prefers_sedation'] === '1'])
     . text_area('notes', 'Observații administrative', ['value' => $v['notes'], 'rows' => 3, 'optional' => true, 'hint' => 'Nu scrieți aici informații medicale: pentru ele sunt anamneza și notele clinice.'])
     . '<div><button type="submit" class="' . e(btn('primary')) . '">' . ($isNew ? 'Creați fișa' : 'Salvați datele') . '</button></div></form>';
 

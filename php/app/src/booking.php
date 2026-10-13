@@ -206,11 +206,11 @@ function location_hours(): array
 /**
  * What stands against an appointment at that time. „block”: the doctor is away or the clinic is
  * closed (the absence has to go first). „warn”: in the past, outside the hours, the doctor or the
- * patient already booked, the cabinet taken, every sedation unit in use; reception may go on.
+ * patient already booked, the cabinet taken; reception may go on.
  *
  * @return array{block: ?string, warn: list<string>}
  */
-function appointment_checks(int $doc, int $loc, string $start, string $end, ?int $patientId = null, ?int $exceptId = null, ?int $cabinet = null, bool $sedation = false): array
+function appointment_checks(int $doc, int $loc, string $start, string $end, ?int $patientId = null, ?int $exceptId = null, ?int $cabinet = null): array
 {
     foreach (time_off_between($start, $end, [$doc], [$loc]) as $t) {
         if (time_off_applies($t, $doc, $loc)) {
@@ -236,13 +236,6 @@ function appointment_checks(int $doc, int $loc, string $start, string $end, ?int
     if ($cabinet !== null) {
         foreach (db_all("SELECT a.starts_at, a.ends_at, d.public_name FROM appointments a JOIN doctors d ON d.id = a.doctor_id WHERE a.location_id = ? AND a.cabinet = ? AND a.status IN ({$active}) AND a.starts_at < ? AND a.ends_at > ? AND a.id <> ?", [$loc, $cabinet, $end, $start, $exceptId ?? 0]) as $c) {
             $warn[] = "Cabinetul {$cabinet} este ocupat: " . hm($c['starts_at']) . '–' . hm($c['ends_at']) . ', ' . $c['public_name'] . '.';
-        }
-    }
-    if ($sedation) {
-        $units = (int) db_value('SELECT sedation_units FROM locations WHERE id = ?', [$loc]);
-        $used = (int) db_value("SELECT COUNT(*) FROM appointments WHERE location_id = ? AND wants_sedation = 1 AND status IN ({$active}) AND starts_at < ? AND ends_at > ? AND id <> ?", [$loc, $end, $start, $exceptId ?? 0]);
-        if ($used >= max(1, $units)) {
-            $warn[] = $units > 1 ? "Toate cele {$units} aparate de inhalosedare sunt folosite în acest interval." : 'Aparatul de inhalosedare este folosit în acest interval.';
         }
     }
     return ['block' => null, 'warn' => $warn];
@@ -497,7 +490,7 @@ function rate_hit(string $key, int $max, int $windowSeconds): bool
  * is opened; a request keeps the trace; the patient (with the link) and the staff are told.
  *
  * @param array{name:string,phone:string,email:?string} $person
- * @param array{source?:string,service_id?:?int,category?:?string,comfort?:?string,sedation?:bool,notes?:string,lead?:array} $o
+ * @param array{source?:string,service_id?:?int,category?:?string,comfort?:?string,notes?:string,lead?:array} $o
  * @return array{appointment_id:int,patient_id:int,lead_id:int}
  */
 function book_slot(string $slotId, array $person, string $reason, ?string $category, ?int $conversationId, array $o = []): array
@@ -549,7 +542,7 @@ function book_slot(string $slotId, array $person, string $reason, ?string $categ
                 'location_id' => $s['location_id'], 'doctor_id' => $s['doctor_id'], 'patient_id' => $pid, 'lead_id' => $leadId, 'category_slug' => $category, 'service_id' => $o['service_id'] ?? null,
                 'reason' => mb_substr($reason, 0, 255), 'starts_at' => $s['start'], 'ends_at' => $s['end'], 'status' => 'programat', 'source' => $source,
                 'cabinet' => db_value('SELECT cabinet FROM doctor_locations WHERE doctor_id = ? AND location_id = ?', [$s['doctor_id'], $s['location_id']]) ?: null,
-                'comfort' => $o['comfort'] ?? null, 'wants_sedation' => !empty($o['sedation']) ? 1 : 0,
+                'comfort' => $o['comfort'] ?? null,
                 'notes' => trim(($source === 'online' ? 'Programare făcută de pacient pe site.' : 'Programare făcută de pacient în chatul de pe site' . ($conversationId ? " (conversația #{$conversationId})" : '') . '.') . (!empty($o['notes']) ? "\n" . $o['notes'] : '')),
                 'created_at' => now_sql(), 'updated_at' => now_sql(),
             ]);

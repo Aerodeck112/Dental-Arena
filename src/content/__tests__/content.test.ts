@@ -74,11 +74,10 @@ describe("site copy", () => {
 });
 
 describe("services", () => {
-  it("has exactly the 10 WordPress slugs", () => {
+  it("has the 9 WordPress slugs still offered (inhalosedare left in October 2026)", () => {
     expect([...SERVICE_SLUGS]).toEqual([
       "consultatie-profilaxie",
       "stomatologie-generala",
-      "inhalosedare",
       "implantologie",
       "chirurgie-dento-alveolara",
       "protetica-dentara",
@@ -94,15 +93,15 @@ describe("services", () => {
   it("gives every page a unique title and description", () => {
     const titles = SERVICE_LIST.map((s) => s.seoTitle);
     const descriptions = SERVICE_LIST.map((s) => s.description);
-    expect(new Set(titles).size).toBe(10);
-    expect(new Set(descriptions).size).toBe(10);
+    expect(new Set(titles).size).toBe(9);
+    expect(new Set(descriptions).size).toBe(9);
     // The old site reused the Ortodonție title on Consultație și profilaxie (§12.6).
     expect(SERVICES["consultatie-profilaxie"].seoTitle).not.toMatch(/ortodon/i);
     for (const d of descriptions) expect(d.length).toBeGreaterThanOrEqual(100);
   });
 
-  it("shows „Cum decurge” only on implantologie, ortodonție and inhalosedare", () => {
-    expect([...SERVICES_WITH_STEPS].sort()).toEqual(["implantologie", "inhalosedare", "ortodontie"]);
+  it("shows „Cum decurge” only on implantologie and ortodonție", () => {
+    expect([...SERVICES_WITH_STEPS].sort()).toEqual(["implantologie", "ortodontie"]);
   });
 
   it("links related services to existing pages, never to itself", () => {
@@ -114,9 +113,9 @@ describe("services", () => {
     }
   });
 
-  it("keeps the comfort note off the inhalosedare page itself", () => {
-    expect(SERVICES.inhalosedare.comfortNote).toBe(false);
-    expect(SERVICES.inhalosedare.bookingComfort).toBe("frica");
+  it("no longer offers inhalation sedation anywhere", () => {
+    expect(SERVICE_SLUGS).not.toContain("inhalosedare");
+    expect(JSON.stringify(SERVICES)).not.toMatch(/inhalosedare/i);
   });
 });
 

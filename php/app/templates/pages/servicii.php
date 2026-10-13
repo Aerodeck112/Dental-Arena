@@ -47,7 +47,7 @@ render_page(
     $body,
     page_meta([
         'title' => 'Servicii stomatologice în Cristești și Luduș',
-        'description' => 'Servicii stomatologice în Cristești și Luduș: consultație, carii, implanturi, extracții, coroane, aparat dentar, copii, albire și inhalosedare, cu prețuri.',
+        'description' => 'Servicii stomatologice în Cristești și Luduș: consultație, carii, implanturi, extracții, coroane, aparat dentar, copii și albire, cu prețuri.',
         'path' => '/servicii',
     ]),
     json_ld(breadcrumb_ld([['name' => 'Servicii', 'path' => '/servicii']])),

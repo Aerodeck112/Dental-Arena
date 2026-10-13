@@ -28,6 +28,8 @@ export type LegalDoc = {
 /** Tokens the legal texts may use. */
 export type LegalValues = {
   legalName: string;
+  /** Both companies, one per clinic, in one sentence. */
+  operatori: string;
   cui: string;
   regCom: string;
   registeredAddress: string;

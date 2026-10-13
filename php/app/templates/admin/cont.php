@@ -94,7 +94,7 @@ if (!$forced) {
     $notices = '<form id="notificari" method="post" novalidate class="flex min-w-0 flex-col gap-5 rounded-panou border border-linie bg-suprafata p-6">' . csrf_field() . '<input type="hidden" name="op" value="notificari">'
         . (post('op') === 'notificari' ? error_summary($errors) : '')
         . '<h2 class="text-h3 font-semibold">Notificările mele</h2>'
-        . ($user['role'] === 'medic' && !$user['doctor_id'] ? '<p class="text-mic text-mustar-text">Contul nu e legat de un medic din echipă; administratorul îl leagă din Utilizatori.</p>' : '')
+        . (is_doctor($user) && !$user['doctor_id'] ? '<p class="text-mic text-mustar-text">Contul nu e legat de un medic din echipă; administratorul îl leagă din Utilizatori.</p>' : '')
         . text_field('phone', 'Telefonul meu', ['type' => 'tel', 'value' => $phone, 'optional' => true, 'error' => $errors['phone'] ?? null, 'hint' => 'Pentru SMS și WhatsApp.'])
         . '<div class="relative overflow-x-auto"><table class="w-full min-w-[26rem] border-collapse text-corp"><thead><tr><th scope="col" class="py-2 text-left text-mic font-semibold text-discret">Când</th><th scope="col" class="' . $th . '">SMS</th><th scope="col" class="' . $th . '">WhatsApp</th><th scope="col" class="' . $th . '">E-mail</th></tr></thead><tbody>' . $rows . '</tbody></table></div>'
         . '<p class="text-mic text-discret">WhatsApp merge doar pentru notificările care au șablon aprobat în Setări → Mesaje.</p>'

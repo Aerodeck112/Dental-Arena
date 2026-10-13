@@ -30,7 +30,7 @@ $body = capture(function () use ($a, $clinic, $doctor, $token): void {
         <p class="font-semibold"><?= e(clinic_address($clinic)) ?></p>
         <p class="mt-1 text-corp">Telefon: <a class="font-semibold underline" href="<?= e(tel_href($clinic['phone'])) ?>"><?= e(format_phone($clinic['phone'])) ?></a></p>
         <?php if (in_array($a['comfort'], ['emotii', 'frica'], true)) { ?>
-        <p class="mt-4 rounded-panou bg-menta-pal p-3 text-corp">Am notat că <?= $a['comfort'] === 'frica' ? 'vă e teamă' : 'aveți emoții' ?>. Medicul știe înainte să intrați și vă explică fiecare pas<?= (int) $a['wants_sedation'] === 1 ? '; pregătim inhalosedarea' : '' ?>.</p>
+        <p class="mt-4 rounded-panou bg-menta-pal p-3 text-corp">Am notat că <?= $a['comfort'] === 'frica' ? 'vă e teamă' : 'aveți emoții' ?>. Medicul știe înainte să intrați și vă explică fiecare pas.</p>
         <?php } ?>
         <div class="mt-5 flex flex-wrap gap-3">
           <a href="/p/<?= e($token) ?>/ics" class="<?= e(btn('primary')) ?>"><?= icon('calendar-plus', 18) ?>Adăugați în calendar</a>

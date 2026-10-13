@@ -29,7 +29,7 @@ export function rememberComfort(value: ComfortAnswer): void {
  * reply and ends in one primary button that carries the answer into booking. Without JavaScript
  * the three answers are plain links into the wizard.
  */
-export function ComfortQuestion({ sedationPrice, headingId }: { sedationPrice: string | null; headingId: string }) {
+export function ComfortQuestion({ headingId }: { headingId: string }) {
   const hydrated = useHydrated();
   const [answer, setAnswer] = useState<ComfortAnswer | null>(null);
   const replyId = useId();
@@ -85,12 +85,6 @@ export function ComfortQuestion({ sedationPrice, headingId }: { sedationPrice: s
           >
             <p className="text-corp text-cerneala masura">
               {chosen.reply}
-              {chosen.value === "frica" && sedationPrice && (
-                <>
-                  {" "}
-                  <span className="font-semibold whitespace-nowrap cifre">{sedationPrice}</span>.
-                </>
-              )}
             </p>
             <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2">
               <ButtonLink
@@ -100,14 +94,6 @@ export function ComfortQuestion({ sedationPrice, headingId }: { sedationPrice: s
               >
                 {chosen.cta}
               </ButtonLink>
-              {"link" in chosen && chosen.link && (
-                <Link
-                  href={chosen.link.href}
-                  className="inline-flex min-h-control items-center gap-1.5 font-medium text-cerneala underline underline-offset-[0.2em] hover:decoration-2"
-                >
-                  {chosen.link.label}
-                </Link>
-              )}
             </div>
             {chosen.value !== "fara-emotii" && (
               <p className="mt-4 flex items-center gap-2 text-mic text-mustar-text">

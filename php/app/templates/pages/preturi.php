@@ -48,6 +48,6 @@ $body = capture(function () use ($categories): void {
 
 render_page($body, page_meta([
     'title' => 'Prețuri stomatologie: lista completă',
-    'description' => 'Prețuri stomatologie în Cristești și Luduș: consultație, obturații, tratament de canal, implant dentar, coroane, aparat dentar, albire și inhalosedare.',
+    'description' => 'Prețuri stomatologie în Cristești și Luduș: consultație, obturații, tratament de canal, implant dentar, coroane, aparat dentar și albire.',
     'path' => '/preturi',
 ]), json_ld(breadcrumb_ld([['name' => 'Prețuri', 'path' => '/preturi']])));

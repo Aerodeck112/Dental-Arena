@@ -110,7 +110,7 @@ function consent_session_sign(array $s, array $device, array $accepted, string $
         $signedAt = now_sql();
         $sigHash = hash('sha256', $raw);
         foreach ($accepted as $type) {
-            $text = consent_text_for($type, $p);
+            $text = consent_text_for($type, $p, $device['location_id'] ? (int) $device['location_id'] : null);
             db_insert('consents', [
                 'patient_id' => $p['id'], 'type' => $type, 'method' => 'tableta', 'signed_on' => date('Y-m-d'), 'signed_at' => $signedAt,
                 'text_version' => consent_version(), 'text_snapshot' => $text, 'document_id' => $docId, 'session_id' => $s['id'],

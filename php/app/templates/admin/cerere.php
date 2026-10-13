@@ -33,7 +33,7 @@ if (is_post()) {
             $row['status'] = 'in-lucru';
             lead_log($id, 'stare', 'in-lucru', null, $user);
         }
-        if ($lead['assigned_to'] === null && in_array($user['role'], ['admin', 'receptie'], true)) {
+        if ($lead['assigned_to'] === null && in_array($user['role'], ['admin', 'admin-medic', 'receptie'], true)) {
             $row['assigned_to'] = $user['id'];
         }
         if ($row !== []) {
@@ -149,7 +149,7 @@ $history = admin_section_open('Istoric', 'istoric', 'Ce s-a făcut, cu cine și 
 $assign = '<form method="post" class="mt-4 flex flex-wrap items-end gap-3">' . csrf_field() . '<input type="hidden" name="op" value="atribuie">'
     . '<div class="min-w-[12rem] flex-1">' . select_field('assigned_to', 'Se ocupă', ['' => 'Nimeni încă'] + array_map('strval', $handlers), ['value' => (string) ($lead['assigned_to'] ?? '')]) . '</div>'
     . '<button type="submit" class="' . e(btn('secondary')) . '">Salvați</button>'
-    . (in_array($user['role'], ['admin', 'receptie'], true) && (int) ($lead['assigned_to'] ?? 0) !== (int) $user['id'] ? '<button type="submit" name="assigned_to" value="' . (int) $user['id'] . '" class="' . e(btn('text')) . '">Mi-o iau eu</button>' : '')
+    . (in_array($user['role'], ['admin', 'admin-medic', 'receptie'], true) && (int) ($lead['assigned_to'] ?? 0) !== (int) $user['id'] ? '<button type="submit" name="assigned_to" value="' . (int) $user['id'] . '" class="' . e(btn('text')) . '">Mi-o iau eu</button>' : '')
     . '</form>';
 
 $statusForm = '<form method="post" class="mt-4 flex flex-col gap-5">' . csrf_field() . '<input type="hidden" name="op" value="stare">' . error_summary($errors)

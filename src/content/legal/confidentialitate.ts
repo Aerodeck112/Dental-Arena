@@ -18,7 +18,7 @@ export const CONFIDENTIALITATE: LegalDoc = {
       blocks: [
         {
           kind: "p",
-          text: "Operatorul datelor este {{legalName}}, cu sediul în {{registeredAddress}}, CUI {{cui}}, nr. de înregistrare la Registrul Comerțului {{regCom}}, denumită în continuare „Dental Arena” sau „clinica”.",
+          text: "Fiecare clinică Dental Arena este o firmă separată și este operatorul datelor pacienților ei: {{operatori}}. În continuare le numim „Dental Arena” sau „clinica”.",
         },
         {
           kind: "ul",
@@ -39,7 +39,7 @@ export const CONFIDENTIALITATE: LegalDoc = {
           kind: "ul",
           items: [
             "Formularul de contact: numele, adresa de e-mail și/sau numărul de telefon, clinica despre care ne scrieți și mesajul.",
-            "Programarea online: numele, telefonul, adresa de e-mail (opțional), motivul vizitei, clinica, medicul și ora alese, răspunsul la întrebarea „Cum vă simțiți înainte de vizită?”, dorința de a lucra sub inhalosedare, ce ne scrieți despre ce vă îngrijorează și, dacă programarea este pentru un copil, prenumele și vârsta lui.",
+            "Programarea online: numele, telefonul, adresa de e-mail (opțional), motivul vizitei, clinica, medicul și ora alese, răspunsul la întrebarea „Cum vă simțiți înainte de vizită?”, ce ne scrieți despre ce vă îngrijorează și, dacă programarea este pentru un copil, prenumele și vârsta lui.",
             "Cererea „Prefer să mă sunați”: numele, telefonul și intervalul în care preferați să vă sunăm.",
             "La clinică, ca pacient: datele de identificare (inclusiv CNP-ul, păstrat criptat), datele de contact, istoricul medical (anamneza), fișa dentară, planurile de tratament, radiografiile și documentele medicale, consimțămintele, facturile și plățile.",
             "Date tehnice: o amprentă criptată (hash) a adresei IP, folosită doar pentru protecția formularelor împotriva abuzurilor și ca dovadă a acordului dat online. Adresa IP în clar nu o păstrăm.",

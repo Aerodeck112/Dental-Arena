@@ -16,7 +16,7 @@ const TIME_WINDOWS = [
 const COMFORT_LABELS = [
     'fara-emotii' => 'Fără emoții',
     'emotii' => 'Am emoții',
-    'frica' => 'Mi-e frică (vrea să afle despre inhalosedare)',
+    'frica' => 'Mi-e frică',
 ];
 const LEAD_STATUS = ['nou' => 'Nouă', 'in-lucru' => 'În lucru', 'programat' => 'Programat', 'inchis' => 'Închisă'];
 

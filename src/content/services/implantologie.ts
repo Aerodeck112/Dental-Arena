@@ -34,7 +34,7 @@ export const implantologie: ServiceContent = {
     { question: "Cât durează tratamentul cu implant dentar?", answer: "După inserarea implantului urmează o perioadă de vindecare de 3–6 luni. Apoi se atașează bontul protetic, iar medicul fixează coroana, puntea sau proteza." },
     { question: "Se poate pune implantul imediat după extracție?", answer: "Da, în unele cazuri implantul se inserează imediat după extracție. Medicul decide după analiza radiografiilor speciale, la consultație." },
     { question: "Cât costă un implant dentar?", answer: "Prețurile pentru implant, bont protetic, adiție de os și lucrările pe implant sunt în lista de pe această pagină. Costul exact îl aflați după consultație și radiografii." },
-    { question: "Doare inserarea unui implant?", answer: "Intervenția se face sub anestezie locală. Dacă vă e teamă, se poate face și sub inhalosedare: rămâneți conștient, dar mult mai relaxat." },
+    { question: "Doare inserarea unui implant?", answer: "Intervenția se face sub anestezie locală. Dacă vă e teamă, spuneți-ne: medicul vă explică fiecare pas înainte să înceapă." },
   ],
   ctaTitle: "Programați o consultație de implantologie",
   bookingCode: "IMP-CONSULT",

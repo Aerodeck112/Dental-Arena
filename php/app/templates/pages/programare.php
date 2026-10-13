@@ -29,7 +29,7 @@ if (query('confirmare') !== '') {
 if (is_post() && in_array(post('op'), ['rezerva', 'apel'], true)) {
     csrf_check();
     $op = post('op');
-    $wizardValues = array_map('strval', array_intersect_key($_POST, array_flip(['serviciu', 'clinica', 'medic', 'slot', 'confort', 'confort_nota', 'sedare', 'name', 'phone', 'email', 'pentru', 'copil', 'varsta', 'message', 'consent', 'marketing', 'cheie', 'interval'])));
+    $wizardValues = array_map('strval', array_intersect_key($_POST, array_flip(['serviciu', 'clinica', 'medic', 'slot', 'confort', 'confort_nota', 'name', 'phone', 'email', 'pentru', 'copil', 'varsta', 'message', 'consent', 'marketing', 'cheie', 'interval'])));
     $v = static fn (string $k) => trim((string) ($wizardValues[$k] ?? ''));
     if (looks_like_bot()) {
         // A bot sees the same thank-you and nothing is saved.
@@ -110,12 +110,11 @@ if (is_post() && in_array(post('op'), ['rezerva', 'apel'], true)) {
             $notes = array_filter([
                 $child ? "Pentru copil: {$child['first']}, {$child['age']} ani. Părintele: " . $v('name') . '.' : null,
                 $comfort ? 'Cum se simte: ' . COMFORT_LABELS[$comfort] . ($v('confort_nota') !== '' ? ' (' . mb_substr($v('confort_nota'), 0, 500) . ')' : '') . '.' : null,
-                $v('sedare') === '1' ? 'Ar vrea inhalosedare.' : null,
                 $v('message') !== '' ? 'Mesaj: ' . mb_substr($v('message'), 0, 2000) : null,
             ]);
             try {
                 $ids = book_slot($v('slot'), ['name' => $v('name'), 'phone' => $v('phone'), 'email' => $v('email') ?: null], $reason['label'], $reason['category'], null, [
-                    'source' => 'online', 'service_id' => $reason['id'], 'comfort' => $comfort, 'sedation' => $v('sedare') === '1', 'notes' => implode("\n", $notes),
+                    'source' => 'online', 'service_id' => $reason['id'], 'comfort' => $comfort, 'notes' => implode("\n", $notes),
                     'marketing' => $v('marketing') === '1', 'child' => $child, 'idempotency_key' => $key,
                 ]);
                 $a = db_one('SELECT * FROM appointments WHERE id = ?', [$ids['appointment_id']]);
@@ -201,7 +200,6 @@ function booking_wizard(array $cfg, array $reasons, array $values, array $errors
     if (!isset($pre['confort']) && isset(COMFORT_LABELS[query('confort')])) {
         $pre['confort'] = query('confort');
     }
-    $sedation = db_one("SELECT * FROM services WHERE code = 'INH-ORA'");
     $data = ['reasons' => $reasons, 'clinics' => $clinicsData, 'doctors' => $doctors, 'doers' => $doers, 'morning' => $cfg['morning_until'], 'days' => (int) $cfg['days_ahead'],
         'initial' => array_filter($pre, static fn ($x) => $x !== null && $x !== ''), 'errors' => $errors];
     $err = static fn (string $k) => $errors[$k] ?? null;
@@ -223,7 +221,7 @@ function booking_wizard(array $cfg, array $reasons, array $values, array $errors
         . '<p data-pas-rezumat hidden class="mt-2 pl-12 text-corp text-discret"></p><div data-pas-continut class="mt-5 flex flex-col gap-5">' . $inner . '</div></section>';
     $next = '<div><button type="button" data-inainte class="' . e(btn('primary', 'l')) . '">Continuați' . icon('chevron-right', 18) . '</button></div>';
     $comfortCards = '';
-    foreach (['fara-emotii' => ['Fără emoții', 'Mă simt bine la dentist.'], 'emotii' => ['Am emoții', 'Mă liniștește să știu ce urmează.'], 'frica' => ['Mi-e frică', 'Am nevoie de răbdare (și poate de inhalosedare).']] as $k => [$t, $h]) {
+    foreach (['fara-emotii' => ['Fără emoții', 'Mă simt bine la dentist.'], 'emotii' => ['Am emoții', 'Mă liniștește să știu ce urmează.'], 'frica' => ['Mi-e frică', 'Am nevoie de răbdare și de explicații.']] as $k => [$t, $h]) {
         $comfortCards .= '<label class="' . $card . '"><input type="radio" name="confort" value="' . $k . '" class="' . $radio . '"' . (($values['confort'] ?? '') === $k ? ' checked' : '') . '><span><span class="block font-semibold">' . e($t) . '</span><span class="block text-mic text-discret">' . e($h) . '</span></span></label>';
     }
     $s1 = '<fieldset><legend class="mb-3 text-control font-medium">Pentru ce veniți?</legend><div class="grid gap-3 sm:grid-cols-2">' . $reasonCards . '</div>' . field_error('serviciu-eroare', $err('serviciu')) . '</fieldset>'
@@ -235,8 +233,7 @@ function booking_wizard(array $cfg, array $reasons, array $values, array $errors
         . '<div data-ore aria-live="polite" class="flex flex-col gap-4"></div>' . field_error('slot-eroare', $err('slot'))
         . '<p><button type="button" data-vreau-apel class="inline-flex min-h-control items-center text-left font-medium text-link underline underline-offset-4">Nu găsesc o oră potrivită. Prefer să mă sunați.</button></p>' . $next;
     $s3 = '<fieldset><legend class="mb-3 text-control font-medium">Cum vă simțiți când vă gândiți la dentist?</legend><div class="grid gap-3 sm:grid-cols-3">' . $comfortCards . '</div></fieldset>'
-        . '<div data-nota hidden>' . text_area('confort_nota', 'Ce vă îngrijorează? (opțional)', ['id' => 'p-confort_nota', 'value' => $values['confort_nota'] ?? '', 'rows' => 2, 'maxlength' => 500, 'hint' => 'Medicul citește înainte să intrați.']) . '</div>'
-        . checkbox_field('sedare', 'Aș vrea inhalosedare' . ($sedation && $sedation['price_min'] ? ' (' . e(format_lei((int) $sedation['price_min'], false, null, null)) . ' / oră)' : ''), ['id' => 'p-sedare', 'checked' => ($values['sedare'] ?? '') === '1', 'description' => 'Rămâneți treaz, doar mult mai relaxat.']) . $next;
+        . '<div data-nota hidden>' . text_area('confort_nota', 'Ce vă îngrijorează? (opțional)', ['id' => 'p-confort_nota', 'value' => $values['confort_nota'] ?? '', 'rows' => 2, 'maxlength' => 500, 'hint' => 'Medicul citește înainte să intrați.']) . '</div>' . $next;
     $s4 = '<div class="grid gap-5 sm:grid-cols-2">' . text_field('name', 'Nume și prenume', ['id' => 'p-name', 'value' => $values['name'] ?? '', 'required' => true, 'autocomplete' => 'name', 'maxlength' => 80, 'error' => $err('name')])
         . text_field('phone', 'Telefon', ['id' => 'p-phone', 'type' => 'tel', 'value' => $values['phone'] ?? '', 'required' => true, 'autocomplete' => 'tel', 'maxlength' => 20, 'error' => $err('phone'), 'hint' => 'Aici primiți confirmarea.']) . '</div>'
         . text_field('email', 'E-mail', ['id' => 'p-email', 'type' => 'email', 'value' => $values['email'] ?? '', 'optional' => true, 'autocomplete' => 'email', 'maxlength' => 190, 'error' => $err('email'), 'hint' => 'Pentru confirmarea scrisă.'])
@@ -306,7 +303,7 @@ $body = capture(function () use ($clinics, $errors, $values, $sentMessage, $book
             <?= text_field('data', 'Ziua dorită', ['type' => 'date', 'value' => $values['data'] ?? '', 'optional' => true, 'min' => date('Y-m-d'), 'max' => date('Y-m-d', strtotime('+6 months')), 'error' => $err('data')]) ?>
           </div>
           <?= radio_group('interval', 'Când vă convine?', TIME_WINDOWS, ['inline' => true, 'value' => $values['interval'] ?? 'oricand']) ?>
-          <?= radio_group('confort', 'Cum vă simțiți când vă gândiți la dentist?', $comfort, ['inline' => true, 'optional' => true, 'value' => $values['confort'] ?? '', 'hint' => 'Medicul vede răspunsul înainte să intrați. Dacă vă e frică, putem lucra sub inhalosedare.']) ?>
+          <?= radio_group('confort', 'Cum vă simțiți când vă gândiți la dentist?', $comfort, ['inline' => true, 'optional' => true, 'value' => $values['confort'] ?? '', 'hint' => 'Medicul vede răspunsul înainte să intrați.']) ?>
           <fieldset class="flex flex-col gap-6">
             <legend class="mb-1 text-h3 font-semibold text-cerneala">Datele dumneavoastră</legend>
             <?= text_field('name', 'Nume și prenume', ['value' => $values['name'] ?? '', 'required' => true, 'autocomplete' => 'name', 'maxlength' => 80, 'error' => $err('name')]) ?>
@@ -367,7 +364,7 @@ $body = capture(function () use ($clinics, $errors, $values, $sentMessage, $book
             <li class="grid grid-cols-[1.75rem_1fr]"><span aria-hidden="true" class="font-display text-[1.5rem] leading-none text-menta cifre">3</span>Vă așteptăm la clinică. Prima vizită începe cu o consultație.</li>
           </ol>
         </section>
-        <?= comfort_note('Vă e teamă?', 'Spuneți-ne în formular. Putem lucra sub inhalosedare: rămâneți conștient, doar mult mai relaxat.') ?>
+        <?= comfort_note('Vă e teamă?', 'Spuneți-ne în formular. Medicul vă explică fiecare pas înainte să înceapă, lucrăm cu anestezie locală și facem pauze când aveți nevoie.') ?>
       </div>
     </aside>
   </div>

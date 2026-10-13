@@ -34,14 +34,14 @@ export const LANDINGS: Record<LandingSlug, LandingContent> = {
     lead: "Clinica Dental Arena din Cristești este lângă Târgu Mureș, pe str. Principală 536J/1. Vedeți pe site medicii, prețurile și orele libere, apoi vă programați online sau la telefon.",
     intro: [
       "Suntem o clinică stomatologică de familie, cu cinci medici, în care punem pe primul loc confortul și siguranța pacientului. Se respectă programările, iar tratamentele sunt făcute fără durere.",
-      "Dacă vă e teamă de dentist, spuneți-ne. Putem lucra sub inhalosedare: rămâneți conștient, doar mult mai relaxat.",
+      "Dacă vă e teamă de dentist, spuneți-ne. Medicul vă explică fiecare pas și lucrăm în ritmul dumneavoastră, fără durere.",
     ],
     servicesTitle: "Ce tratăm în Cristești",
     focusTitle: "Medicii",
     focusLead: "Respectăm ora programării, iar medicii noștri au acea „mână ușoară” pe care o căutați.",
     comfortTitle: "Vă e teamă de dentist?",
     comfortText:
-      "Nu sunteți singurul. Tratamentul se poate face sub inhalosedare: respirați un amestec care vă relaxează, colaborați cu medicul și vă reveniți în 3–5 minute.",
+      "Nu sunteți singurul. Spuneți-ne la programare: medicul vă explică fiecare pas înainte să înceapă, lucrăm cu anestezie locală și facem pauze când aveți nevoie.",
     clinicTitle: "Clinica din Cristești",
     ludusNote: "Avem și o clinică în Luduș, pe str. Gheorghe Barițiu nr. 6.",
   },
@@ -61,7 +61,7 @@ export const LANDINGS: Record<LandingSlug, LandingContent> = {
     focusLead: "Câte un preț pentru fiecare serviciu. Lista completă este pe pagina de prețuri.",
     comfortTitle: "Fără durere, fără frică",
     comfortText:
-      "Pentru pacienții care se tem de dentist, și pentru copii, lucrăm și sub inhalosedare: o sedare conștientă din care vă reveniți în 3–5 minute.",
+      "Pentru pacienții care se tem de dentist, și pentru copii, lucrăm cu răbdare și cu anestezie locală, explicând fiecare pas.",
     clinicTitle: "Unde este cabinetul",
     ludusNote: "Avem și o clinică în Luduș, pe str. Gheorghe Barițiu nr. 6.",
   },

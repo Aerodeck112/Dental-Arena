@@ -53,8 +53,10 @@ if (is_post()) {
     }
     if (!isset(ROLES[$v['role']])) {
         $errors['role'] = 'Alegeți rolul.';
-    } elseif (!in_array($v['role'], ['admin', 'tehnic'], true) && $v['locations'] === []) {
+    } elseif (!in_array($v['role'], ADMIN_ROLES, true) && $v['locations'] === []) {
         $errors['locations'] = 'Bifați cel puțin o clinică.';
+    } elseif ($v['role'] === 'admin-medic' && ($v['doctor_id'] === '' || !db_value('SELECT 1 FROM doctors WHERE id = ?', [(int) $v['doctor_id']]))) {
+        $errors['doctor_id'] = 'Alegeți profilul de medic al administratorului: programările, planurile și notele lui se leagă de el.';
     }
     if ($isNew || $password !== '') {
         if (($p = password_problem($password)) !== null) {
@@ -64,7 +66,7 @@ if (is_post()) {
     if ($errors === []) {
         $id = db_tx(static function () use ($v, $isNew, $acc, $password) {
             $row = ['name' => mb_substr($v['name'], 0, 120), 'email' => $v['email'], 'role' => $v['role'], 'active' => (int) $v['active'],
-                'doctor_id' => $v['role'] === 'medic' && $v['doctor_id'] !== '' && db_value('SELECT 1 FROM doctors WHERE id = ?', [(int) $v['doctor_id']]) ? (int) $v['doctor_id'] : null];
+                'doctor_id' => in_array($v['role'], ['medic', 'admin-medic'], true) && $v['doctor_id'] !== '' && db_value('SELECT 1 FROM doctors WHERE id = ?', [(int) $v['doctor_id']]) ? (int) $v['doctor_id'] : null];
             if ($isNew) {
                 $id = db_insert('users', $row + ['password_hash' => password_hash($password, PASSWORD_DEFAULT), 'must_change_password' => 1, 'created_at' => now_sql()]);
             } else {
@@ -72,7 +74,7 @@ if (is_post()) {
                 db_update('users', $row, 'id = :id', ['id' => $id]);
             }
             db_run('DELETE FROM user_locations WHERE user_id = ?', [$id]);
-            $locs = in_array($v['role'], ['admin', 'tehnic'], true) ? array_map('intval', array_column(db_all('SELECT id FROM locations'), 'id')) : $v['locations'];
+            $locs = in_array($v['role'], ADMIN_ROLES, true) ? array_map('intval', array_column(db_all('SELECT id FROM locations'), 'id')) : $v['locations'];
             foreach ($locs as $lid) {
                 db_run('INSERT INTO user_locations (user_id, location_id) VALUES (?, ?)', [$id, $lid]);
             }
@@ -105,12 +107,13 @@ $body = '<p class="mb-4"><a href="/admin/utilizatori" class="inline-flex min-h-c
         'receptie' => ['label' => 'Recepție', 'description' => 'Vede și rezolvă cererile și programările clinicilor bifate.'],
         'medic' => ['label' => 'Medic', 'description' => 'Vede programările și fișele clinicilor bifate.'],
         'admin' => ['label' => 'Administrator', 'description' => 'Vede tot ce ține de clinică: pacienți, rapoarte, prețuri, fotografii, echipa, marketing. Setările și conturile le face suportul tehnic.'],
+        'admin-medic' => ['label' => 'Administrator medic', 'description' => 'Administratorul care este și medic: are tot ce are administratorul, plus partea de medic (consultații, anamneză, odontogramă, planuri, note, intervenții). Se leagă de profilul lui de medic, mai jos.'],
         'tehnic' => ['label' => 'Suport tehnic (VITIM)', 'description' => 'Configurează: setările, conturile, mesajele, tabletele, actualizările. Administratorul primește un rezumat cu ce s-a schimbat.'],
     ], ['value' => $v['role'], 'error' => $errors['role'] ?? null]))
     . '<fieldset id="field-locations" tabindex="-1" class="flex flex-col gap-1"><legend class="mb-1.5 text-control font-medium">Clinica în care lucrează</legend>'
-    . '<p class="-mt-1 mb-1 text-mic text-discret">Pentru recepție și medici. Administratorul și suportul tehnic văd ambele clinici.</p>'
+    . '<p class="-mt-1 mb-1 text-mic text-discret">Pentru recepție și medici. Administratorii și suportul tehnic văd ambele clinici.</p>'
     . '<div class="flex flex-wrap gap-x-8">' . $clinicBoxes . '</div>' . field_error('field-locations-error', $errors['locations'] ?? null) . '</fieldset>'
-    . select_field('doctor_id', 'Profilul de medic (pentru rolul Medic)', ['' => 'Niciunul'] + array_map(static fn ($n) => (string) $n, array_column(db_all('SELECT id, public_name FROM doctors ORDER BY sort_order'), 'public_name', 'id')), ['value' => $v['doctor_id'], 'hint' => 'Programările noi făcute de acest cont se pun implicit la acest medic.'])
+    . select_field('doctor_id', 'Profilul de medic (pentru Medic și Administrator medic)', ['' => 'Niciunul'] + array_map(static fn ($n) => (string) $n, array_column(db_all('SELECT id, public_name FROM doctors ORDER BY sort_order'), 'public_name', 'id')), ['value' => $v['doctor_id'], 'error' => $errors['doctor_id'] ?? null, 'hint' => 'Programările noi făcute de acest cont se pun implicit la acest medic.'])
     . ($self ? '' : checkbox_field('active', 'Contul este activ', ['checked' => $v['active'] === '1', 'description' => 'Un cont dezactivat nu mai poate intra în panou.']))
     . '</div></section>'
     . admin_section_open($isNew ? 'Parola de început' : 'Parolă nouă', 'parola', $isNew ? 'O spuneți persoanei; la prima intrare își alege una nouă.' : 'Completați doar dacă persoana și-a uitat parola. Va fi rugată să-și aleagă una nouă.')
