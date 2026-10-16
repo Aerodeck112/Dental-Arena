@@ -29,6 +29,9 @@
   --da-mustar-text: #7A5600;
   --da-carmin: #B42318;
   --da-carmin-pal: #FBE9E7;
+  /* Orange: a confirmed appointment in the calendar. */
+  --da-portocaliu: #B85407;
+  --da-portocaliu-pal: #FDE8D4;
   --da-subsol: #5C6765;
   --da-pe-subsol: #FFFFFF;
   --da-umbra: 0 1px 0 rgb(37 46 44 / .06), 0 16px 40px -16px rgb(37 46 44 / .30);
@@ -61,6 +64,8 @@
   --da-mustar-text: #F2C862;
   --da-carmin: #F0877D;
   --da-carmin-pal: #3F2522;
+  --da-portocaliu: #F29A4A;
+  --da-portocaliu-pal: #45291A;
   --da-subsol: #232D2B;
   --da-pe-subsol: #E6EDEA;
   --da-umbra: 0 1px 0 rgb(0 0 0 / .3), 0 16px 40px -16px rgb(0 0 0 / .7);
@@ -90,6 +95,8 @@
     --da-mustar-text: #F2C862;
     --da-carmin: #F0877D;
     --da-carmin-pal: #3F2522;
+    --da-portocaliu: #F29A4A;
+    --da-portocaliu-pal: #45291A;
     --da-subsol: #232D2B;
     --da-pe-subsol: #E6EDEA;
     --da-umbra: 0 1px 0 rgb(0 0 0 / .3), 0 16px 40px -16px rgb(0 0 0 / .7);
@@ -134,6 +141,8 @@
   --color-mustar-text: var(--da-mustar-text);
   --color-carmin: var(--da-carmin);
   --color-carmin-pal: var(--da-carmin-pal);
+  --color-portocaliu: var(--da-portocaliu);
+  --color-portocaliu-pal: var(--da-portocaliu-pal);
   --color-subsol: var(--da-subsol);
   --color-pe-subsol: var(--da-pe-subsol);
   /* Public site only: the deep forest green of the booking band (brand green, darkened). */

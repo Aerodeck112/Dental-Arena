@@ -52,7 +52,7 @@ $url = static fn (array $q) => admin_url('/admin/calendar', $q + ['clinica' => $
 $step = $view === 'saptamana' || $view === 'lista' ? '7 days' : '1 day';
 
 // Toolbar: clinic, day / week / list, doctors / cabinets, previous / today / next, a date.
-$seg = static fn (string $href, string $label, bool $on, string $onCls = 'bg-menta-pal font-semibold') => '<a href="' . e($href) . '"' . ($on ? ' aria-current="page"' : '') . ' class="' . e(cn('inline-flex min-h-control-s items-center rounded-[calc(var(--radius-control)-2px)] px-3 text-control', $on ? $onCls : 'hover:bg-adancit')) . '">' . $label . '</a>';
+$seg = static fn (string $href, string $label, bool $on, string $onCls = 'bg-menta-pal font-semibold') => '<a href="' . e($href) . '"' . ($on ? ' aria-current="page"' : '') . ' class="' . e(cn('inline-flex min-h-control-s items-center rounded-[calc(var(--radius-control)-2px)] px-2.5 text-control', $on ? $onCls : 'hover:bg-adancit')) . '">' . $label . '</a>';
 $clinicSwitch = implode('', array_map(static fn ($id) => $seg($url(['clinica' => $id]), e($names[$id]), $id === $clinicId, 'bg-actiune font-semibold text-pe-actiune'), $allowed));
 $viewSwitch = '';
 foreach (['zi' => 'Zi', 'saptamana' => 'Săptămână', 'lista' => 'Listă'] as $k => $l) {
@@ -66,7 +66,7 @@ $title = match ($view) {
     'lista' => format_date($day) . ' – ' . format_date($day->modify('+6 days')),
     default => 'Săptămâna ' . (int) $monday->format('j') . ' ' . RO_MONTHS[(int) $monday->format('n') - 1] . ' – ' . format_date($monday->modify('+6 days')),
 };
-$toolbar = '<div class="mb-6 flex flex-wrap items-center gap-3">'
+$toolbar = '<div class="mb-3 flex flex-wrap items-center gap-2">'
     . (count($allowed) > 1 ? '<nav aria-label="Clinica" class="inline-flex rounded-control border border-linie-control bg-suprafata p-1">' . $clinicSwitch . '</nav>' : '')
     . '<nav aria-label="Vizualizare" class="inline-flex rounded-control border border-linie-control bg-suprafata p-1">' . $viewSwitch . '</nav>'
     . $colSwitch
@@ -76,45 +76,60 @@ $toolbar = '<div class="mb-6 flex flex-wrap items-center gap-3">'
     . '<a href="' . e($url(['data' => $day->modify("+{$step}")->format('Y-m-d')])) . '" class="' . e(btn('secondary', 's', 'px-2')) . '" aria-label="Înainte">' . icon('chevron-right', 18) . '</a></div>'
     . '<form method="get" class="flex items-center gap-2"><input type="hidden" name="clinica" value="' . $clinicId . '"><input type="hidden" name="vizualizare" value="' . $view . '">'
     . ($byCabinet ? '<input type="hidden" name="coloane" value="cabinete">' : '')
-    . '<label class="sr-only" for="cal-data">Mergeți la ziua</label><input id="cal-data" type="date" name="data" value="' . e($date) . '" class="' . e(input_classes('h-control-s w-auto')) . '" data-trimite-la-schimbare>'
-    . '<button type="submit" class="' . e(btn('text', 's')) . '">Mergeți</button></form>'
-    . '<a href="' . e(admin_url('/admin/programari/noua', ['clinica' => $clinicId, 'data' => $date, 'inapoi' => $url([])])) . '" class="' . e(btn('primary', 's', 'ml-auto')) . '">' . icon('plus', 16) . 'Programare nouă</a>'
+    . '<label class="sr-only" for="cal-data">Mergeți la ziua</label><input id="cal-data" type="date" name="data" value="' . e($date) . '" class="' . e(input_classes('h-control-s w-[9.5rem]')) . '" data-trimite-la-schimbare>'
+    . '<button type="submit" class="sr-only focus:not-sr-only">Mergeți</button></form>'
     . '</div>';
 
 $movable = static fn (array $a) => in_array($a['status'], ['programat', 'confirmat', 'sosit', 'in-tratament'], true);
-$block = static function (array $a) use ($movable): string {
+// The colour says the state at a glance: white not confirmed yet, orange confirmed, green arrived
+// (darker in treatment), red did not come, grey done or cancelled. A click opens the quick menu.
+$block = static function (array $a) use ($movable, $url): string {
     $cls = match ($a['status']) {
-        'confirmat' => 'border-actiune bg-suprafata',
-        'sosit', 'in-tratament' => 'border-actiune bg-menta-pal',
+        'confirmat' => 'border-portocaliu bg-portocaliu-pal',
+        'sosit' => 'border-actiune bg-menta-pal',
+        'in-tratament' => 'border-actiune bg-menta/45',
         'finalizat' => 'border-linie bg-adancit text-discret',
         'neprezentat' => 'border-carmin bg-carmin-pal',
         'anulat' => 'border-linie bg-adancit text-discret line-through',
         default => 'border-dashed border-linie-control bg-suprafata',
     };
-    return '<a href="/admin/programari/' . (int) $a['id'] . '" class="' . e(cn('block h-full overflow-hidden rounded-control border-l-4 border px-2 py-1 text-mic leading-tight shadow-sm hover:shadow-float', $cls, $movable($a) ? 'cursor-grab' : '')) . '" draggable="false">'
+    $menu = ['id' => (int) $a['id'], 'stare' => APPT_STATUS[$a['status']] ?? $a['status'], 'nume' => patient_name($a), 'ora' => hm($a['starts_at']) . '–' . hm($a['ends_at']), 'actiuni' => appt_quick_actions($a['status']), 'inapoi' => $url([])];
+    return '<a href="/admin/programari/' . (int) $a['id'] . '" data-meniu-stare="' . e((string) json_encode($menu, JSON_UNESCAPED_UNICODE)) . '" title="' . e(hm($a['starts_at']) . ' ' . patient_name($a) . ' · ' . (APPT_STATUS[$a['status']] ?? '')) . '" class="' . e(cn('block h-full overflow-hidden rounded-control border-l-4 border px-2 py-0.5 text-mic leading-tight shadow-sm hover:shadow-float', $cls, $movable($a) ? 'cursor-grab' : '')) . '" draggable="false">'
         . '<span class="font-semibold cifre" data-ora>' . e(hm($a['starts_at'])) . '</span> <span class="font-semibold">' . e(patient_name($a)) . '</span>'
         . (in_array($a['comfort'], ['emotii', 'frica'], true) ? ' <span aria-label="emoții" class="inline-block size-2 rounded-full bg-mustar"></span>' : '')
         . '<span class="block truncate text-discret">' . e($a['reason'] ?: service_title($a['category_slug'])) . '</span></a>';
 };
 
 if ($view === 'zi') {
-    $rowsCount = (CAL_END_HOUR - CAL_START_HOUR) * 60 / CAL_SLOT_MIN;
+    // 9:00–21:00, wider only when an appointment or the clinic's hours need it.
+    $startHour = CAL_START_HOUR;
+    $endHour = CAL_END_HOUR;
+    foreach ($appts as $a) {
+        $startHour = min($startHour, (int) substr($a['starts_at'], 11, 2));
+        $endHour = max($endHour, (int) ceil(((int) substr($a['ends_at'], 11, 2) * 60 + (int) substr($a['ends_at'], 14, 2)) / 60));
+    }
+    if (isset($open[(int) $day->format('N')])) {
+        $startHour = min($startHour, (int) substr($open[(int) $day->format('N')][0], 0, 2));
+        $endHour = max($endHour, (int) ceil(((int) substr($open[(int) $day->format('N')][1], 0, 2) * 60 + (int) substr($open[(int) $day->format('N')][1], 3, 2)) / 60));
+    }
+    $endHour = min(24, $endHour);
+    $rowsCount = ($endHour - $startHour) * 60 / CAL_SLOT_MIN;
     // The columns: the doctors, or the cabinets.
     $columns = $byCabinet
         ? array_map(static fn ($c) => ['id' => $c, 'label' => "Cabinetul {$c}", 'doctor' => null], range(1, $cabinetCount))
         : array_map(static fn ($d) => ['id' => (int) $d['id'], 'label' => $d['short'], 'doctor' => (int) $d['id']], $doctors);
     $cols = max(1, count($columns));
     $colIndex = array_flip(array_column($columns, 'id'));
-    $calStart = strtotime("{$date} " . sprintf('%02d:00:00', CAL_START_HOUR));
-    $calEnd = strtotime("{$date} " . sprintf('%02d:00:00', CAL_END_HOUR));
-    $cfg = ['url' => '/admin/calendar/muta', 'date' => $date, 'start' => CAL_START_HOUR, 'slot' => CAL_SLOT_MIN, 'rows' => $rowsCount, 'by' => $byCabinet ? 'cabinet' : 'doctor', 'cols' => array_column($columns, 'id'), 'today' => $date === date('Y-m-d'), 'now' => (int) date('G') * 60 + (int) date('i')];
-    $grid = '<div class="relative overflow-x-auto rounded-panou border border-linie bg-suprafata"><div data-cal="' . e((string) json_encode($cfg)) . '" class="relative grid min-w-[44rem] select-none" style="grid-template-columns:4rem repeat(' . $cols . ',minmax(9rem,1fr));grid-template-rows:auto repeat(' . $rowsCount . ',1.6rem)">';
+    $calStart = strtotime("{$date} " . sprintf('%02d:00:00', $startHour));
+    $calEnd = $calStart + ($endHour - $startHour) * 3600;
+    $cfg = ['url' => '/admin/calendar/muta', 'date' => $date, 'start' => $startHour, 'slot' => CAL_SLOT_MIN, 'rows' => $rowsCount, 'by' => $byCabinet ? 'cabinet' : 'doctor', 'cols' => array_column($columns, 'id'), 'today' => $date === date('Y-m-d'), 'now' => (int) date('G') * 60 + (int) date('i')];
+    $grid = '<div class="relative overflow-x-auto rounded-panou border border-linie bg-suprafata"><div data-cal="' . e((string) json_encode($cfg)) . '" class="relative grid min-w-[44rem] select-none" style="grid-template-columns:4rem repeat(' . $cols . ',minmax(9rem,1fr));grid-template-rows:auto repeat(' . $rowsCount . ',minmax(0.625rem,1fr));height:' . ($rowsCount * 1.6 + 3) . 'rem">';
     $grid .= '<div class="sticky top-0 border-b border-linie bg-suprafata" style="grid-row:1;grid-column:1"></div>';
     foreach ($columns as $i => $c) {
         $grid .= '<div data-cal-col class="border-b border-l border-linie bg-suprafata px-2 py-2 text-control font-semibold" style="grid-row:1;grid-column:' . ($i + 2) . '">' . e($c['label']) . '</div>';
     }
     for ($r = 0; $r < $rowsCount; $r++) {
-        $min = CAL_START_HOUR * 60 + $r * CAL_SLOT_MIN;
+        $min = $startHour * 60 + $r * CAL_SLOT_MIN;
         $hhmm = sprintf('%02d:%02d', intdiv($min, 60), $min % 60);
         $full = $min % 60 === 0;
         $grid .= '<div' . ($r === 0 ? ' data-cal-row' : '') . ' class="' . e(cn('pr-2 text-right text-mic text-discret cifre', $full ? 'border-t border-linie' : '')) . '" style="grid-row:' . ($r + 2) . ';grid-column:1">' . ($full ? $hhmm : '') . '</div>';
@@ -193,7 +208,7 @@ if ($view === 'zi') {
     if ($others !== []) {
         $grid .= '<p class="mt-4 text-mic text-discret">Programări la medici care nu mai lucrează la această clinică: ' . e(implode(', ', array_map(static fn ($a) => hm($a['starts_at']) . ' ' . patient_name($a), $others))) . '</p>';
     }
-    $hint = '<p class="mt-3 text-mic text-discret">Trageți o programare la altă oră' . ($byCabinet ? ' sau în alt cabinet' : ' sau la alt medic') . '; trageți de marginea de jos ca să schimbați durata. Pacientul primește noua oră după două minute, timp în care puteți apăsa „Anulați”.</p>';
+    $hint = '<p class="mt-3 text-mic text-discret">Apăsați pe o programare ca s-o marcați: confirmat, a sosit, nu a venit. Trageți o programare la altă oră' . ($byCabinet ? ' sau în alt cabinet' : ' sau la alt medic') . '; trageți de marginea de jos ca să schimbați durata. Pacientul primește noua oră după două minute, timp în care puteți apăsa „Anulați”.</p>';
     $content = $columns === [] ? '<p class="text-corp text-discret">Niciun medic nu e trecut la această clinică. Bifați clinica în Echipa → medicul.</p>' : $grid . $hint;
 } elseif ($view === 'lista') {
     $byDay = [];
@@ -261,8 +276,21 @@ foreach ($timeOff as $t) {
 }
 $notesHtml = $notes !== [] ? '<ul class="mb-4 flex flex-col gap-1 rounded-panou border border-mustar bg-mustar-pal p-3 text-mic">' . implode('', array_map(static fn ($n) => '<li class="flex items-start gap-2">' . icon('user-x', 16, 'mt-0.5') . '<span>' . e($n) . '</span></li>', array_unique($notes))) . '<li><a class="text-link underline" href="/admin/absente">Absențe și zile libere</a></li></ul>' : '';
 $active = array_filter($appts, static fn ($a) => $a['status'] !== 'anulat');
-$body = admin_header('Calendar', $title . ' · ' . ($names[$clinicId] ?? '') . ' · ' . count_ro(count($active), 'o programare', 'programări'))
-    . $toolbar . $notesHtml . $content
+$legendItem = static fn (string $cls, string $label) => '<li class="flex items-center gap-1.5"><span aria-hidden="true" class="' . e(cn('inline-block size-3.5 rounded-sm border border-l-4', $cls)) . '"></span>' . e($label) . '</li>';
+$legendList = $view !== 'lista' ? '<ul class="flex flex-wrap gap-x-4 gap-y-1 text-mic text-discret" aria-label="Culorile programărilor">'
+    . $legendItem('border-dashed border-linie-control bg-suprafata', 'Programat') . $legendItem('border-portocaliu bg-portocaliu-pal', 'Confirmat')
+    . $legendItem('border-actiune bg-menta-pal', 'A sosit') . $legendItem('border-actiune bg-menta/45', 'În tratament')
+    . $legendItem('border-carmin bg-carmin-pal', 'Nu a venit') . $legendItem('border-linie bg-adancit', 'Finalizat / anulat') . '</ul>' : '';
+// Beside the title on a wide screen; under the calendar on a tablet, so the day keeps its height.
+$legend = $legendList !== '' ? '<div class="hidden 2xl:block">' . $legendList . '</div>' : '';
+$legendBelow = $legendList !== '' ? '<div class="mt-3 2xl:hidden">' . $legendList . '</div>' : '';
+// A short header: the day view should show 9:00–21:00 without scrolling.
+$body = '<div class="mb-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-1"><div class="flex flex-wrap items-baseline gap-x-4">'
+    . '<h1 class="font-display text-[1.875rem] leading-tight text-cerneala">Calendar</h1>'
+    . '<p class="text-corp text-discret first-letter:uppercase">' . e($title . ' · ' . ($names[$clinicId] ?? '') . ' · ' . count_ro(count($active), 'o programare', 'programări')) . '</p></div>' . '<div class="flex flex-wrap items-center gap-x-5 gap-y-2">' . $legend
+    . '<a href="' . e(admin_url('/admin/programari/noua', ['clinica' => $clinicId, 'data' => $date, 'inapoi' => $url([])])) . '" class="' . e(btn('primary', 's')) . '">' . icon('plus', 16) . 'Programare nouă</a></div></div>'
+    . $toolbar . $notesHtml . $content . $legendBelow
     . '<div data-cal-anunt role="status" aria-live="polite" hidden class="fixed inset-x-4 bottom-4 z-50 mx-auto flex max-w-xl items-center gap-3 rounded-panou bg-cerneala px-4 py-3 text-corp text-fundal shadow-float"></div>'
-    . '<input type="hidden" data-cal-csrf value="' . e(csrf_token()) . '">';
+    . '<input type="hidden" data-cal-csrf value="' . e(csrf_token()) . '">'
+    . '<div data-meniu-programare role="dialog" aria-label="Starea programării" hidden class="fixed z-50 w-64 rounded-panou border border-linie bg-suprafata p-3 text-corp shadow-float"></div>';
 admin_page('Calendar', $body, $user);

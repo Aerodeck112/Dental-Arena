@@ -96,12 +96,13 @@ ${rol === "medic" ? sfat("Când recepția apasă „A sosit”, medicul care a c
 export const calendar = () => ({
   titlu: "Calendarul",
   html: `
-<p>Calendarul arată ziua unei clinici, cu câte o coloană pentru fiecare medic, de la 8 la 20, pe sferturi de oră. Sus alegeți clinica și vederea: ${b("Zi")}, ${b("Săptămână")} sau ${b("Listă")}.</p>
+<p>Calendarul arată ziua unei clinici, cu câte o coloană pentru fiecare medic, de la 9:00 la 21:00, pe sferturi de oră, toată pe un singur ecran (fără derulare, pe calculator și pe tabletă). Dacă o programare sau programul clinicii iese din interval, ziua se lărgește singură. Sus alegeți clinica și vederea: ${b("Zi")}, ${b("Săptămână")} sau ${b("Listă")}.</p>
 ${img("calendar-zi", "Calendarul pe o zi: orele în care medicul nu lucrează sunt gri, pauza e notată, absențele sunt roșii, iar sus apare lista absențelor zilei.")}
 <ul>
-<li>${b("‹")} ${b("Azi")} ${b("›")} mută ziua; câmpul de dată și ${b("Mergeți")} sar la orice zi.</li>
+<li>${b("‹")} ${b("Azi")} ${b("›")} mută ziua; câmpul de dată sare la orice zi.</li>
 <li>Un <strong>clic pe un loc liber</strong> deschide o programare nouă cu medicul, ziua și ora deja completate.</li>
-<li>Un <strong>clic pe o programare</strong> o deschide.</li>
+<li>Un <strong>clic pe o programare</strong> deschide un meniu mic: ${b("Confirmat")}, ${b("A sosit")}, ${b("Nu a venit")} (și pașii următori: începe tratamentul, finalizat) sau ${b("Deschideți programarea")}. Starea se schimbă pe loc, fără să plecați din calendar.</li>
+<li><strong>Culorile căsuțelor</strong>: albă cu chenar punctat = programat (neconfirmat), <strong>portocalie</strong> = a confirmat, <strong>verde</strong> = a sosit (verde mai închis: în tratament), <strong>roșie</strong> = nu a venit, gri = finalizat sau anulat. Legenda culorilor e lângă titlu sau sub calendar.</li>
 <li><strong>Gri</strong>: orele în care medicul nu lucrează la clinica asta, pauza lui sau orele în care clinica e închisă. <strong>Roșu</strong>: concediu, curs sau interval blocat (vezi capitolul despre absențe). Sus, banda galbenă arată absențele și sărbătorile legale din ziua sau săptămâna aleasă.</li>
 <li>Azi, o <strong>linie roșie</strong> arată ora de acum.</li>
 <li>Programările finalizate apar mai șterse; punctul galben arată un pacient cu emoții sau căruia îi e frică.</li>
@@ -548,7 +549,7 @@ ${sfat("Când cineva pleacă din echipă, debifați „Contul este activ”: nu 
 export const echipa = () => ({
   titlu: "Echipa: medicii pe site și programul lor",
   html: `
-<p>${b("Echipa")} arată medicii, în ordinea de pe site. Un medic se deschide cu un clic; ${b("Medic nou")} adaugă unul.</p>
+<p>${b("Echipa")} arată medicii, în ordinea de pe site. Săgețile ${b("↑")} ${b("↓")} de lângă fiecare medic îi schimbă locul: aceeași ordine apare pe site, în coloanele calendarului și la programarea online. Un medic se deschide cu un clic; ${b("Medic nou")} adaugă unul.</p>
 ${img("medic-profil", "Profilul unui medic.")}
 ${tabel(["Chenarul", "Ce setați"], [
   ["Pe site", "Numele afișat, specialitatea, prenumele și numele, textul „Despre medic”, ordinea, dacă apare pe site și dacă primește programări de pe site (și din chat)."],

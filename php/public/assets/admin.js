@@ -291,6 +291,15 @@
       return pad(Math.floor(m / 60)) + ":" + pad(m % 60);
     };
     var rowHeight = function () { return cal.querySelector("[data-cal-row]").getBoundingClientRect().height; };
+    // The whole day on one screen (computer, tablet): the rows share the height left under the
+    // toolbar, never smaller than 12px each. On a phone the day scrolls as before.
+    var fit = function () {
+      if (!window.matchMedia("(min-width: 768px)").matches) return;
+      var top = cal.getBoundingClientRect().top + window.scrollY;
+      cal.style.height = Math.max(C.rows * 10 + 40, window.innerHeight - top - 8) + "px";
+    };
+    fit();
+    window.addEventListener("resize", fit);
     var colRects = function () {
       return Array.prototype.map.call(cal.querySelectorAll("[data-cal-col]"), function (h) { return h.getBoundingClientRect(); });
     };
@@ -439,6 +448,74 @@
       tick();
       setInterval(tick, 60000);
     }
+  }
+
+  // Calendar: a click on an appointment opens a small menu to mark it at once (confirmed, arrived,
+  // did not come…) or open it. A click that ends a drag does not open it (the drag stops it).
+  var apptMenu = document.querySelector("[data-meniu-programare]");
+  if (apptMenu) {
+    var csrfCal = document.querySelector("[data-cal-csrf]");
+    var menuFor = null;
+    var closeMenu = function () {
+      apptMenu.hidden = true;
+      if (menuFor) menuFor.focus();
+      menuFor = null;
+    };
+    var TONE = { confirmat: "bg-portocaliu text-fundal hover:opacity-90", sosit: "bg-actiune text-pe-actiune hover:bg-actiune-apasat", neprezentat: "bg-carmin text-fundal hover:opacity-90" };
+    document.addEventListener("click", function (e) {
+      var a = e.target.closest && e.target.closest("[data-meniu-stare]");
+      if (!a) {
+        if (!apptMenu.hidden && !apptMenu.contains(e.target)) closeMenu();
+        return;
+      }
+      if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      e.preventDefault();
+      var d = JSON.parse(a.getAttribute("data-meniu-stare"));
+      apptMenu.innerHTML = "";
+      var h = document.createElement("p");
+      h.className = "font-semibold";
+      h.textContent = d.ora + " · " + d.nume;
+      var st = document.createElement("p");
+      st.className = "mb-2 text-mic text-discret";
+      st.textContent = "Acum: " + d.stare;
+      apptMenu.appendChild(h);
+      apptMenu.appendChild(st);
+      Object.keys(d.actiuni).forEach(function (k) {
+        var f = document.createElement("form");
+        f.method = "post";
+        f.action = "/admin/programari/" + d.id;
+        [["_csrf", csrfCal.value], ["op", "stare"], ["stare", k], ["inapoi", d.inapoi]].forEach(function (x) {
+          var i = document.createElement("input");
+          i.type = "hidden";
+          i.name = x[0];
+          i.value = x[1];
+          f.appendChild(i);
+        });
+        var b = document.createElement("button");
+        b.type = "submit";
+        b.className = "mt-1.5 flex min-h-control w-full items-center justify-center rounded-control px-3 font-semibold " + (TONE[k] || "border border-linie-control bg-suprafata text-cerneala hover:bg-adancit");
+        b.textContent = d.actiuni[k];
+        f.appendChild(b);
+        apptMenu.appendChild(f);
+      });
+      var open = document.createElement("a");
+      open.href = a.getAttribute("href");
+      open.className = "mt-2 flex min-h-control items-center justify-center font-medium text-link underline underline-offset-4";
+      open.textContent = "Deschideți programarea";
+      apptMenu.appendChild(open);
+      apptMenu.hidden = false;
+      var r = a.getBoundingClientRect(), mw = apptMenu.offsetWidth, mh = apptMenu.offsetHeight;
+      var left = r.right + 8 + mw > window.innerWidth ? Math.max(8, r.left - mw - 8) : r.right + 8;
+      apptMenu.style.left = left + "px";
+      apptMenu.style.top = Math.max(8, Math.min(window.innerHeight - mh - 8, r.top)) + "px";
+      menuFor = a;
+      var first = apptMenu.querySelector("button, a");
+      if (first) first.focus();
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && !apptMenu.hidden) closeMenu();
+    });
+    window.addEventListener("scroll", function () { if (!apptMenu.hidden) { apptMenu.hidden = true; menuFor = null; } }, { passive: true });
   }
 
   // A request: why it is lost, only when it is being closed.

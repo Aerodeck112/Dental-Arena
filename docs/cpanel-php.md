@@ -482,3 +482,20 @@ din copia bazei de date nu mai pot fi citite.
   din banner), ca harta Google. Adresa paginii și afișarea se schimbă din Setări → **Pagina de
   Facebook**; pagina trebuie să fie publică.
 - Actualizarea aplică singură migrarea `011_two_companies.sql`.
+
+## Pacienții din QDental, program până la 21:00, ordinea medicilor, culorile calendarului (octombrie 2026)
+
+- **Pacienții din programul vechi (QDental)**: actualizarea aduce lista lor (nume, prenume, telefon,
+  plus numărul fișei vechi într-o notă) în `dentalarena/data/import/`. Se adaugă **o singură dată**,
+  la prima pagină de panou deschisă după actualizare (câteva secunde); rezultatul apare în Jurnal
+  („import-pacienti”). Un pacient care există deja (același telefon și același nume) nu se dublează.
+  Fișa veche se găsește și după număr: căutați „4416”. Lista nu intră în GitHub (date personale).
+- **Ora maximă: 21:00**. Calendarul arată ziua de la 9:00 la 21:00 pe un singur ecran, iar în
+  formularul de programare orele merg până la 21:00. Pe site se văd ore până la 21:00 doar dacă
+  programul medicului (Echipa → medic → „Unde și când lucrează”) și orele clinicii (Setări) merg
+  până la 21:00.
+- **Ordinea medicilor**: Echipa → săgețile ↑ ↓. Aceeași ordine pe site, în calendar și la programare.
+- **Culorile programărilor**: albă = programat, portocalie = confirmat, verde = a sosit (mai închis:
+  în tratament), roșie = nu a venit, gri = finalizat / anulat. Un clic pe programare deschide meniul
+  rapid (Confirmat, A sosit, Nu a venit, Deschideți).
+

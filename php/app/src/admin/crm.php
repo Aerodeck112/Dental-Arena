@@ -25,6 +25,16 @@ const APPT_NEXT = [
     'sosit' => ['in-tratament' => 'Începe tratamentul'],
     'in-tratament' => ['finalizat' => 'Finalizat'],
 ];
+/** What a click on an appointment in the calendar offers, by status (colours: orange confirmed, green arrived, red did not come). */
+function appt_quick_actions(string $status): array
+{
+    $next = APPT_NEXT[$status] ?? [];
+    if (in_array($status, ['programat', 'confirmat'], true)) {
+        $next['neprezentat'] = 'Nu a venit';
+    }
+    return $next + (APPT_BACK[$status] ?? []);
+}
+
 /** Going back a step, by status (a cancelled appointment kept after all, a visit reopened). */
 const APPT_BACK = [
     'confirmat' => ['programat' => 'Înapoi la Programat'],
@@ -61,8 +71,9 @@ const HISTORY_FLAGS = [
 ];
 /** Months until the usual check-up after a visit, by service page. */
 const RECALL_MONTHS = ['consultatie-profilaxie' => 6, 'stomatologie-generala' => 6, 'parodontologie' => 3, 'pedodontie' => 6, 'implantologie' => 6, 'ortodontie' => 1, 'protetica-dentara' => 6];
-const CAL_START_HOUR = 8;
-const CAL_END_HOUR = 20;
+/** The day view shows the whole working day on one screen: 9:00–21:00 (wider when an appointment or the clinic's hours fall outside). */
+const CAL_START_HOUR = 9;
+const CAL_END_HOUR = 21;
 const CAL_SLOT_MIN = 15;
 const DURATIONS = [15 => '15 minute', 30 => '30 de minute', 45 => '45 de minute', 60 => 'o oră', 90 => 'o oră și jumătate', 120 => 'două ore'];
 
@@ -445,7 +456,7 @@ function appt_status_chip(string $status): string
 {
     $cls = match ($status) {
         'programat' => 'border border-dashed border-linie-control text-discret',
-        'confirmat' => 'border border-actiune text-actiune',
+        'confirmat' => 'border border-portocaliu bg-portocaliu-pal text-portocaliu',
         'sosit' => 'bg-menta-pal text-cerneala',
         'in-tratament' => 'bg-menta text-pe-menta',
         'finalizat' => 'bg-adancit text-discret',

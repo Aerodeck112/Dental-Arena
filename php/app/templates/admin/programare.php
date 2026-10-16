@@ -132,7 +132,7 @@ if (is_post()) {
     $d = DateTimeImmutable::createFromFormat('!Y-m-d H:i', "{$v['date']} {$v['time']}");
     if ($d === false) {
         $errors['time'] = 'Alegeți ziua și ora.';
-    } elseif ((int) $d->format('H') < 6 || (int) $d->format('H') > 21) {
+    } elseif ($d->format('H:i') < '06:00' || $d->format('H:i') > '21:00') {
         $errors['time'] = 'Ora trebuie să fie între 06:00 și 21:00.';
     }
     $cabinetMax = $loc !== null ? (int) db_value('SELECT cabinets FROM locations WHERE id = ?', [$loc]) : 1;
@@ -280,7 +280,7 @@ foreach (content('services') as $s) {
     $serviceOptions[$s['slug']] = $s['title'];
 }
 $times = [];
-for ($m = 7 * 60; $m <= 20 * 60; $m += CAL_SLOT_MIN) {
+for ($m = 7 * 60; $m <= 21 * 60; $m += CAL_SLOT_MIN) {
     $t = sprintf('%02d:%02d', intdiv($m, 60), $m % 60);
     $times[$t] = $t;
 }
