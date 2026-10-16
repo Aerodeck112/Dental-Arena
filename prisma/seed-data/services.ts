@@ -18,62 +18,61 @@ export const CATEGORIES: readonly SeedCategory[] = [
     sortOrder: 1,
   },
   {
-    slug: "stomatologie-generala",
-    name: "Stomatologie generală",
-    summary: "Planuri de tratament personalizate în funcție de cerințele și nevoile pacientului.",
+    slug: "odontologie",
+    name: "Odontologie",
+    summary: "Tratamentul cariilor și refacerea dinților: obturații din compozit, estetice, reconstrucții, cu planuri de tratament personalizate.",
     sortOrder: 2,
+  },
+  {
+    slug: "endodontie",
+    name: "Endodonție",
+    summary: "Tratamentul de canal, cu instrumente rotative, ca să păstrăm dintele: când nervul este inflamat sau infectat.",
+    sortOrder: 3,
   },
   {
     slug: "inhalosedare",
     name: "Inhalosedare",
     summary: "Pacientul este relaxat și cooperant în timpul anesteziei prin inhalosedare.",
-    sortOrder: 3,
+    sortOrder: 4,
   },
   {
     slug: "implantologie",
     name: "Implantologie",
     summary: "Medici pregătiți pentru cele mai complexe cazuri de implantologie și chirurgie dentară.",
-    sortOrder: 4,
+    sortOrder: 5,
   },
   {
     slug: "chirurgie-dento-alveolara",
     name: "Chirurgie dento-alveolară",
     summary:
       "Medicii noștri sunt pregătiți pentru cele mai complexe cazuri de chirurgie dentară, atât la adulți, cât și la copii: extracții laborioase, rezecții apicale, chistectomii dentare și odontectomii.",
-    sortOrder: 5,
+    sortOrder: 6,
   },
   {
     slug: "protetica-dentara",
     name: "Protetică dentară",
     summary:
       "Folosim concepte noi în medicina dentară. Planificarea, designul și realizarea lucrărilor dentare au la bază un sistem computerizat de cea mai mare precizie.",
-    sortOrder: 6,
+    sortOrder: 7,
   },
   {
     slug: "pedodontie",
     name: "Pedodonție",
     summary: "Stomatologie pentru copii, care se întorc de fiecare dată cu plăcere și fără frică.",
-    sortOrder: 7,
+    sortOrder: 8,
   },
   {
     slug: "ortodontie",
     name: "Ortodonție",
     summary:
       "Problemele de poziție ale dinților afectează masticația și oferă un aspect neplăcut zâmbetului. Pot fi corectate cu ajutorul aparatelor dentare, care sunt de mai multe tipuri – fixe, mobile, vizibile (cu brackeți metalici), invizibile (cu brackeți ceramici).",
-    sortOrder: 8,
+    sortOrder: 9,
   },
   {
     slug: "parodontologie",
     name: "Parodontologie",
     summary:
       "Boala parodontală sau parodontoza este cauzată în principal de placa bacteriană. În timp, dacă este lăsată netratată, duce la pierderea dinților.",
-    sortOrder: 9,
-  },
-  {
-    slug: "estetica-dentara",
-    name: "Estetică dentară",
-    summary:
-      "Aspectul zâmbetului influențează viața de zi cu zi mai mult decât ne-am dori. De aceea, există metode de înfrumusețare după înlăturarea problemelor dentare.",
     sortOrder: 10,
   },
 ];
@@ -130,10 +129,10 @@ export const SERVICES: readonly SeedService[] = [
   { code: "CON-ALBIRE", category: "consultatie-profilaxie", name: "Albire dentară", price: 1000, durationMinutes: 60 },
   { code: "CON-SIGILARE", category: "consultatie-profilaxie", name: "Sigilare șanțuri", price: 130, durationMinutes: 30 },
 
-  // 2. Stomatologie generală
+  // 2. Odontologie (carii, obturații, reconstrucții)
   {
     code: "SG-URGENTA",
-    category: "stomatologie-generala",
+    category: "odontologie",
     name: "Consultație de urgență (durere)",
     price: null,
     durationMinutes: 30,
@@ -141,10 +140,9 @@ export const SERVICES: readonly SeedService[] = [
     urgent: true,
     publicVisible: false,
   },
-  { code: "SG-PANSAMENT", category: "stomatologie-generala", name: "Pansament calmant", price: 50, durationMinutes: 30 },
   {
     code: "SG-OBT-COMPOZIT",
-    category: "stomatologie-generala",
+    category: "odontologie",
     name: "Obturație compozit",
     price: 200,
     priceFrom: true,
@@ -155,7 +153,7 @@ export const SERVICES: readonly SeedService[] = [
   },
   {
     code: "SG-OBT-ESTETICA",
-    category: "stomatologie-generala",
+    category: "odontologie",
     name: "Obturație estetică",
     price: 300,
     priceFrom: true,
@@ -163,12 +161,14 @@ export const SERVICES: readonly SeedService[] = [
     durationMinutes: 60,
     toothSpecific: true,
   },
-  { code: "SG-PIVOT", category: "stomatologie-generala", name: "Reconstrucție cu pivot din fibră de sticlă", price: 550, unit: "DINTE", durationMinutes: 60, toothSpecific: true },
-  { code: "SG-OBT-GIC", category: "stomatologie-generala", name: "Obturație glas-ionomer", price: 120, unit: "DINTE", durationMinutes: 30, toothSpecific: true },
-  { code: "SG-ENDO-MONO", category: "stomatologie-generala", name: "Tratament endodontic rotativ, monoradiculari", price: 350, unit: "DINTE", durationMinutes: 60, toothSpecific: true },
-  { code: "SG-ENDO-PLURI", category: "stomatologie-generala", name: "Tratament endodontic rotativ, pluriradiculari", price: 400, unit: "DINTE", durationMinutes: 90, toothSpecific: true },
-  { code: "SG-RETRAT-MONO", category: "stomatologie-generala", name: "Retratament, monoradiculari", price: 400, unit: "DINTE", durationMinutes: 60, toothSpecific: true },
-  { code: "SG-RETRAT-PLURI", category: "stomatologie-generala", name: "Retratament, pluriradiculari", price: 600, unit: "DINTE", durationMinutes: 90, toothSpecific: true },
+  { code: "SG-PIVOT", category: "odontologie", name: "Reconstrucție cu pivot din fibră de sticlă", price: 550, unit: "DINTE", durationMinutes: 60, toothSpecific: true },
+  { code: "SG-OBT-GIC", category: "odontologie", name: "Obturație glas-ionomer", price: 120, unit: "DINTE", durationMinutes: 30, toothSpecific: true },
+  // 3. Endodonție (tratament de canal)
+  { code: "SG-PANSAMENT", category: "endodontie", name: "Pansament calmant", price: 50, durationMinutes: 30 },
+  { code: "SG-ENDO-MONO", category: "endodontie", name: "Tratament endodontic rotativ, monoradiculari", price: 350, unit: "DINTE", durationMinutes: 60, representative: true, toothSpecific: true },
+  { code: "SG-ENDO-PLURI", category: "endodontie", name: "Tratament endodontic rotativ, pluriradiculari", price: 400, unit: "DINTE", durationMinutes: 90, toothSpecific: true },
+  { code: "SG-RETRAT-MONO", category: "endodontie", name: "Retratament, monoradiculari", price: 400, unit: "DINTE", durationMinutes: 60, toothSpecific: true },
+  { code: "SG-RETRAT-PLURI", category: "endodontie", name: "Retratament, pluriradiculari", price: 600, unit: "DINTE", durationMinutes: 90, toothSpecific: true },
 
   // 3. Inhalosedare
   {
@@ -290,18 +290,6 @@ export const SERVICES: readonly SeedService[] = [
   },
   { code: "PAR-GINGIVECTOMIE", category: "parodontologie", name: "Gingivectomie / dinte", price: 100, unit: "DINTE", durationMinutes: 30 },
 
-  // 10. Estetică dentară
-  {
-    code: "EST-OPALESCENCE",
-    category: "estetica-dentara",
-    name: "Albire profesională Opalescence Boost",
-    price: 800,
-    durationMinutes: 90,
-    representative: true,
-  },
-  { code: "EST-ALBIRE-INTERNA", category: "estetica-dentara", name: "Albire internă dinte", price: 200, unit: "DINTE", durationMinutes: 45 },
-  { code: "EST-BIJUTERIE", category: "estetica-dentara", name: "Aplicare bijuterie dentară", price: 200, durationMinutes: 30 },
-  { code: "EST-GUTIERA", category: "estetica-dentara", name: "Gutieră bruxism / arcadă", price: 300, unit: "ARCADA", durationMinutes: 30 },
 ];
 
 /** Lei → bani. */

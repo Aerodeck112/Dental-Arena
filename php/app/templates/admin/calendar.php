@@ -83,7 +83,7 @@ $toolbar = '<div class="mb-3 flex flex-wrap items-center gap-2">'
 $movable = static fn (array $a) => in_array($a['status'], ['programat', 'confirmat', 'sosit', 'in-tratament'], true);
 // The colour says the state at a glance: white not confirmed yet, orange confirmed, green arrived
 // (darker in treatment), red did not come, grey done or cancelled. A click opens the quick menu.
-$block = static function (array $a) use ($movable, $url): string {
+$block = static function (array $a, bool $compact = false) use ($movable, $url): string {
     $cls = match ($a['status']) {
         'confirmat' => 'border-portocaliu bg-portocaliu-pal',
         'sosit' => 'border-actiune bg-menta-pal',
@@ -94,10 +94,11 @@ $block = static function (array $a) use ($movable, $url): string {
         default => 'border-dashed border-linie-control bg-suprafata',
     };
     $menu = ['id' => (int) $a['id'], 'stare' => APPT_STATUS[$a['status']] ?? $a['status'], 'nume' => patient_name($a), 'ora' => hm($a['starts_at']) . '–' . hm($a['ends_at']), 'actiuni' => appt_quick_actions($a['status']), 'inapoi' => $url([])];
-    return '<a href="/admin/programari/' . (int) $a['id'] . '" data-meniu-stare="' . e((string) json_encode($menu, JSON_UNESCAPED_UNICODE)) . '" title="' . e(hm($a['starts_at']) . ' ' . patient_name($a) . ' · ' . (APPT_STATUS[$a['status']] ?? '')) . '" class="' . e(cn('block h-full overflow-hidden rounded-control border-l-4 border px-2 py-0.5 text-mic leading-tight shadow-sm hover:shadow-float', $cls, $movable($a) ? 'cursor-grab' : '')) . '" draggable="false">'
-        . '<span class="font-semibold cifre" data-ora>' . e(hm($a['starts_at'])) . '</span> <span class="font-semibold">' . e(patient_name($a)) . '</span>'
-        . (in_array($a['comfort'], ['emotii', 'frica'], true) ? ' <span aria-label="emoții" class="inline-block size-2 rounded-full bg-mustar"></span>' : '')
-        . '<span class="block truncate text-discret">' . e($a['reason'] ?: service_title($a['category_slug'])) . '</span></a>';
+    return '<a href="/admin/programari/' . (int) $a['id'] . '" data-meniu-stare="' . e((string) json_encode($menu, JSON_UNESCAPED_UNICODE)) . '" title="' . e(hm($a['starts_at']) . ' ' . patient_name($a) . ' · ' . (APPT_STATUS[$a['status']] ?? '')) . '" class="' . e(cn('block h-full overflow-hidden rounded-control border-l-4 border px-1.5 text-mic shadow-sm hover:shadow-float', $compact ? 'flex items-center gap-1 whitespace-nowrap py-0 text-[0.6875rem] leading-none' : 'py-0.5 leading-tight', $cls, $movable($a) ? 'cursor-grab' : '')) . '" draggable="false">'
+        . '<span class="shrink-0 font-semibold cifre" data-ora>' . e(hm($a['starts_at'])) . '</span> <span class="' . ($compact ? 'min-w-0 truncate font-semibold' : 'font-semibold') . '">' . e(patient_name($a)) . '</span>'
+        . (in_array($a['comfort'], ['emotii', 'frica'], true) ? ' <span aria-label="emoții" class="inline-block size-2 shrink-0 rounded-full bg-mustar"></span>' : '')
+        // A 15-minute appointment has room for one line: the time and the name; the rest is in the title and the menu.
+        . ($compact ? '' : '<span class="block truncate text-discret">' . e($a['reason'] ?: service_title($a['category_slug'])) . '</span>') . '</a>';
 };
 
 if ($view === 'zi') {
@@ -186,6 +187,45 @@ if ($view === 'zi') {
             }
         }
     }
+    // Appointments that overlap in one column share it side by side, each in its own lane.
+    $lane = [];
+    $byColumn = [];
+    foreach ($appts as $a) {
+        $key = $byCabinet ? ($a['cabinet'] !== null ? (int) $a['cabinet'] : ($usualCabinet[(int) $a['doctor_id']] ?? 1)) : (int) $a['doctor_id'];
+        $byColumn[$key][] = $a;
+    }
+    foreach ($byColumn as $list) {
+        usort($list, static fn ($x, $y) => [$x['starts_at'], $y['ends_at']] <=> [$y['starts_at'], $x['ends_at']]);
+        $group = [];
+        $groupEnd = '';
+        $laneEnds = [];
+        $close = static function () use (&$group, &$laneEnds, &$lane): void {
+            foreach ($group as $id) {
+                $lane[$id][1] = count($laneEnds);
+            }
+            $group = [];
+            $laneEnds = [];
+        };
+        foreach ($list as $a) {
+            if ($group !== [] && $a['starts_at'] >= $groupEnd) {
+                $close();
+                $groupEnd = '';
+            }
+            $free = null;
+            foreach ($laneEnds as $i => $end) {
+                if ($end <= $a['starts_at']) {
+                    $free = $i;
+                    break;
+                }
+            }
+            $free ??= count($laneEnds);
+            $laneEnds[$free] = $a['ends_at'];
+            $lane[(int) $a['id']] = [$free, 1];
+            $group[] = (int) $a['id'];
+            $groupEnd = max($groupEnd, $a['ends_at']);
+        }
+        $close();
+    }
     $others = [];
     foreach ($appts as $a) {
         $key = $byCabinet ? ($a['cabinet'] !== null ? (int) $a['cabinet'] : ($usualCabinet[(int) $a['doctor_id']] ?? 1)) : (int) $a['doctor_id'];
@@ -198,7 +238,9 @@ if ($view === 'zi') {
         $s = max(0, min($rowsCount - 1, $s));
         $len = min($len, $rowsCount - $s);
         $data = $movable($a) ? ' data-appt="' . (int) $a['id'] . '" data-rand="' . $s . '" data-lungime="' . $len . '" data-col="' . $colIndex[$key] . '" data-medic="' . (int) $a['doctor_id'] . '" data-cabinet="' . ($a['cabinet'] ?? '') . '"' : '';
-        $grid .= '<div' . $data . ' class="relative z-10 p-0.5" style="grid-row:' . ($s + 2) . ' / span ' . $len . ';grid-column:' . ($colIndex[$key] + 2) . '">' . $block($a)
+        [$li, $ln] = $lane[(int) $a['id']] ?? [0, 1];
+        $side = $ln > 1 ? ';width:calc(100% / ' . $ln . ');margin-left:calc(100% * ' . $li . ' / ' . $ln . ')' : '';
+        $grid .= '<div' . $data . ' class="relative z-10 min-h-0 p-px" style="grid-row:' . ($s + 2) . ' / span ' . $len . ';grid-column:' . ($colIndex[$key] + 2) . $side . '">' . $block($a, $len <= 2 || $ln > 2)
             . ($movable($a) ? '<span data-trage-jos aria-hidden="true" class="absolute inset-x-2 bottom-0 h-2 cursor-ns-resize rounded-full hover:bg-actiune/40"></span>' : '') . '</div>';
     }
     if ($date === date('Y-m-d')) {

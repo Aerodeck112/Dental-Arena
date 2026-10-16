@@ -32,14 +32,14 @@ export type DentalArtName =
 /** The drawing on each service's tile and page. */
 export const SERVICE_ART: Record<ServiceSlug, DentalArtName> = {
   "consultatie-profilaxie": "consult",
-  "stomatologie-generala": "plomba",
+  odontologie: "plomba",
+  endodontie: "plomba",
   implantologie: "implant",
   "chirurgie-dento-alveolara": "clesti",
   "protetica-dentara": "coroana",
   pedodontie: "copil",
   ortodontie: "aparat",
   parodontologie: "gingie",
-  "estetica-dentara": "culori",
 };
 
 /** Places an upright 120 × 120 drawing with its centre at (x, y), turned and scaled. */

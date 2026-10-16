@@ -30,5 +30,5 @@ export const ortodontie: ServiceContent = {
   ctaTitle: "Programați o consultație ortodontică",
   bookingCode: "ORT-CONSULT",
   comfortNote: true,
-  related: ["pedodontie", "estetica-dentara"],
+  related: ["pedodontie", "consultatie-profilaxie"],
 };

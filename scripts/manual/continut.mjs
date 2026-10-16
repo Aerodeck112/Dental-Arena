@@ -565,14 +565,22 @@ ${sfat("Lăsați goale zilele în care medicul nu lucrează la acea clinică. F�
 export const servicii = () => ({
   titlu: "Servicii și prețuri",
   html: `
-<p>${b("Servicii și prețuri")} arată cele 10 pagini de servicii ale site-ului, fiecare cu lista ei de prețuri. Ce schimbați aici apare pe site imediat și se folosește la planuri și la programări.</p>
-${img("servicii-pagina", "Prețurile unei pagini de servicii.")}
+<p>${b("Servicii și prețuri")} arată serviciile site-ului (de exemplu Odontologie, Endodonție, Implantologie), fiecare cu pagina lui pe site și cu lista lui de prețuri (sub-serviciile). Ce schimbați aici apare pe site imediat și se folosește la planuri și la programări.</p>
+<h3>Serviciile (paginile)</h3>
 <ul>
-<li><strong>Descrierea scurtă</strong> apare pe prima pagină și pe pagina Servicii.</li>
-<li>Fiecare rând: numele serviciului, prețul, bifa „de la”, un al doilea preț (pentru „200 / 400 lei”), unitatea (de exemplu „/dinte”), bifa „pe site” și prețul reprezentativ (cel afișat pe cardul serviciului). Prețul gol înseamnă „Prețul îl aflați la telefon”.</li>
+<li>${b("Serviciu nou")} (în dreapta): numele și o descriere scurtă. Se face pagina lui pe site, de exemplu „Albire dentară” → dentalarena.ro/albire-dentara, și apare în meniul Servicii, pe pagina Servicii, la Prețuri și la programare.</li>
+<li>Săgețile ${b("↑")} ${b("↓")} schimbă ordinea serviciilor: așa apar în meniul site-ului și pe paginile Servicii și Prețuri.</li>
+<li>Într-un serviciu, la ${b("Pagina pe site")}: numele, descrierea scurtă, fraza de sub titlu și textul paginii (paragrafele se despart cu un rând gol). Debifat „Serviciul apare pe site”, pagina dispare de pe site, dar rămâne în panou.</li>
+<li>${b("Ștergeți serviciul")} (jos în pagină) scoate pagina și prețurile ei. Prețurile folosite deja în planuri sau facturi rămân în istoric, ascunse.</li>
+<li>Medicii care fac serviciul se bifează la Echipa → medic (apar pe pagina lui la „Cine vă tratează”).</li>
+</ul>
+${img("servicii-pagina", "Prețurile unei pagini de servicii.")}
+<h3>Prețurile (sub-serviciile)</h3>
+<ul>
+<li>Fiecare rând: numele, prețul, bifa „de la”, un al doilea preț (pentru „200 / 400 lei”), unitatea (de exemplu „/dinte”), bifa „pe site” și prețul reprezentativ (cel afișat pe cardul serviciului). Prețul gol înseamnă „Prețul îl aflați la telefon”.</li>
 <li><strong>Durează</strong>: cât ține serviciul. Pe site, programarea pentru el ocupă atât.</li>
 <li><strong>Programare online</strong>: bifat, serviciul apare ca motiv pe pagina Programare de pe site, cu textul pentru pacient (de exemplu „Consultație sau control”) și o explicație scurtă. „Urgență” îl pune al doilea, evidențiat, cu telefoanele clinicilor.</li>
-<li>${b("Adăugați un serviciu")} pune un rând nou; săgețile îl mută; coșul îl șterge.</li>
+<li>${b("Adăugați un preț (sub-serviciu)")} pune un rând nou; săgețile îl mută; coșul îl șterge.</li>
 <li>La sfârșit, ${b("Salvați prețurile")}.</li>
 </ul>
 ${img("servicii-online", "Un serviciu oferit ca motiv de programare pe site.")}

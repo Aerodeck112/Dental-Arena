@@ -32,7 +32,7 @@ function catalog(): array
         return $cache;
     }
     $cache = [];
-    foreach (db_all('SELECT * FROM categories ORDER BY sort_order, name') as $c) {
+    foreach (db_all('SELECT * FROM categories WHERE public_visible = 1 ORDER BY sort_order, name') as $c) {
         $cache[$c['slug']] = ['id' => (int) $c['id'], 'slug' => $c['slug'], 'name' => $c['name'], 'summary' => $c['summary'], 'prices' => [], 'representative' => null];
     }
     $bySlugId = array_column($cache, 'slug', 'id');
@@ -157,6 +157,14 @@ function site_image(string $slot): array
     foreach (content('siteImageSlots') as $s) {
         if ($s['key'] === $slot) {
             $default = $s['default'];
+        }
+    }
+    if ($default === null && str_starts_with($slot, 'serviciu.')) {
+        // A service page added in the panel: the photo of the general dentistry pages until one is uploaded.
+        foreach (content('siteImageSlots') as $s) {
+            if ($s['key'] === 'serviciu.odontologie') {
+                $default = $s['default'];
+            }
         }
     }
     if ($default === null) {

@@ -262,7 +262,7 @@ function booking_wizard(array $cfg, array $reasons, array $values, array $errors
 $body = capture(function () use ($clinics, $errors, $values, $sentMessage, $bookable, $cfg, $reasons, $wizardValues, $wizardErrors): void {
     $err = static fn (string $k): ?string => $errors[$k] ?? null;
     $services = ['' => 'Nu știu încă: o consultație'];
-    foreach (content('services') as $s) {
+    foreach (site_services() as $s) {
         $services[$s['slug']] = $s['title'];
     }
     $clinicOptions = [];

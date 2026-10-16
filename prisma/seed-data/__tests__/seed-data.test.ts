@@ -37,14 +37,14 @@ describe("catalog (§10.3)", () => {
   const specCategories = table("| # | Category slug |");
   const specServices = table("| code | category | name | price (lei) |");
 
-  it("has the 10 categories in order", () => {
+  it("has the categories in order", () => {
     expect(CATEGORIES.map((c) => [c.sortOrder, c.slug, c.name])).toEqual(
       specCategories.map(([n, slug, name]) => [Number(n), slug.replace(/`/g, ""), name]),
     );
   });
 
   it("has every price item of the spec, and nothing else", () => {
-    expect(specServices.length).toBe(66);
+    expect(specServices.length).toBe(62);
     expect(SERVICES.map((s) => s.code)).toEqual(specServices.map((r) => r[0]));
   });
 

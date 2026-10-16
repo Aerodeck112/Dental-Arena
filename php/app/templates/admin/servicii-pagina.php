@@ -1,6 +1,9 @@
 <?php
 /**
- * /admin/servicii/{slug}: the price list of one service page. One form saves every row; the
+ * /admin/servicii/{slug}: one service page: its name and texts, whether it shows on the site, and
+ * its price list (the sub-services). It can be deleted: its prices go too, except those already used
+ * in a treatment plan or an invoice (then the page is only hidden).
+ * The price list: One form saves every row; the
  * row buttons (up, down, delete) save first, then act. An empty price reads „Prețul îl aflați la
  * telefon”; „de la” and a second price make „de la 200 lei” and „900 / 1.100 lei”.
  */
@@ -15,6 +18,27 @@ $load = static fn () => db_all('SELECT * FROM services WHERE category_id = ? ORD
 $rows = $load();
 $errors = [];
 $input = [];
+
+if (is_post() && post('op') === 'sterge-serviciul') {
+    csrf_check();
+    $used = (int) db_value('SELECT COUNT(*) FROM services s WHERE s.category_id = ? AND (s.id IN (SELECT service_id FROM treatment_plan_items WHERE service_id IS NOT NULL) OR s.id IN (SELECT service_id FROM invoice_items WHERE service_id IS NOT NULL))', [$catId]);
+    db_tx(static function () use ($catId, $cat, $used): void {
+        db_run('DELETE FROM services WHERE category_id = ? AND id NOT IN (SELECT service_id FROM treatment_plan_items WHERE service_id IS NOT NULL) AND id NOT IN (SELECT service_id FROM invoice_items WHERE service_id IS NOT NULL)', [$catId]);
+        db_run('DELETE FROM site_images WHERE slot = ?', ["serviciu.{$cat['slug']}"]);
+        db_run('UPDATE appointments SET category_slug = NULL WHERE category_slug = ?', [$cat['slug']]);
+        db_run('UPDATE leads SET category_slug = NULL WHERE category_slug = ?', [$cat['slug']]);
+        if ($used === 0) {
+            db_run('DELETE FROM categories WHERE id = ?', [$catId]);
+        } else {
+            db_run('UPDATE services SET public_visible = 0, bookable_online = 0, representative = 0 WHERE category_id = ?', [$catId]);
+            db_run('UPDATE categories SET public_visible = 0 WHERE id = ?', [$catId]);
+            db_run('DELETE FROM doctor_categories WHERE category_id = ?', [$catId]);
+        }
+    });
+    audit('serviciu-sters', $cat['name'] . ($used > 0 ? " (ascuns: {$used} prețuri folosite în planuri sau facturi)" : ''));
+    flash($used === 0 ? "Serviciul „{$cat['name']}” a fost șters de pe site și din panou." : "Serviciul „{$cat['name']}” a fost scos de pe site. {$used} prețuri folosite deja în planuri sau facturi rămân în istoric, ascunse.");
+    redirect('/admin/servicii');
+}
 
 if (is_post()) {
     csrf_check();
@@ -80,12 +104,18 @@ if (is_post()) {
     if ($summary === '') {
         $errors['summary'] = 'Scrieți descrierea scurtă a serviciului.';
     }
+    $page = ['name' => trim(post('cat_name')), 'lead' => trim(post('cat_lead')), 'body' => trim(str_replace("\r\n", "\n", post('cat_body'))), 'public_visible' => post('cat_visible') === '1' ? 1 : 0];
+    if (mb_strlen($page['name']) < 3) {
+        $errors['cat_name'] = 'Scrieți numele serviciului.';
+    } elseif (db_value('SELECT 1 FROM categories WHERE name = ? AND id <> ?', [$page['name'], $catId])) {
+        $errors['cat_name'] = 'Există deja un serviciu cu acest nume.';
+    }
     if ($errors === []) {
-        db_tx(static function () use ($updates, $catId, $newName, $newMin, $summary, $op, $cat): void {
+        db_tx(static function () use ($updates, $catId, $newName, $newMin, $summary, $op, $cat, $page): void {
             foreach ($updates as $id => $u) {
                 db_update('services', $u, 'id = :id AND category_id = :c', ['id' => $id, 'c' => $catId]);
             }
-            db_update('categories', ['summary' => mb_substr($summary, 0, 1000)], 'id = :id', ['id' => $catId]);
+            db_update('categories', ['summary' => mb_substr($summary, 0, 1000), 'name' => mb_substr($page['name'], 0, 120), 'lead' => $page['lead'] !== '' ? mb_substr($page['lead'], 0, 600) : null, 'body' => $page['body'] !== '' ? mb_substr($page['body'], 0, 8000) : null, 'public_visible' => $page['public_visible']], 'id = :id', ['id' => $catId]);
             if ($newName !== '') {
                 $sort = (int) db_value('SELECT COALESCE(MAX(sort_order), 0) + 1 FROM services WHERE category_id = ?', [$catId]);
                 db_insert('services', [
@@ -187,13 +217,22 @@ $body = '<p class="mb-4"><a href="/admin/servicii" class="inline-flex min-h-cont
     . error_summary(array_map(static fn ($m) => $m, $errors), 'Prețurile nu au fost salvate')
     . admin_section_open('Prețurile', 'preturi', count($rows) . ' rânduri, în ordinea de pe site.')
     . '<ul class="mt-2">' . ($rowsHtml !== '' ? $rowsHtml : '<li class="py-4 text-discret">Niciun preț încă.</li>') . '</ul></section>'
-    . admin_section_open('Adăugați un serviciu', 'nou')
+    . admin_section_open('Adăugați un preț (sub-serviciu)', 'nou', 'De exemplu „Obturație compozit”. După ce salvați, îi puteți pune unitatea, durata și programarea online.')
     . '<div class="mt-4 grid gap-4 sm:grid-cols-[minmax(0,1fr)_10rem]">'
     . text_field('new_name', 'Numele serviciului', ['value' => post('new_name'), 'maxlength' => 190, 'id' => 'field-new'])
     . text_field('new_min', 'Preț (lei)', ['value' => post('new_min'), 'inputmode' => 'decimal', 'hint' => 'Gol = la telefon'])
     . '</div></section>'
-    . admin_section_open('Descrierea scurtă', 'descriere', 'Apare sub numele serviciului pe prima pagină și pe pagina Servicii.')
-    . '<div class="mt-4">' . text_area('summary', 'Text', ['value' => is_post() ? post('summary') : $cat['summary'], 'rows' => 3, 'maxlength' => 1000, 'error' => $errors['summary'] ?? null]) . '</div></section>'
+    . admin_section_open('Pagina pe site', 'descriere', 'Numele și textele serviciului. Adresa paginii rămâne /' . $cat['slug'] . '.')
+    . '<div class="mt-4 flex flex-col gap-5">'
+    . text_field('cat_name', 'Numele serviciului', ['value' => is_post() ? post('cat_name') : $cat['name'], 'maxlength' => 120, 'error' => $errors['cat_name'] ?? null, 'hint' => 'Apare în meniul site-ului, ca titlu al paginii și în panou.'])
+    . text_area('summary', 'Descrierea scurtă', ['value' => is_post() ? post('summary') : $cat['summary'], 'rows' => 3, 'maxlength' => 1000, 'error' => $errors['summary'] ?? null, 'hint' => 'Apare pe pagina Servicii și pe prima pagină.'])
+    . text_area('cat_lead', 'Fraza de sub titlu', ['value' => is_post() ? post('cat_lead') : (string) ($cat['lead'] ?? ''), 'rows' => 2, 'maxlength' => 600, 'optional' => true, 'hint' => 'Goală: ' . (service_content($cat['slug'])['lead'] ?? 'descrierea scurtă') . ''])
+    . text_area('cat_body', 'Textul paginii', ['value' => is_post() ? post('cat_body') : (string) ($cat['body'] ?? ''), 'rows' => 8, 'maxlength' => 8000, 'optional' => true, 'hint' => 'Paragrafele se despart cu un rând gol. Gol: textul de acum al paginii.'])
+    . checkbox_field('cat_visible', 'Serviciul apare pe site', ['checked' => is_post() ? post('cat_visible') === '1' : (int) ($cat['public_visible'] ?? 1) === 1, 'description' => 'Debifat: pagina, prețurile și motivul de programare dispar de pe site, dar rămân în panou.'])
+    . '</div></section>'
     . '<div class="sticky bottom-0 -mx-4 border-t border-linie bg-fundal/95 px-4 py-3 backdrop-blur-sm md:mx-0 md:rounded-panou md:border"><button type="submit" class="' . e(btn('primary', 'l')) . '">Salvați prețurile</button></div>'
-    . '</form>';
+    . '</form>'
+    . '<form method="post" class="mt-10 rounded-panou border border-carmin/40 bg-suprafata p-6" data-confirma="Ștergeți serviciul „' . e($cat['name']) . '” cu toate prețurile lui? Pagina dispare de pe site.">' . csrf_field() . '<input type="hidden" name="op" value="sterge-serviciul">'
+    . '<h2 class="text-h3 font-semibold">Ștergeți serviciul</h2><p class="mt-1 max-w-[60ch] text-corp text-discret">Pagina și prețurile ei dispar de pe site și din panou. Prețurile folosite deja în planuri de tratament sau facturi rămân în istoric, ascunse.</p>'
+    . '<div class="mt-4"><button type="submit" class="' . e(btn('danger')) . '">' . icon('trash-2', 18) . 'Ștergeți serviciul</button></div></form>';
 admin_page($cat['name'], $body, $user);

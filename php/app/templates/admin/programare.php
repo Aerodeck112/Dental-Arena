@@ -276,7 +276,7 @@ if ($maxCab > 1) {
     $cabinetSelect = select_field('cabinet', 'Cabinetul', $cabOptions, ['value' => $v['cabinet']]);
 }
 $serviceOptions = ['' => 'Consultație / nespecificat'];
-foreach (content('services') as $s) {
+foreach (site_services() as $s) {
     $serviceOptions[$s['slug']] = $s['title'];
 }
 $times = [];

@@ -74,17 +74,17 @@ describe("site copy", () => {
 });
 
 describe("services", () => {
-  it("has the 9 WordPress slugs still offered (inhalosedare left in October 2026)", () => {
+  it("has the service pages offered (October 2026: no inhalosedare or estetică, general dentistry split in two)", () => {
     expect([...SERVICE_SLUGS]).toEqual([
       "consultatie-profilaxie",
-      "stomatologie-generala",
+      "odontologie",
+      "endodontie",
       "implantologie",
       "chirurgie-dento-alveolara",
       "protetica-dentara",
       "pedodontie",
       "ortodontie",
       "parodontologie",
-      "estetica-dentara",
     ]);
     for (const slug of SERVICE_SLUGS) expect(SERVICES[slug].slug).toBe(slug);
     expect(getServiceContent("nu-exista")).toBeNull();

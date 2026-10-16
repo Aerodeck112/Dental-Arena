@@ -62,8 +62,8 @@ function services_menu(bool $current, string $path): void
     <?= icon('chevron-down', 18, 'transition-transform duration-200 ease-filet group-open/menu:rotate-180') ?>
   </summary>
   <div class="da-rise absolute top-full left-[-1.5rem] z-50 mt-3 w-[42rem] max-w-[calc(100vw-2*var(--spacing-margine))] rounded-panou border border-linie bg-suprafata p-6 shadow-float">
-    <ul class="grid grid-flow-col grid-cols-2 grid-rows-5 gap-x-8">
-      <?php foreach (content('services') as $s) {
+    <ul class="grid grid-flow-col grid-cols-2 gap-x-8" style="grid-template-rows:repeat(<?= (int) ceil(count(site_services()) / 2) ?>,auto)">
+      <?php foreach (site_services() as $s) {
           $here = $path === "/{$s['slug']}"; ?>
       <li>
         <a href="/<?= e($s['slug']) ?>"<?= $here ? ' aria-current="page"' : '' ?> class="<?= e(cn('flex min-h-control items-center text-control text-cerneala underline-offset-4 hover:text-link hover:underline', $here ? 'font-semibold text-link underline' : '')) ?>"><?= e($s['title']) ?></a>
@@ -138,7 +138,7 @@ function mobile_menu(string $path): void
         <a href="/servicii" class="<?= e(cn('font-display text-nume', $path === '/servicii' ? 'text-link underline decoration-2 underline-offset-[0.3em]' : 'text-cerneala')) ?>">Servicii</a>
       </h3>
       <ul class="mt-2 grid grid-cols-1 gap-x-6 min-[30rem]:grid-cols-2">
-        <?php foreach (content('services') as $s) { ?>
+        <?php foreach (site_services() as $s) { ?>
         <li>
           <a href="/<?= e($s['slug']) ?>"<?= $path === "/{$s['slug']}" ? ' aria-current="page"' : '' ?> class="flex min-h-control items-center text-control text-cerneala underline-offset-4 hover:underline aria-[current=page]:font-semibold aria-[current=page]:text-link aria-[current=page]:underline"><?= e($s['title']) ?></a>
         </li>

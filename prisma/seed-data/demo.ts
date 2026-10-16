@@ -253,11 +253,11 @@ const BLOCKING: readonly AppointmentStatus[] = ["PROGRAMAT", "CONFIRMAT", "SOSIT
 const SERVICE_MIX: Record<string, readonly (readonly [string, number])[]> = {
   "andrei-marcoci": [
     ["CON-CONSULT", 3], ["CON-DETARTRAJ", 4], ["CON-AIRFLOW", 1], ["SG-OBT-COMPOZIT", 5], ["SG-OBT-ESTETICA", 2],
-    ["SG-ENDO-MONO", 1], ["SG-ENDO-PLURI", 1], ["SG-PANSAMENT", 1], ["PAR-CHIURETAJ", 1], ["PR-ZR", 1], ["EST-OPALESCENCE", 0.5],
+    ["SG-ENDO-MONO", 1], ["SG-ENDO-PLURI", 1], ["SG-PANSAMENT", 1], ["PAR-CHIURETAJ", 1], ["PR-ZR", 1], ["CON-ALBIRE", 0.5],
   ],
   "paul-bologa": [
     ["CON-CONSULT", 3], ["CON-DETARTRAJ", 4], ["SG-OBT-COMPOZIT", 5], ["SG-OBT-GIC", 1], ["SG-ENDO-PLURI", 1],
-    ["SG-RETRAT-MONO", 0.5], ["PAR-PARODONTOMETRIE", 1], ["PR-MC", 1], ["EST-ALBIRE-INTERNA", 0.5],
+    ["SG-RETRAT-MONO", 0.5], ["PAR-PARODONTOMETRIE", 1], ["PR-MC", 1], ["SG-OBT-ESTETICA", 0.5],
   ],
   "mihail-dan-masca": [
     ["CON-CONSULT", 2], ["IMP-CONSULT", 2], ["IMP-NEODENT", 1], ["IMP-BONT", 1], ["SG-OBT-COMPOZIT", 3], ["PR-ZR", 2],

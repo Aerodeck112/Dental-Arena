@@ -499,3 +499,18 @@ din copia bazei de date nu mai pot fi citite.
   în tratament), roșie = nu a venit, gri = finalizat / anulat. Un clic pe programare deschide meniul
   rapid (Confirmat, A sosit, Nu a venit, Deschideți).
 
+## Servicii: Odontologie și Endodonție, fără Estetică, servicii noi din panou (octombrie 2026)
+
+- „Stomatologie generală” s-a împărțit în **Odontologie** (carii, obturații, reconstrucții) și
+  **Endodonție** (pansament calmant, tratament de canal, retratament). Adresa veche
+  `/stomatologie-generala` duce la `/odontologie`. Medicii bifați la stomatologie generală sunt bifați
+  la amândouă.
+- **Estetica dentară** a fost scoasă (pagina, prețurile); `/estetica-dentara` duce la `/servicii`.
+  Prețurile folosite deja în planuri sau facturi rămân ascunse, în istoric.
+- **Servicii și prețuri** (administratori): serviciu nou (o pagină nouă pe site), ordinea cu săgeți,
+  numele și textele paginii, „apare pe site”, ștergere; prețurile (sub-serviciile) ca înainte.
+  Un serviciu nou primește și loc de fotografie la Fotografii site.
+- **Calendarul**: programările care se suprapun la același medic stau una lângă alta; cele de până
+  la 30 de minute se arată pe un rând (ora și numele).
+- Actualizarea aplică singură migrarea `012_service_pages.sql`.
+

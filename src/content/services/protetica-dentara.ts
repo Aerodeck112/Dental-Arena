@@ -23,5 +23,5 @@ export const proteticaDentara: ServiceContent = {
   ctaTitle: "Programați o consultație pentru o lucrare dentară",
   bookingCode: "IMP-CONSULT",
   comfortNote: true,
-  related: ["implantologie", "estetica-dentara"],
+  related: ["implantologie", "endodontie"],
 };

@@ -46,14 +46,14 @@ export const SITE_IMAGE_SLOTS: readonly SiteImageSlot[] = [
   { key: "despre.principala", group: "Despre noi", label: "Fotografia principală", hint: "Prima fotografie din pagina „Despre noi”. Orizontală.", default: IMG.receptieLarg },
   { key: "despre.secundara", group: "Despre noi", label: "A doua fotografie", hint: "O fotografie de atmosferă. Orizontală.", default: IMG.canapea },
   service("consultatie-profilaxie", "Consultație și profilaxie", IMG.radiografie),
-  service("stomatologie-generala", "Stomatologie generală", IMG.receptie),
+  service("odontologie", "Odontologie", IMG.receptie),
+  service("endodontie", "Endodonție", IMG.radiografie),
   service("implantologie", "Implantologie", IMG.muschi),
   service("chirurgie-dento-alveolara", "Chirurgie dento-alveolară", IMG.radiografie),
   service("protetica-dentara", "Protetică dentară", IMG.receptieLarg),
   service("pedodontie", "Pedodonție", IMG.plaja),
   service("ortodontie", "Ortodonție", IMG.canapea),
   service("parodontologie", "Parodontologie", IMG.radiografie),
-  service("estetica-dentara", "Estetică dentară", IMG.canapea),
 ];
 
 export function siteImageSlot(key: string): SiteImageSlot | undefined {

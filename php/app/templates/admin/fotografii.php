@@ -3,6 +3,15 @@
 declare(strict_types=1);
 
 $slots = content('siteImageSlots');
+// The service pages of the panel: those added there get a photo place too; deleted ones lose it.
+$pages = array_column(site_services(), 'title', 'slug');
+$slots = array_values(array_filter($slots, static fn ($s) => !str_starts_with($s['key'], 'serviciu.') || isset($pages[substr($s['key'], 9)])));
+$known = array_column($slots, 'key');
+foreach ($pages as $slug => $title) {
+    if (!in_array("serviciu.{$slug}", $known, true)) {
+        $slots[] = ['key' => "serviciu.{$slug}", 'group' => 'Servicii', 'label' => $title, 'hint' => "Fotografia mare din pagina „{$title}”. Merge bine o fotografie orizontală din cabinet.", 'default' => site_image("serviciu.{$slug}")];
+    }
+}
 $byKey = array_column($slots, null, 'key');
 
 if (is_post()) {

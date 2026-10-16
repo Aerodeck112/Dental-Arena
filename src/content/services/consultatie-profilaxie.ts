@@ -34,5 +34,5 @@ export const consultatieProfilaxie: ServiceContent = {
   ctaTitle: "Programați o consultație sau o igienizare",
   bookingCode: "CON-CONSULT",
   comfortNote: true,
-  related: ["stomatologie-generala", "parodontologie"],
+  related: ["odontologie", "parodontologie"],
 };

@@ -21,10 +21,66 @@ function content(string $path = ''): mixed
     return $node;
 }
 
+/**
+ * The service pages, in the clinic's order: the categories of the panel (Servicii și prețuri),
+ * each with the texts of content.json when it has them, or the texts written in the panel. The
+ * name, the summary and, when written, the lead and the body from the panel always win. A hidden
+ * category has no page. Without a database (installation), the pages of content.json.
+ *
+ * @return list<array<string,mixed>>
+ */
+function site_services(): array
+{
+    static $cache = null;
+    if ($cache !== null) {
+        return $cache;
+    }
+    $static = array_column(content('services'), null, 'slug');
+    $rows = [];
+    if (INSTALLED) {
+        try {
+            $rows = db_all('SELECT * FROM categories WHERE public_visible = 1 ORDER BY sort_order, name');
+        } catch (Throwable $e) {
+            app_log('warning', 'site_services: ' . $e->getMessage());
+            $rows = [];
+        }
+    }
+    if ($rows === []) {
+        return $cache = array_values($static);
+    }
+    $cache = [];
+    foreach ($rows as $c) {
+        $paras = static fn (?string $t) => array_values(array_filter(array_map('trim', preg_split('/\n\s*\n/', trim((string) $t)) ?: []), static fn ($p) => $p !== ''));
+        $base = $static[$c['slug']] ?? [
+            'slug' => $c['slug'],
+            'seoTitle' => "{$c['name']} în Cristești și Luduș",
+            'description' => mb_strimwidth(trim((string) $c['summary']) ?: "{$c['name']} la Dental Arena, în Cristești, lângă Târgu Mureș, și în Luduș. Prețuri afișate pe site.", 0, 300, '…'),
+            'lead' => trim((string) $c['summary']),
+            'body' => [],
+            'priceNote' => 'Prețurile sunt orientative. Costul exact îl aflați după consultație.',
+            'faqs' => [],
+            'ctaTitle' => 'Programați o consultație',
+            'bookingCode' => 'CON-CONSULT',
+            'comfortNote' => true,
+            'related' => [],
+        ];
+        $base['title'] = $c['name'];
+        $base['summary'] = trim((string) $c['summary']) !== '' ? $c['summary'] : ($base['summary'] ?? '');
+        if (trim((string) ($c['lead'] ?? '')) !== '') {
+            $base['lead'] = trim((string) $c['lead']);
+        }
+        if ($paras($c['body'] ?? null) !== []) {
+            $base['body'] = $paras($c['body']);
+        }
+        $cache[] = $base;
+    }
+    return $cache;
+}
+
 /** @return array<string,mixed>|null the text of one service page. */
 function service_content(string $slug): ?array
 {
-    foreach (content('services') as $s) {
+    foreach (site_services() as $s) {
         if ($s['slug'] === $slug) {
             return $s;
         }
@@ -35,7 +91,7 @@ function service_content(string $slug): ?array
 /** @return list<string> */
 function service_slugs(): array
 {
-    return array_column(content('services'), 'slug');
+    return array_column(site_services(), 'slug');
 }
 
 /**

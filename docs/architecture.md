@@ -2487,15 +2487,15 @@ These are the 10 categories and every price item on the current site, with the d
 | # | Category slug | Name (`ServiceCategory.name`) |
 |---|---|---|
 | 1 | `consultatie-profilaxie` | Consultație și profilaxie |
-| 2 | `stomatologie-generala` | Stomatologie generală |
-| 3 | `inhalosedare` | Inhalosedare |
-| 4 | `implantologie` | Implantologie |
-| 5 | `chirurgie-dento-alveolara` | Chirurgie dento-alveolară |
-| 6 | `protetica-dentara` | Protetică dentară |
-| 7 | `pedodontie` | Pedodonție |
-| 8 | `ortodontie` | Ortodonție |
-| 9 | `parodontologie` | Parodontologie |
-| 10 | `estetica-dentara` | Estetică dentară |
+| 2 | `odontologie` | Odontologie |
+| 3 | `endodontie` | Endodonție |
+| 4 | `inhalosedare` | Inhalosedare |
+| 5 | `implantologie` | Implantologie |
+| 6 | `chirurgie-dento-alveolara` | Chirurgie dento-alveolară |
+| 7 | `protetica-dentara` | Protetică dentară |
+| 8 | `pedodontie` | Pedodonție |
+| 9 | `ortodontie` | Ortodonție |
+| 10 | `parodontologie` | Parodontologie |
 
 | code | category | name | price (lei) | unit | min | flags |
 |---|---|---|---|---|---|---|
@@ -2504,16 +2504,16 @@ These are the 10 categories and every price item on the current site, with the d
 | CON-AIRFLOW | consultatie-profilaxie | Detartraj, periaj și air-flow / arcadă | 250 | ARCADA | 60 | `recallMonths 6` |
 | CON-ALBIRE | consultatie-profilaxie | Albire dentară | 1.000 | ACT | 60 | open item 7 (vs EST-OPALESCENCE) |
 | CON-SIGILARE | consultatie-profilaxie | Sigilare șanțuri | 130 | ACT | 30 | |
-| SG-URGENTA | stomatologie-generala | Consultație de urgență (durere) | null | ACT | 30 | Online „Am o durere acum”; `urgent`; **not** `publicVisible` |
-| SG-PANSAMENT | stomatologie-generala | Pansament calmant | 50 | ACT | 30 | |
-| SG-OBT-COMPOZIT | stomatologie-generala | Obturație compozit | de la 200 | DINTE | 45 | **R**; `priceFrom`; `toothSpecific` |
-| SG-OBT-ESTETICA | stomatologie-generala | Obturație estetică | de la 300 | DINTE | 60 | `priceFrom`; `toothSpecific` |
-| SG-PIVOT | stomatologie-generala | Reconstrucție cu pivot din fibră de sticlă | 550 | DINTE | 60 | `toothSpecific` |
-| SG-OBT-GIC | stomatologie-generala | Obturație glas-ionomer | 120 | DINTE | 30 | `toothSpecific` |
-| SG-ENDO-MONO | stomatologie-generala | Tratament endodontic rotativ, monoradiculari | 350 | DINTE | 60 | `toothSpecific` |
-| SG-ENDO-PLURI | stomatologie-generala | Tratament endodontic rotativ, pluriradiculari | 400 | DINTE | 90 | `toothSpecific` |
-| SG-RETRAT-MONO | stomatologie-generala | Retratament, monoradiculari | 400 | DINTE | 60 | `toothSpecific` |
-| SG-RETRAT-PLURI | stomatologie-generala | Retratament, pluriradiculari | 600 | DINTE | 90 | `toothSpecific` |
+| SG-URGENTA | odontologie | Consultație de urgență (durere) | null | ACT | 30 | Online „Am o durere acum”; `urgent`; **not** `publicVisible` |
+| SG-OBT-COMPOZIT | odontologie | Obturație compozit | de la 200 | DINTE | 45 | **R**; `priceFrom`; `toothSpecific` |
+| SG-OBT-ESTETICA | odontologie | Obturație estetică | de la 300 | DINTE | 60 | `priceFrom`; `toothSpecific` |
+| SG-PIVOT | odontologie | Reconstrucție cu pivot din fibră de sticlă | 550 | DINTE | 60 | `toothSpecific` |
+| SG-OBT-GIC | odontologie | Obturație glas-ionomer | 120 | DINTE | 30 | `toothSpecific` |
+| SG-PANSAMENT | endodontie | Pansament calmant | 50 | ACT | 30 | |
+| SG-ENDO-MONO | endodontie | Tratament endodontic rotativ, monoradiculari | 350 | DINTE | 60 | **R**; `toothSpecific` |
+| SG-ENDO-PLURI | endodontie | Tratament endodontic rotativ, pluriradiculari | 400 | DINTE | 90 | `toothSpecific` |
+| SG-RETRAT-MONO | endodontie | Retratament, monoradiculari | 400 | DINTE | 60 | `toothSpecific` |
+| SG-RETRAT-PLURI | endodontie | Retratament, pluriradiculari | 600 | DINTE | 90 | `toothSpecific` |
 | INH-ORA | inhalosedare | Inhalosedare | 150 | ORA | 60 | **R**; added to other appointments through `wantsSedation` |
 | IMP-CONSULT | implantologie | Consultație de implantologie | null | ACT | 30 | Online „Implant sau lucrare dentară”; not `publicVisible` |
 | IMP-NEODENT | implantologie | Implant Neodent | 2.200 | DINTE | 90 | **R**; `toothSpecific` |
@@ -2561,10 +2561,6 @@ These are the 10 categories and every price item on the current site, with the d
 | PAR-IMOBILIZARE | parodontologie | Imobilizare cu bandă din fibră de sticlă | 450 | ACT | 60 | |
 | PAR-CHIURETAJ | parodontologie | Chiuretaj parodontal subgingival / arcadă | 700 | ARCADA | 60 | **R** |
 | PAR-GINGIVECTOMIE | parodontologie | Gingivectomie / dinte | 100 | DINTE | 30 | |
-| EST-OPALESCENCE | estetica-dentara | Albire profesională Opalescence Boost | 800 | ACT | 90 | **R** |
-| EST-ALBIRE-INTERNA | estetica-dentara | Albire internă dinte | 200 | DINTE | 45 | |
-| EST-BIJUTERIE | estetica-dentara | Aplicare bijuterie dentară | 200 | ACT | 30 | |
-| EST-GUTIERA | estetica-dentara | Gutieră bruxism / arcadă | 300 | ARCADA | 30 | |
 
 ### 10.4 Settings, tags and templates
 

@@ -105,7 +105,7 @@ foreach ($names as $lid => $n) {
     $clinicOptions[(string) $lid] = $n;
 }
 $serviceOptions = ['' => 'Oricare'];
-foreach (content('services') as $s) {
+foreach (site_services() as $s) {
     $serviceOptions[$s['slug']] = $s['title'];
 }
 $err = static fn (string $k): ?string => $errors[$k] ?? null;

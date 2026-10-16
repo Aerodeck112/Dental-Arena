@@ -569,7 +569,7 @@ function book_slot(string $slotId, array $person, string $reason, ?string $categ
 /** The reasons offered on the site: the services marked online, the urgent one second, then „Nu știu sigur”. */
 function booking_reasons(): array
 {
-    $rows = db_all("SELECT s.id, s.code, s.online_label, s.online_hint, s.urgent, s.duration_minutes, c.slug AS category FROM services s JOIN categories c ON c.id = s.category_id WHERE s.bookable_online = 1 AND s.online_label IS NOT NULL AND s.online_label <> '' ORDER BY c.sort_order, s.sort_order, s.id");
+    $rows = db_all("SELECT s.id, s.code, s.online_label, s.online_hint, s.urgent, s.duration_minutes, c.slug AS category FROM services s JOIN categories c ON c.id = s.category_id WHERE s.bookable_online = 1 AND c.public_visible = 1 AND s.online_label IS NOT NULL AND s.online_label <> '' ORDER BY c.sort_order, s.sort_order, s.id");
     $urgent = array_values(array_filter($rows, static fn ($r) => (int) $r['urgent'] === 1));
     $rest = array_values(array_filter($rows, static fn ($r) => (int) $r['urgent'] !== 1));
     $list = $rest === [] ? $urgent : array_merge([$rest[0]], $urgent, array_slice($rest, 1));

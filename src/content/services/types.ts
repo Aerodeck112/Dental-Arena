@@ -5,14 +5,14 @@
 
 export const SERVICE_SLUGS = [
   "consultatie-profilaxie",
-  "stomatologie-generala",
+  "odontologie",
+  "endodontie",
   "implantologie",
   "chirurgie-dento-alveolara",
   "protetica-dentara",
   "pedodontie",
   "ortodontie",
   "parodontologie",
-  "estetica-dentara",
 ] as const;
 
 export type ServiceSlug = (typeof SERVICE_SLUGS)[number];

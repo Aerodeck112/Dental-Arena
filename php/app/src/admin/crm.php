@@ -70,7 +70,7 @@ const HISTORY_FLAGS = [
     'smoker' => 'Fumător',
 ];
 /** Months until the usual check-up after a visit, by service page. */
-const RECALL_MONTHS = ['consultatie-profilaxie' => 6, 'stomatologie-generala' => 6, 'parodontologie' => 3, 'pedodontie' => 6, 'implantologie' => 6, 'ortodontie' => 1, 'protetica-dentara' => 6];
+const RECALL_MONTHS = ['consultatie-profilaxie' => 6, 'odontologie' => 6, 'endodontie' => 6, 'parodontologie' => 3, 'pedodontie' => 6, 'implantologie' => 6, 'ortodontie' => 1, 'protetica-dentara' => 6];
 /** The day view shows the whole working day on one screen: 9:00–21:00 (wider when an appointment or the clinic's hours fall outside). */
 const CAL_START_HOUR = 9;
 const CAL_END_HOUR = 21;

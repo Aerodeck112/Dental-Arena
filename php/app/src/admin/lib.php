@@ -128,7 +128,7 @@ function leads_table(array $leads): string
         return '<p class="rounded-panou border border-dashed border-linie p-6 text-corp text-discret">Nu există cereri care să se potrivească.</p>';
     }
     $clinics = admin_clinic_names();
-    $titles = array_column(content('services'), 'title', 'slug');
+    $titles = array_column(site_services(), 'title', 'slug');
     $th = 'px-3 py-2 text-left text-mic font-semibold text-discret';
     $rows = '';
     $cards = '';

@@ -25,6 +25,9 @@ const OLD_ADDRESSES = [
     '/programari' => '/programare',
     // October 2026: inhalation sedation is no longer offered; old links go to the services.
     '/inhalosedare' => '/servicii',
+    // October 2026: general dentistry split into Odontologie and Endodonție; esthetics no longer offered.
+    '/stomatologie-generala' => '/odontologie',
+    '/estetica-dentara' => '/servicii',
     '/cabinet' => '/admin',
     '/crm' => '/admin',
     '/wp-admin' => '/admin',
