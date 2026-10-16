@@ -1,0 +1,418 @@
+{
+  "media": [
+    {
+      "file": "164964094_176511157596179_4287899319184109583_n-e1716794678679.jpg",
+      "kind": "logo",
+      "width": 1845,
+      "height": 645,
+      "description": "MAIN LOGO. A horizontal lockup on solid white. A mint-green outline tooth (#7EC9A2) runs into a threaded dental-implant root that tapers to a point. The mark sits between the words DENTAL and ARENA, set in slate-grey (#5A6765) Trajan-style serif capitals. Below is a full-width slate hairline rule, then 'CLINICA STOMATOLOGICA' in a widely spaced uppercase sans. The site uses it in the header and footer (3 times per page).",
+      "quality": "Usable as-is on white or light backgrounds. It is the cleanest raster of the logo, with only light JPEG softness. The white background is not transparent and the file has 15px or less of padding. Best source for tracing an SVG; an SVG redraw is recommended for the new site.",
+      "usedOn": [
+        "acasa",
+        "despre-noi",
+        "servicii",
+        "contact",
+        "15ani",
+        "cabinet-stomatologic-targu-mures",
+        "dentist-targu-mures",
+        "consultatie-profilaxie",
+        "stomatologie-generala",
+        "inhalosedare",
+        "implantologie",
+        "chirurgie-dento-alveolara",
+        "protetica-dentara",
+        "pedodontie",
+        "ortodontie",
+        "parodontologie",
+        "estetica-dentara"
+      ]
+    },
+    {
+      "file": "Untitled-design-2024-05-27T094429.697.png",
+      "kind": "logo",
+      "width": 1916,
+      "height": 1916,
+      "description": "The same full logo lockup (mint tooth/implant mark, DENTAL ARENA, rule, CLINICA STOMATOLOGICA) as a square PNG with a transparent background, exported from Canva. The logo fills about 1638x615 px in the middle of the canvas. Shown on the 15ani promo page.",
+      "quality": "Needs cleanup. Background removal left white haze blobs along the baseline and under the letters, which show on any non-white background, and the letter edges are slightly wobbly. Trim the large empty margins. Use it only on white, or redraw the logo as SVG.",
+      "usedOn": [
+        "15ani"
+      ]
+    },
+    {
+      "file": "cropped-164964094_176511157596179_4287899319184109583_n-e1716794678679.jpg",
+      "kind": "logo",
+      "width": 512,
+      "height": 512,
+      "description": "WordPress site icon (favicon or app icon) auto-cropped from the main logo. It shows the mint tooth/implant mark with the wordmark cut off at both sides ('AL ARE', 'ICA STOMATOLOGI').",
+      "quality": "Unsuitable. The baked-in text is truncated. Build a new favicon from the tooth/implant mark alone, for example as an SVG on white or mint. Not referenced in the page text; it is the site icon.",
+      "usedOn": []
+    },
+    {
+      "file": "312167804_577320624181895_7536328341001133742_n.jpg",
+      "kind": "team-portrait",
+      "person": "Dr. Andrei Marcoci",
+      "width": 1440,
+      "height": 1440,
+      "description": "Professional waist-up portrait of a smiling young man with short dark hair, stubble and orthodontic braces. He wears navy-blue V-neck scrubs and a wristwatch, with his hands in his pockets. Behind him are a blurred dark-grey wall, white pendant lights, a mustard armchair and a plant, the same studio session as the Fertea and Mașca photos. In the homepage team grid it appears directly before 'Dr. Andrei Marcoci – stomatologie generală'.",
+      "quality": "Sharp professional photo, usable as-is. It is square; crop to 4:5 or 3:4 for portrait cards.",
+      "usedOn": [
+        "acasa"
+      ]
+    },
+    {
+      "file": "Untitled-design-2024-05-27T102139.723.png",
+      "kind": "team-portrait",
+      "person": "Dr. Mihail Dan Mașca",
+      "width": 600,
+      "height": 557,
+      "description": "Portrait of a man with short hair and stubble in teal-blue scrubs with his arms crossed. Behind him are a dark-grey wall, white pendant lights, an abstract figurative painting and a mustard armchair (same photo session). In the homepage team grid it appears directly before 'Dr. Mihail Dan Mașca – medic dentist, stomatologie generală, competență în implantologie'.",
+      "quality": "Low resolution (600x557 Canva export). Good enough for small team cards of about 300px at 2x, not for large display. The subject sits right of centre, so it needs a crop. Ask the clinic for the original high-resolution file.",
+      "usedOn": [
+        "acasa"
+      ]
+    },
+    {
+      "file": "328740551_1261847997699717_3209855370680217997_n.jpg",
+      "kind": "team-portrait",
+      "person": "Dr. Paul Bologa",
+      "width": 1440,
+      "height": 1800,
+      "description": "Portrait of a young man with a short side-parted haircut in light-blue scrubs. He leans on the brown leather backrest of a dental chair with his hands clasped and wears a red smartwatch. Plain cream wall. In the homepage team grid it appears directly before 'Dr. Paul Bologa – medic dentist, stomatologie generală'.",
+      "quality": "Sharp phone photo in 4:5, usable as-is. The style differs from the other portraits (cream wall, not the grey studio backdrop). Apply uniform cropping and grading for a consistent team grid.",
+      "usedOn": [
+        "acasa"
+      ]
+    },
+    {
+      "file": "431150871_18047793892613789_4261121530290906434_n.jpg",
+      "kind": "team-portrait",
+      "person": "Dr. Fertea Ana-Maria",
+      "width": 1289,
+      "height": 844,
+      "description": "Portrait of a smiling woman with a copper-red bob and round glasses. She wears light-blue scrubs with the Dental Arena logo embroidered on the chest and stands with her hands together. Behind her are a dark-grey wall, an abstract painting, a mustard armchair and a doorway. In the homepage team grid it appears directly before 'Dr. Fertea Ana-Maria – medic dentist, medic specialist în chirurgie dento-alveolară'.",
+      "quality": "Landscape, so it needs a portrait crop: the subject spans roughly x 430–840, which gives a crop of about 520x840. Professional quality, slightly soft.",
+      "usedOn": [
+        "acasa"
+      ]
+    },
+    {
+      "file": "Untitled-design-2024-05-29T130321.118.png",
+      "kind": "service-illustration",
+      "width": 800,
+      "height": 489,
+      "description": "Stock photo of a transparent jaw model with titanium dental implants and white crowns on a soft blue-white background. A small mint tooth/implant logo mark is baked onto one crown. It is the Implantologie service image. It is ALSO misused in the homepage team grid as the photo for 'Dr Podar Victoria-Ana – medic dentist specializat în ortodonție și ortopedie dento-facială'. No real portrait of Dr. Podar exists on the site.",
+      "quality": "Moderate resolution, fine for cards up to about 400px wide. The logo watermark is baked in. A real portrait of Dr. Podar Victoria-Ana must be requested from the clinic.",
+      "usedOn": [
+        "implantologie",
+        "acasa"
+      ]
+    },
+    {
+      "file": "Untitled-design-2024-05-29T125747.619.png",
+      "kind": "service-illustration",
+      "width": 800,
+      "height": 489,
+      "description": "Stock photo of a smiling young woman in a denim shirt in a dental chair. Blue-gloved hands hold a mouth mirror and probe. A small mint tooth/implant logo mark is baked onto the pink patient bib. Image for Stomatologie generală.",
+      "quality": "Moderate resolution with a baked-in logo watermark. Fine for service cards, not for a hero.",
+      "usedOn": [
+        "stomatologie-generala"
+      ]
+    },
+    {
+      "file": "Untitled-design-2024-05-29T130144.544.png",
+      "kind": "service-illustration",
+      "width": 800,
+      "height": 489,
+      "description": "Stock photo (a well-known Unsplash-style image) of a modern grey-and-white dental chair and delivery unit in a bright white operatory with cabinets. A mint tooth mark is baked onto the cabinet at lower right. Image for Inhalosedare.",
+      "quality": "Moderate resolution with a baked-in watermark. It is stock and not the clinic's own room. Usable for cards.",
+      "usedOn": [
+        "inhalosedare"
+      ]
+    },
+    {
+      "file": "Untitled-design-2024-05-29T130503.088.png",
+      "kind": "service-illustration",
+      "width": 800,
+      "height": 489,
+      "description": "Stock photo of stainless-steel dental surgical instruments (forceps, probes, a mirror) on a tray, with a carpule syringe behind, in cool blue-white tones. The mint tooth mark is baked into the mirror. Image for Chirurgie dento-alveolară.",
+      "quality": "Moderate resolution with a baked-in watermark. Usable for cards.",
+      "usedOn": [
+        "chirurgie-dento-alveolara"
+      ]
+    },
+    {
+      "file": "Untitled-design-2024-05-29T130628.643.png",
+      "kind": "service-illustration",
+      "width": 800,
+      "height": 489,
+      "description": "Stock photo of a large white 3D molar model surrounded by dental instruments, a toothbrush and an electric brush head on a pale blue surface. The mint tooth mark is baked into the dental mirror. Image for Protetică dentară.",
+      "quality": "Moderate resolution with a baked-in watermark. Usable for cards.",
+      "usedOn": [
+        "protetica-dentara"
+      ]
+    },
+    {
+      "file": "Untitled-design-2024-05-29T130748.635.png",
+      "kind": "service-illustration",
+      "width": 800,
+      "height": 489,
+      "description": "Stock close-up of a child's open mouth with a dental mirror reflecting the lower teeth. A small mint tooth mark is baked in at top left. Image for Pedodonție.",
+      "quality": "Moderate resolution with a baked-in watermark. Usable for cards; the close-up crop is a little clinical.",
+      "usedOn": [
+        "pedodontie"
+      ]
+    },
+    {
+      "file": "Untitled-design-2024-05-29T130914.564.png",
+      "kind": "service-illustration",
+      "width": 800,
+      "height": 489,
+      "description": "Stock close-up of a smiling mouth with metal braces (brackets and archwire), with a dental probe at left. A small mint tooth mark is baked in at top left. Image for Ortodonție.",
+      "quality": "Moderate resolution with a baked-in watermark. Usable for cards.",
+      "usedOn": [
+        "ortodontie"
+      ]
+    },
+    {
+      "file": "Untitled-design-2024-05-29T131031.652.png",
+      "kind": "service-illustration",
+      "width": 800,
+      "height": 489,
+      "description": "Stock photo of a dentist in blue gloves and scrubs examining a smiling patient's teeth with a probe and mirror, with a shallow depth of field. A small mint tooth mark is baked in at top left. Image for Parodontologie.",
+      "quality": "Moderate resolution with a baked-in watermark. Usable for cards.",
+      "usedOn": [
+        "parodontologie"
+      ]
+    },
+    {
+      "file": "Untitled-design-2024-05-29T131203.581.png",
+      "kind": "service-illustration",
+      "width": 800,
+      "height": 489,
+      "description": "Stock profile close-up of a dental handpiece polishing bright white front teeth, with a blue glove and a dark background. A small mint tooth mark is baked in at top left. Image for Estetică dentară.",
+      "quality": "Moderate resolution with a baked-in watermark. Usable for cards.",
+      "usedOn": [
+        "estetica-dentara"
+      ]
+    },
+    {
+      "file": "Untitled-design-2024-05-27T130820.634.png",
+      "kind": "clinic-interior",
+      "width": 800,
+      "height": 489,
+      "description": "A bright white operatory, apparently the clinic's own: a dental chair with brown and blue upholstery, a pink instrument tray, a white cabinet with the Dental Arena logo composited onto it, a lime-yellow roller blind and an air conditioner. It is the same room as the washed-out homepage hero (T094834). Used as the image for Consultație și profilaxie.",
+      "quality": "Moderate resolution with a baked-in logo. Usable for cards; very high-key exposure.",
+      "usedOn": [
+        "consultatie-profilaxie"
+      ]
+    },
+    {
+      "file": "Untitled-design-2024-05-13T112021.742.png",
+      "kind": "banner",
+      "width": 1200,
+      "height": 630,
+      "description": "Stock close-up of a smile with white teeth and pink lips, and a dental mirror whose reflection shows the full Dental Arena logo, composited in. Its 1200x630 Open Graph size suggests a social-share image. On the homepage it sits between the 'Precizie' value block and the 'Echipa' heading, shown at 768x403.",
+      "quality": "Good, with the logo baked in. Usable as the OG or social-share image.",
+      "usedOn": [
+        "acasa"
+      ]
+    },
+    {
+      "file": "Untitled-design-2024-05-27T094834.611.png",
+      "kind": "banner",
+      "width": 1920,
+      "height": 916,
+      "description": "Full-width hero background: a heavily washed-out white photo of the operatory (dental chair, lime blind) with a large mint ring outline in the centre containing the full Dental Arena logo.",
+      "quality": "The logo and ring are baked in, and it is very washed out. Not referenced in the page text, probably a CSS hero or slider background on the old homepage. Not recommended for the new site; use a clean photo plus a live SVG logo.",
+      "usedOn": []
+    },
+    {
+      "file": "Untitled-design-2024-05-27T131528.593.png",
+      "kind": "banner",
+      "width": 2000,
+      "height": 320,
+      "description": "Thin page-title banner on a flat mint background (#7BCAA0, the same as the brand mint). It has 3D clip-art of a tooth with a dental mirror at far left and a tooth with a purple shield and gems at far right, and no text. Likely the inner-page header background.",
+      "quality": "No baked text, but the clip-art looks dated. Not referenced in the page text (CSS background). It confirms that the site used the brand mint as its UI colour.",
+      "usedOn": []
+    },
+    {
+      "file": "15-Ani-zambete-stralucite-cu-Dental-Arena.png",
+      "kind": "banner",
+      "width": 2000,
+      "height": 792,
+      "description": "Anniversary promo banner on a sky-blue gradient. On the left are a glossy 3D white molar and a dental mirror. In the centre is a large red serif '15 ani' with gold spaced capitals 'ÎMPREUNĂ' below. On the right is a red gift box with a gold ribbon, and a small Dental Arena logo sits at bottom centre. It was used for the July–August 2024 promotion (free cleaning and consultation for existing patients, 15% off for new ones).",
+      "quality": "Text and logo are baked in, the promo is outdated, and the red (#BE0704) and gold are off-brand. Keep it only for an archive or news post.",
+      "usedOn": [
+        "15ani"
+      ]
+    },
+    {
+      "file": "407869274_18037383127613789_3652406136975789781_n.jpg",
+      "kind": "clinic-exterior",
+      "width": 1440,
+      "height": 1800,
+      "description": "Dusk photo of a modern white two-storey clinic building. A central column of wood-look tiles carries the backlit 3D DENTAL ARENA / CLINICA STOMATOLOGICA sign with a mint tooth mark, under three warm wall lights. Glass doors show a waiting room with a colourful abstract painting and a yellow chair. A curtain of fairy lights covers the left wall, and a wet stone path lined with bollard lights runs through a lawn with roses. Most likely the Cristești location (str. Principală 536J/1): it is a suburban residential setting, the painting matches the waiting-room photo, and the 15ani page shows it beside the Cristești address. This is inferred, not confirmed.",
+      "quality": "Sharp phone photo in 4:5, usable as-is. This is the full-resolution original of the T102007 crop, so use it for hero or location sections. Not itself referenced in the page text.",
+      "usedOn": []
+    },
+    {
+      "file": "Untitled-design-2024-05-27T102007.291.png",
+      "kind": "clinic-exterior",
+      "width": 600,
+      "height": 557,
+      "description": "A downscaled crop of the same dusk exterior (wood-clad central column with the backlit DENTAL ARENA sign, fairy lights, lit garden path).",
+      "quality": "Low resolution. Use the full-resolution original 407869274_…jpg instead.",
+      "usedOn": [
+        "despre-noi",
+        "15ani"
+      ]
+    },
+    {
+      "file": "DSC1557-Copy.jpg",
+      "kind": "clinic-exterior",
+      "width": 2500,
+      "height": 1668,
+      "description": "Professional daytime photo (Nikon D800, July 2019) of a street-front clinic facade clad in silver aluminium composite panels. It carries large black 3D letters 'DENTAL ARENA' over a rule and 'CLINICA STOMATOLOGICA', and a large bright-green (#1FB27C) tooth/implant sign at right. The big shop window reflects the street, houses and a parked dark car, and there is a white entrance door. Probably the Luduș location (str. Gheorghe Barițiu nr. 6), given the town-centre street setting, but this is inferred, not confirmed. The site uses it in the homepage 'Despre Dental Arena Clinic' block.",
+      "quality": "High resolution and sharp, usable. Consider cropping to the sign and window; the reflections of the car and street are a little distracting.",
+      "usedOn": [
+        "acasa",
+        "servicii",
+        "cabinet-stomatologic-targu-mures",
+        "dentist-targu-mures"
+      ]
+    },
+    {
+      "file": "Picture1.jpg",
+      "kind": "clinic-interior",
+      "width": 1430,
+      "height": 953,
+      "description": "Reception scene: a female staff member in mint scrubs, seen from behind, hands documents to a smiling young male patient with glasses and a striped T-shirt at the reception desk. The room has grey-and-cream striped wallpaper, three black pendant lights, a dark-framed glass entrance door, and a lime chair and yellow sofa at the edges. It is the hero image of the Despre noi page.",
+      "quality": "Good, slightly soft; usable as-is for about-us or hero sections.",
+      "usedOn": [
+        "despre-noi"
+      ]
+    },
+    {
+      "file": "Picture2-1.jpg",
+      "kind": "clinic-interior",
+      "width": 1430,
+      "height": 953,
+      "description": "Waiting-room detail: a yellow gerbera in an embossed ceramic pot and a framed print reading 'laughter is the best medicine' in the foreground. Out of focus behind them are a mustard-yellow sofa, striped wallpaper and a wall TV.",
+      "quality": "Good, usable as-is; nice for an atmosphere or comfort section.",
+      "usedOn": [
+        "despre-noi"
+      ]
+    },
+    {
+      "file": "438712305_938311964749424_5696109962466858468_n.jpg",
+      "kind": "clinic-interior",
+      "width": 1536,
+      "height": 2048,
+      "description": "Waiting room: grey-and-cream striped wallpaper, a mustard-yellow velvet sofa, navy armchairs with mandala-pattern upholstery, a small glass side table with a 'Smile' sign and leaflets, a wall-mounted TV showing a landscape, a frosted window, and a large vivid abstract galaxy painting in red, yellow and blue on a dark-grey wall. The painting is the one visible through the door in the dusk exterior photo, which suggests the Cristești location.",
+      "quality": "Sharp phone photo, usable as-is, with mild wide-angle distortion. Not referenced in the page text; probably from a gallery or slider the snapshot did not capture.",
+      "usedOn": []
+    },
+    {
+      "file": "438716692_938311954749425_6793390655779106115_n.jpg",
+      "kind": "clinic-interior",
+      "width": 1536,
+      "height": 2048,
+      "description": "Treatment room: a new Suntem dental chair with black leather upholstery and a blue disposable headrest cover, a white delivery unit and spittoon bowl, and a white drawer cabinet. Behind it is a full-wall photo mural of a tropical beach with turquoise water, palm fronds and Thai longtail boats.",
+      "quality": "Sharp phone photo, usable as-is. Not referenced in the page text. Pixel-identical duplicate of b62b3b23-…jpg; keep one.",
+      "usedOn": []
+    },
+    {
+      "file": "b62b3b23-1e7f-43d7-a84a-688331554f15.jpg",
+      "kind": "clinic-interior",
+      "width": 1536,
+      "height": 2048,
+      "description": "Exact duplicate, pixel for pixel, of 438716692_…jpg: the treatment room with the black Suntem dental chair and the tropical beach and longtail-boat wall mural.",
+      "quality": "Duplicate, so skip it and use 438716692_…jpg. Not referenced in the page text.",
+      "usedOn": []
+    },
+    {
+      "file": "WhatsApp-Image-2024-04-12-at-09.13.07.jpeg",
+      "kind": "clinic-interior",
+      "width": 1536,
+      "height": 2048,
+      "description": "Decor detail: a preserved-moss wall panel in mixed bright and dark greens, framed by vertical wooden slats. A large white cut-out of the Dental Arena tooth/implant mark sits in the centre, with a brass light fixture at the top.",
+      "quality": "Sharp, usable as-is. A strong brand and atmosphere image, good for about-us, a gallery or a section background. The site shows it at 768x1024.",
+      "usedOn": [
+        "15ani"
+      ]
+    },
+    {
+      "file": "1-1.jpg",
+      "kind": "clinic-interior",
+      "width": 938,
+      "height": 656,
+      "description": "Treatment scene: a female dentist in mint scrubs, a colourful patterned surgical cap and a mask shows a panoramic dental X-ray on a tablet to a young male patient with glasses, who sits in a dental chair with a white and light-blue seat. White room with a dental light and a radiator. The mint scrubs suggest the clinic's own staff.",
+      "quality": "Low quality: visibly upscaled and blurry, with JPEG artifacts. Avoid, or use only very small. Not referenced in the page text; probably a CSS background or slider image.",
+      "usedOn": []
+    },
+    {
+      "file": "anpc-1-300x76-1.jpg",
+      "kind": "legal-badge",
+      "width": 300,
+      "height": 76,
+      "description": "ANPC badge 'SOLUȚIONAREA ALTERNATIVĂ A LITIGIILOR' (SAL) with the ANPC logo, Romanian coat of arms and 'Te respectă', a dark-blue rounded border and a 'DETALII' button. The footer links it to https://anpc.ro/ce-este-sal/. Required consumer-protection badge for Romanian sites.",
+      "quality": "Low resolution (300x76). Recreate it as crisp HTML/SVG or use the official high-resolution ANPC asset.",
+      "usedOn": [
+        "acasa",
+        "despre-noi",
+        "servicii",
+        "contact",
+        "15ani",
+        "cabinet-stomatologic-targu-mures",
+        "dentist-targu-mures",
+        "consultatie-profilaxie",
+        "stomatologie-generala",
+        "inhalosedare",
+        "implantologie",
+        "chirurgie-dento-alveolara",
+        "protetica-dentara",
+        "pedodontie",
+        "ortodontie",
+        "parodontologie",
+        "estetica-dentara"
+      ]
+    },
+    {
+      "file": "anpc-2-300x76-1-1.jpg",
+      "kind": "legal-badge",
+      "width": 300,
+      "height": 76,
+      "description": "Badge 'SOLUȚIONAREA ONLINE A LITIGIILOR' (SOL) with a dark-blue border and a 'DETALII' button. The footer links it to the EU ODR platform (ec.europa.eu/consumers/odr). The EU ODR platform was discontinued in 2025, so check the current legal requirement or link target before reusing it.",
+      "quality": "Low resolution (300x76). Recreate it as HTML/SVG.",
+      "usedOn": [
+        "acasa",
+        "despre-noi",
+        "servicii",
+        "contact",
+        "15ani",
+        "cabinet-stomatologic-targu-mures",
+        "dentist-targu-mures",
+        "consultatie-profilaxie",
+        "stomatologie-generala",
+        "inhalosedare",
+        "implantologie",
+        "chirurgie-dento-alveolara",
+        "protetica-dentara",
+        "pedodontie",
+        "ortodontie",
+        "parodontologie",
+        "estetica-dentara"
+      ]
+    }
+  ],
+  "brand": {
+    "logoFile": "164964094_176511157596179_4287899319184109583_n-e1716794678679.jpg",
+    "colors": [
+      "#7EC9A2",
+      "#5A6765",
+      "#1FB27C",
+      "#FFFFFF"
+    ],
+    "typographyNotes": "COLOURS. All hex values were measured from pixel counts, not estimated. Brand mint, #7EC9A2 (rgb 126,201,162): the modal colour of the tooth/implant mark in both logo files (about 6,000 identical pixels), and the old site's flat mint banner is the same (#7BCAA0). It is too light for text on white (contrast about 1.9:1), so use it for the mark, fills, rings and backgrounds. For mint text or buttons, darken it to about #23774F (about 5.5:1 with white). Slate grey, #5A6765 (modal #596865 / #5B6765; whole-wordmark average #5B6664): a grey with a slight green-teal tint, used for the wordmark, rule and tagline; about 5.9:1 on white, so safe for body text. #1FB27C is the more saturated green of the physical facade sign in Luduș (DSC1557) and is a signage variant, not the primary colour. The logo sits on white. Supporting interior colours from the photos: mustard yellow sofas, dark-grey walls, striped grey and cream wallpaper, preserved-moss greens. The 15-years promo red #BE0704 and gold are campaign colours, not brand colours.\n\nWORDMARK TYPEFACE. 'DENTAL ARENA' is set in a classical Roman inscriptional serif in the style of Trajan: all capitals, wedge serifs, moderate stroke contrast, an R with a long sweeping leg, pointed A apexes, and no lowercase. The capitals come in two sizes. The D of DENTAL and the final A of ARENA are full height, and ENTAL and AREN are small caps, so the two words read as a symmetrical pair of bookends. The mint tooth/implant mark stands between the two words, and its threaded root tapers to a point on the baseline, almost like a V joining them. A thin slate hairline runs the full width beneath. The tagline 'CLINICA STOMATOLOGICA' sits below in a light humanist sans in the style of Gill Sans, uppercase with very wide tracking (about 0.3em), centred, in the same slate. The artwork has no diacritics; the correct Romanian is 'CLINICĂ STOMATOLOGICĂ', but keep the logo artwork unchanged. Close web-font matches: Cinzel (Google Fonts), or Trajan Pro if licensed, for display headings that echo the wordmark; Cabin, whose design draws on Johnston and Gill, for a sans that echoes the tagline. Both support Romanian ă â î ș ț.\n\nLOGO ASSETS. The cleanest raster is the 1845x645 JPG on white. The 1916x1916 transparent PNG has white halo artefacts from background removal, and the 512x512 site icon is a bad crop with cut-off text. Recommendation: redraw the logo as an SVG (full lockup, mark only, and a white-on-mint or white-on-slate variant) and make a new favicon from the mark alone.\n\nTEAM MAPPING. From the homepage team-grid order, where the image comes right before each name: Dr. Andrei Marcoci = 312167804_…jpg; Dr. Mihail Dan Mașca = Untitled-design-2024-05-27T102139.723.png; Dr. Paul Bologa = 328740551_…jpg; Dr. Podar Victoria-Ana has NO portrait (the site uses the implant stock image T130321 as a placeholder); Dr. Fertea Ana-Maria = 431150871_…jpg. The genders in the photos match the names. The facade locations (dusk white house = Cristești, silver street facade = Luduș) are inferred, not confirmed by the page text."
+  }
+}
