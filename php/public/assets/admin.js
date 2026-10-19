@@ -450,6 +450,19 @@
     }
   }
 
+  // „Sterilizare”, while the QR code is shown: the page reloads when a photo arrives from the phone.
+  var poze = document.querySelector("[data-poze-noi]");
+  if (poze && window.fetch) {
+    var pozeN = Number(poze.getAttribute("data-poze-numar"));
+    setInterval(function () {
+      if (document.hidden) return;
+      fetch(poze.getAttribute("data-poze-noi"), { credentials: "same-origin", headers: { Accept: "application/json" } })
+        .then(function (r) { return r.json(); })
+        .then(function (d) { if (d.n !== pozeN) location.reload(); })
+        .catch(function () {});
+    }, 4000);
+  }
+
   // Calendar: a click on an appointment opens a small menu to mark it at once (confirmed, arrived,
   // did not come…) or open it. A click that ends a drag does not open it (the drag stops it).
   var apptMenu = document.querySelector("[data-meniu-programare]");

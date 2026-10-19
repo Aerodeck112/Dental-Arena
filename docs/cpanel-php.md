@@ -552,3 +552,14 @@ din copia bazei de date nu mai pot fi citite.
   (cu ora apelului) în calendar și pe **Azi**, până când pacientul confirmă, ajunge sau se scoate
   bifa. Cu „mișcare redusă” din sistem rămâne doar conturul roșu, fix.
 - Actualizarea aplică singură migrarea `015_appointment_no_answer.sql`.
+
+## Sterilizare: poze de pe telefon cu cod QR (octombrie 2026)
+
+- În fila **Sterilizare**, **Cod QR pentru telefon** arată un cod QR (desenat de server, biblioteca
+  `bacon/bacon-qr-code` din `vendor/`, cere extensia PHP `iconv`, prezentă pe cPanel). Telefonul
+  care îl scanează deschide `/incarca/<cod>`: **Faceți o poză** (camera) sau **Alegeți din
+  galerie**, fără parolă. Pozele se micșorează pe telefon (cel mult 2000 px) și se trimit pe rând,
+  deci limita de încărcare a găzduirii nu contează. Pagina de pe calculator le arată singură.
+- Codul: o oră, un pacient, doar adăugare de poze, cel mult 40; **Opriți codul** îl închide. În baza
+  de date se păstrează doar amprenta lui (SHA-256). Pe telefon se vede doar „Nume I.” și fișa.
+- Actualizarea aplică singură migrarea `016_upload_links.sql`.

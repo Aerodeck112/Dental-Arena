@@ -96,6 +96,13 @@ if ($path === '/api/chat') {
     chat_endpoint();
 }
 
+// Photos from the phone, by the QR code on the patient's „Sterilizare” tab.
+if (preg_match('#^/incarca/([A-Za-z0-9_-]{32})$#', $path, $m)) {
+    $uploadToken = $m[1];
+    require APP_DIR . '/src/upload.php';
+    exit;
+}
+
 if ($path === '/tableta' || str_starts_with($path, '/tableta/')) {
     require APP_DIR . '/src/tablet.php';
     exit;

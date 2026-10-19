@@ -369,8 +369,56 @@ function save_document(array $file, int $patientId, string $kind, string $title,
         'created_by' => $user['id'],
         'created_at' => now_sql(),
     ]);
-    audit('document-incarcat', DOC_KINDS[$kind] ?? $kind, null, $patientId);
+    audit('document-incarcat', DOC_KINDS[$kind] ?? $kind, isset($user['id']) ? (int) $user['id'] : null, $patientId);
     return $id;
+}
+
+// ── Photos from the phone (QR code) ──────────────────────────────────────────
+
+const UPLOAD_LINK_MINUTES = 60;
+const UPLOAD_LINK_MAX_PHOTOS = 40;
+
+/** A code for the phone: it adds photos of one kind to one patient, for an hour. */
+function upload_link_create(int $patientId, string $kind, array $user): array
+{
+    $token = rtrim(strtr(base64_encode(random_bytes(24)), '+/', '-_'), '=');
+    $expires = date('Y-m-d H:i:s', time() + UPLOAD_LINK_MINUTES * 60);
+    $id = db_insert('upload_links', [
+        'token_hash' => hash('sha256', $token), 'patient_id' => $patientId, 'kind' => $kind,
+        'created_by' => $user['id'], 'created_at' => now_sql(), 'expires_at' => $expires,
+    ]);
+    audit('cod-qr-poze', (DOC_KINDS[$kind] ?? $kind) . ', valabil până la ' . substr($expires, 11, 5), null, $patientId);
+    return ['id' => $id, 'token' => $token, 'expires_at' => $expires];
+}
+
+/** The link of a code still valid (not stopped, not expired, photos left). */
+function upload_link_find(string $token): ?array
+{
+    if (!preg_match('/^[A-Za-z0-9_-]{32}$/', $token)) {
+        return null;
+    }
+    $l = db_one('SELECT * FROM upload_links WHERE token_hash = ?', [hash('sha256', $token)]);
+    return $l !== null && $l['revoked_at'] === null && $l['expires_at'] > now_sql() && (int) $l['uploads'] < UPLOAD_LINK_MAX_PHOTOS ? $l : null;
+}
+
+/** An SVG QR code (the panel draws it; nothing leaves the server), or null without the library. */
+function qr_svg(string $text, int $size = 240): ?string
+{
+    if (!is_file(APP_DIR . '/vendor/autoload.php')) {
+        return null;
+    }
+    require_once APP_DIR . '/vendor/autoload.php';
+    try {
+        $writer = new BaconQrCode\Writer(new BaconQrCode\Renderer\ImageRenderer(
+            new BaconQrCode\Renderer\RendererStyle\RendererStyle($size, 2),
+            new BaconQrCode\Renderer\Image\SvgImageBackEnd(),
+        ));
+        $svg = $writer->writeString($text);
+        return preg_replace('/^<\?xml[^>]*>\s*/', '', $svg);
+    } catch (Throwable $e) {
+        app_log('error', 'cod QR: ' . $e->getMessage());
+        return null;
+    }
 }
 
 function format_size(int $bytes): string
@@ -676,6 +724,9 @@ const AUDIT_LABELS = [
     'odontograma' => 'Odontogramă: constatare nouă',
     'odontograma-rezolvat' => 'Odontogramă: constatare trecută în istoric',
     'document-incarcat' => 'Document încărcat',
+    'cod-qr-poze' => 'Cod QR pentru poze de pe telefon',
+    'programare-nu-raspunde' => 'Programare: sunat, nu răspunde',
+    'programare-nu-raspunde-scos' => 'Programare: scoasă bifa „nu răspunde”',
     'document-deschis' => 'Document deschis',
     'document-sters' => 'Document șters',
     'acord' => 'Acord înregistrat',
