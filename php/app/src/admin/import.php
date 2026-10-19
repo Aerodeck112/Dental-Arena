@@ -45,8 +45,9 @@ function run_pending_imports(bool $now = false): void
     });
     foreach (pending_imports() as $file) {
         $failed = import_marker($file, 'failed');
-        // A list added just now (the patients) can be what the next one was waiting for.
-        if (!$now && is_file($failed) && filemtime($failed) > time() - 3600) {
+        // A list added just now (the patients) can be what the next one was waiting for; a new
+        // version (VERSION is newer than the failure) may add what the old one could not.
+        if (!$now && is_file($failed) && filemtime($failed) > max(time() - 3600, (int) @filemtime(APP_DIR . '/VERSION'))) {
             continue;
         }
         $lockFile = import_marker($file, 'lock');
