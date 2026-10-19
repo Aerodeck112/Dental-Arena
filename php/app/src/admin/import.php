@@ -184,6 +184,11 @@ function import_procedures(string $file): array
                     break;
                 }
             }
+            // Two QDental files that are the same patient here (same name and phone): nothing to check.
+            $note = $r['note'] ?? null;
+            if (count(array_unique(array_filter(array_map(static fn ($f) => $byFile[$f] ?? null, $fise)))) <= 1) {
+                $note = null;
+            }
             if ($pid === null || !preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) ($r['date'] ?? ''))) {
                 $skipped++;
                 $missing[(string) ($r['patient'] ?? '?')] = true;
@@ -193,7 +198,7 @@ function import_procedures(string $file): array
                 'patient_id' => $pid, 'location_id' => $loc !== null ? (int) $loc : null, 'doctor_id' => null,
                 'performed_on' => $r['date'], 'tooth' => null, 'name' => mb_substr(trim((string) $r['name']) ?: 'Procedură', 0, 255),
                 'price' => max(0, (int) ($r['price'] ?? 0)), 'discount' => 0, 'lab_cost' => 0, 'done' => 1,
-                'notes' => isset($r['note']) && $r['note'] !== null ? mb_substr((string) $r['note'], 0, 500) : null,
+                'notes' => $note !== null ? mb_substr((string) $note, 0, 500) : null,
                 'source' => 'qdental', 'created_at' => $now, 'updated_at' => $now,
             ]);
             $added++;
