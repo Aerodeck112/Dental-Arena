@@ -23,14 +23,48 @@ if (query('stare') !== '') {
     exit;
 }
 
+// The page asks every few seconds whether files arrived from the phone (admin.js).
+if (query('numar') === '1') {
+    header('Content-Type: application/json');
+    header('Cache-Control: no-store');
+    echo json_encode(['n' => (int) db_value("SELECT COUNT(*) FROM patient_documents WHERE patient_id = ? AND kind <> 'sterilizare' AND deleted_at IS NULL", [$pid])]);
+    exit;
+}
+$qr = upload_qr_current($pid, 'document');
+
 if (is_post() && $writable) {
     csrf_check();
     $op = post('op');
+    // From the patient's file („Fișa”) the quick button comes back there.
+    $return = admin_safe_return(post('inapoi')) ?? $base . '#documente';
     try {
-        if ($op === 'incarca') {
-            save_document($_FILES['fisier'] ?? [], $pid, post('kind'), trim(post('title')), $user);
-            flash('Documentul a fost încărcat.');
+        if ($op === 'qr') {
+            upload_qr_start($pid, 'document', $user);
+            redirect($base . '#telefon');
+        }
+        if ($op === 'opreste-qr') {
+            upload_qr_stop($pid, 'document');
+            flash('Codul QR a fost oprit; telefonul nu mai poate trimite fișiere.', 'info');
             redirect($base . '#documente');
+        }
+        if ($op === 'incarca') {
+            $files = uploaded_files('fisiere');
+            if ($files === []) {
+                throw new DomainException(($_SERVER['CONTENT_LENGTH'] ?? 0) > 0 ? 'Fișierele sunt prea mari pentru server (cel mult ' . upload_limit_mb() . ' MB odată).' : 'Alegeți fișierul.');
+            }
+            $saved = 0;
+            foreach ($files as $file) {
+                try {
+                    save_document($file, $pid, post('kind') ?: 'auto', count($files) === 1 ? trim(post('title')) : '', $user);
+                    $saved++;
+                } catch (DomainException $e) {
+                    flash(($file['name'] ?? 'Fișierul') . ': ' . $e->getMessage(), 'eroare');
+                }
+            }
+            if ($saved > 0) {
+                flash($saved === 1 ? 'Fișierul a fost încărcat.' : "Au fost încărcate {$saved} fișiere.");
+            }
+            redirect($return);
         }
         if ($op === 'cod-tableta') {
             $types = array_values(array_filter((array) ($_POST['types'] ?? []), 'is_string'));
@@ -85,6 +119,10 @@ if (is_post() && $writable) {
             redirect($base . '#documente');
         }
     } catch (DomainException $e) {
+        if ($op === 'incarca' && post('inapoi') !== '') {
+            flash($e->getMessage(), 'eroare');
+            redirect($return);
+        }
         $errors[match ($op) { 'incarca' => 'fisier', 'cod-tableta' => 'tableta', default => 'acord' }] = $e->getMessage();
     }
 }
@@ -161,7 +199,7 @@ if ($session !== null) {
 $docs = db_all('SELECT d.*, u.name AS author FROM patient_documents d LEFT JOIN users u ON u.id = d.created_by WHERE d.patient_id = ? AND d.kind <> \'sterilizare\' AND d.deleted_at IS NULL ORDER BY d.created_at DESC', [$pid]);
 $docRows = '';
 foreach ($docs as $d) {
-    $isImage = str_starts_with($d['mime'], 'image/');
+    $isImage = in_array($d['mime'], DOC_PREVIEW, true);
     $docRows .= '<li class="flex flex-wrap items-center gap-4 border-t border-linie py-3 first:border-t-0">'
         . '<a href="/admin/documente/' . (int) $d['id'] . '" class="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-control border border-linie bg-fundal">'
         . ($isImage ? '<img src="/admin/documente/' . (int) $d['id'] . '" alt="" loading="lazy" class="size-full object-cover">' : icon('file', 28, 'text-discret')) . '</a>'
@@ -172,10 +210,10 @@ foreach ($docs as $d) {
         . '</div></li>';
 }
 $uploadForm = $writable ? '<form method="post" enctype="multipart/form-data" novalidate class="mt-4 grid gap-4 rounded-panou border border-dashed border-linie-control p-4 md:grid-cols-12 md:items-end">' . csrf_field() . '<input type="hidden" name="op" value="incarca">'
-    . '<div class="flex min-w-0 flex-col gap-1.5 md:col-span-5">' . field_label('field-fisier', 'Fișierul (PDF, JPG, PNG, WebP; cel mult ' . min(DOC_MAX_MB, upload_limit_mb()) . ' MB)')
-    . '<input id="field-fisier" type="file" name="fisier" required accept="application/pdf,image/jpeg,image/png,image/webp"' . (isset($errors['fisier']) ? ' aria-invalid="true" aria-describedby="fisier-eroare"' : '') . ' class="w-full min-w-0 max-w-full text-corp file:mr-3 file:rounded-control file:border file:border-linie-control file:bg-suprafata file:px-3 file:py-2">'
+    . '<div class="flex min-w-0 flex-col gap-1.5 md:col-span-5">' . field_label('field-fisier', 'Fișierele (poze, PDF, Word, Excel, video, STL, ZIP; cel mult ' . min(DOC_MAX_MB, upload_limit_mb()) . ' MB)')
+    . '<input id="field-fisier" type="file" name="fisiere[]" multiple required' . (isset($errors['fisier']) ? ' aria-invalid="true" aria-describedby="fisier-eroare"' : '') . ' class="w-full min-w-0 max-w-full text-corp file:mr-3 file:rounded-control file:border file:border-linie-control file:bg-suprafata file:px-3 file:py-2">'
     . field_error('fisier-eroare', $errors['fisier'] ?? null) . '</div>'
-    . select_field('kind', 'Tipul', array_diff_key(DOC_KINDS, ['sterilizare' => 1]), ['value' => post('kind') ?: 'radiografie-panoramica', 'class' => 'min-w-0 md:col-span-3'])
+    . select_field('kind', 'Tipul', ['auto' => 'Automat (poză / document)'] + array_diff_key(DOC_KINDS, ['sterilizare' => 1]), ['value' => post('kind') ?: 'auto', 'class' => 'min-w-0 md:col-span-3'])
     . text_field('title', 'Titlul', ['optional' => true, 'value' => post('title'), 'class' => 'min-w-0 md:col-span-4'])
     . '<div class="md:col-span-12"><button type="submit" class="' . e(btn('primary')) . '">' . icon('upload', 18) . 'Încărcați</button></div></form>' : '';
 
@@ -184,7 +222,8 @@ $body = patient_header($p, $user, 'documente')
     . ($tablet !== '' ? admin_section_open('Semnare pe tabletă', 'tableta', 'Pacientul introduce codul pe tableta de la recepție, bifează acordurile și semnează cu degetul.') . $tablet . '</section>' : '')
     . admin_section_open('Acorduri', 'acorduri', 'Tipăriți formularul, dați-l pacientului să-l semneze, apoi înregistrați-l aici (eventual cu copia scanată).')
     . '<ul class="mt-3">' . $consentRows . '</ul>' . $consentForm . '</section>'
-    . admin_section_open('Documente', 'documente', 'Radiografii, fotografii, documente semnate. Se păstrează în afara site-ului și se deschid doar din panou.')
+    . admin_section_open('Documente', 'documente', 'Radiografii, fotografii, documente semnate, orice fișier al pacientului. Se păstrează în afara site-ului și se deschid doar din panou.')
+    . ($writable ? '<div class="mt-4">' . upload_qr_panel($qr, $base . '?numar=1', count($docs), 'Se deschide o pagină unde faceți o poză sau alegeți orice fișier de pe telefon.') . '</div>' : '')
     . $uploadForm . ($docRows !== '' ? '<ul class="mt-4">' . $docRows . '</ul>' : '<p class="mt-4 text-corp text-discret">Niciun document.</p>') . '</section>'
     . '</div>';
 admin_page('Documente: ' . patient_name($p), $body, $user);

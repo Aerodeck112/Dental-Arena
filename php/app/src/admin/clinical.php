@@ -318,8 +318,20 @@ const DOC_KINDS = [
     'sterilizare' => 'Sterilizare',
     'alt' => 'Alt document',
 ];
-const DOC_MIME = ['application/pdf' => 'pdf', 'image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
-const DOC_MAX_MB = 25;
+const DOC_MIME = [
+    'application/pdf' => 'pdf', 'image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp',
+    'image/heic' => 'heic', 'image/heif' => 'heif', 'image/gif' => 'gif', 'image/tiff' => 'tif', 'image/bmp' => 'bmp',
+    'video/mp4' => 'mp4', 'video/quicktime' => 'mov', 'video/webm' => 'webm',
+    'application/msword' => 'doc', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
+    'application/vnd.ms-excel' => 'xls', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'xlsx',
+    'application/vnd.oasis.opendocument.text' => 'odt', 'text/plain' => 'txt', 'application/zip' => 'zip',
+    'application/dicom' => 'dcm', 'model/stl' => 'stl',
+];
+/** Files the server cannot recognise by their content (3D scans, DICOM, Office): taken by their extension. */
+const DOC_EXT_BY_NAME = ['stl', 'ply', 'obj', '3mf', 'dcm', 'doc', 'docx', 'xls', 'xlsx', 'pptx'];
+/** Images the browser shows as a thumbnail. */
+const DOC_PREVIEW = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const DOC_MAX_MB = 100;
 
 function documents_dir(): string
 {
@@ -350,14 +362,25 @@ function save_document(array $file, int $patientId, string $kind, string $title,
         throw new DomainException('Fișierul are peste ' . DOC_MAX_MB . ' MB.');
     }
     $mime = (string) (new finfo(FILEINFO_MIME_TYPE))->file($file['tmp_name']);
-    if (!isset(DOC_MIME[$mime])) {
-        throw new DomainException('Se pot încărca doar PDF, JPG, PNG sau WebP.');
+    $ext = strtolower(pathinfo((string) ($file['name'] ?? ''), PATHINFO_EXTENSION));
+    if (in_array($ext, DOC_EXT_BY_NAME, true) && in_array($mime, ['application/octet-stream', 'text/plain', 'application/zip', 'application/CDFV2'], true)) {
+        $stored = $ext;
+        // A .docx is a ZIP inside: it keeps the type of its extension, so it opens in Word.
+        $mime = array_flip(DOC_MIME)[$ext] ?? 'application/octet-stream';
+    } elseif (isset(DOC_MIME[$mime])) {
+        $stored = DOC_MIME[$mime];
+    } else {
+        throw new DomainException('Fișierul acesta nu se poate încărca. Merg: poze, PDF, Word, Excel, video, scanări 3D (STL), DICOM, ZIP.');
     }
-    $stored = bin2hex(random_bytes(16)) . '.' . DOC_MIME[$mime];
+    $stored = bin2hex(random_bytes(16)) . '.' . $stored;
     if (!move_uploaded_file($file['tmp_name'], documents_dir() . '/' . $stored)) {
         throw new DomainException('Fișierul nu a putut fi salvat pe server.');
     }
     $original = mb_substr(preg_replace('/[\x00-\x1f\/\\\\]+/u', '', (string) ($file['name'] ?? 'document')) ?: 'document', 0, 190);
+    if ($kind === 'auto') {
+        // From the quick button or the phone: photos and videos are „Fotografie”, the rest „Alt document”.
+        $kind = str_starts_with($mime, 'image/') || str_starts_with($mime, 'video/') ? 'fotografie' : 'alt';
+    }
     $id = db_insert('patient_documents', [
         'patient_id' => $patientId,
         'kind' => isset(DOC_KINDS[$kind]) ? $kind : 'alt',
@@ -377,6 +400,8 @@ function save_document(array $file, int $patientId, string $kind, string $title,
 
 const UPLOAD_LINK_MINUTES = 60;
 const UPLOAD_LINK_MAX_PHOTOS = 40;
+/** What a code adds: sterilization photos, or any file for „Documente și acorduri”. */
+const UPLOAD_LINK_KINDS = ['sterilizare' => 'Sterilizare', 'document' => 'Documente și poze'];
 
 /** A code for the phone: it adds photos of one kind to one patient, for an hour. */
 function upload_link_create(int $patientId, string $kind, array $user): array
@@ -387,7 +412,7 @@ function upload_link_create(int $patientId, string $kind, array $user): array
         'token_hash' => hash('sha256', $token), 'patient_id' => $patientId, 'kind' => $kind,
         'created_by' => $user['id'], 'created_at' => now_sql(), 'expires_at' => $expires,
     ]);
-    audit('cod-qr-poze', (DOC_KINDS[$kind] ?? $kind) . ', valabil până la ' . substr($expires, 11, 5), null, $patientId);
+    audit('cod-qr-poze', (UPLOAD_LINK_KINDS[$kind] ?? $kind) . ', valabil până la ' . substr($expires, 11, 5), null, $patientId);
     return ['id' => $id, 'token' => $token, 'expires_at' => $expires];
 }
 
@@ -399,6 +424,61 @@ function upload_link_find(string $token): ?array
     }
     $l = db_one('SELECT * FROM upload_links WHERE token_hash = ?', [hash('sha256', $token)]);
     return $l !== null && $l['revoked_at'] === null && $l['expires_at'] > now_sql() && (int) $l['uploads'] < UPLOAD_LINK_MAX_PHOTOS ? $l : null;
+}
+
+/**
+ * The QR code this computer shows for the patient, while still valid: the session keeps the code
+ * (to draw it again after a reload), the database only its hash.
+ *
+ * @return array{token:string,link:array}|null
+ */
+function upload_qr_current(int $patientId, string $kind): ?array
+{
+    session_begin();
+    $key = "{$kind}:{$patientId}";
+    $qr = $_SESSION['qr_poze'][$key] ?? null;
+    $link = is_array($qr) ? db_one('SELECT * FROM upload_links WHERE id = ? AND patient_id = ? AND kind = ?', [(int) $qr['id'], $patientId, $kind]) : null;
+    if ($link === null || $link['revoked_at'] !== null || $link['expires_at'] <= now_sql() || (int) $link['uploads'] >= UPLOAD_LINK_MAX_PHOTOS) {
+        unset($_SESSION['qr_poze'][$key]);
+        return null;
+    }
+    return ['token' => (string) $qr['token'], 'link' => $link];
+}
+
+function upload_qr_start(int $patientId, string $kind, array $user): void
+{
+    session_begin();
+    $link = upload_link_create($patientId, $kind, $user);
+    $_SESSION['qr_poze']["{$kind}:{$patientId}"] = ['id' => $link['id'], 'token' => $link['token']];
+}
+
+function upload_qr_stop(int $patientId, string $kind): void
+{
+    if (($cur = upload_qr_current($patientId, $kind)) !== null) {
+        db_update('upload_links', ['revoked_at' => now_sql()], 'id = :id', ['id' => $cur['link']['id']]);
+    }
+    unset($_SESSION['qr_poze']["{$kind}:{$patientId}"]);
+}
+
+/**
+ * The QR code with what to do, or the button that makes one. $countUrl answers with the number of
+ * files ({"n": …}); the page reloads when it changes, so what the phone sends shows at once.
+ */
+function upload_qr_panel(?array $cur, string $countUrl, int $count, string $hint): string
+{
+    if ($cur === null) {
+        return '<form method="post">' . csrf_field() . '<input type="hidden" name="op" value="qr"><button type="submit" class="' . e(btn('secondary')) . '">' . admin_icon('qr', 18) . 'Cod QR pentru telefon</button></form>';
+    }
+    $url = absolute_url('/incarca/' . $cur['token']);
+    $svg = qr_svg($url);
+    $link = $cur['link'];
+    return '<div id="telefon" class="flex flex-col gap-5 rounded-panou border-2 border-actiune bg-menta-pal p-4 sm:flex-row sm:items-center" data-poze-noi="' . e($countUrl) . '" data-poze-numar="' . $count . '">'
+        . ($svg !== null ? '<div class="w-[15rem] max-w-full shrink-0 self-center rounded-control bg-white p-2 [&>svg]:h-auto [&>svg]:w-full" role="img" aria-label="Cod QR pentru telefon">' . $svg . '</div>' : '')
+        . '<div class="min-w-0 flex-1"><p class="flex items-center gap-2 text-h3 font-semibold">' . admin_icon('camera', 20) . 'Scanați codul cu telefonul</p>'
+        . '<p class="mt-1 text-corp">' . e($hint) . ' Apare aici imediat; nu trebuie să intrați în panou pe telefon.</p>'
+        . '<p class="mt-2 text-mic text-discret">Valabil până la ' . e(hm($link['expires_at'])) . ', doar pentru acest pacient, cel mult ' . UPLOAD_LINK_MAX_PHOTOS . ' fișiere' . ((int) $link['uploads'] > 0 ? '; trimise până acum: ' . (int) $link['uploads'] : '') . '.</p>'
+        . '<p class="mt-2 break-all text-mic"><a class="text-link underline underline-offset-4" href="' . e($url) . '" target="_blank" rel="noopener">' . e($url) . '</a></p>'
+        . '<form method="post" class="mt-3">' . csrf_field() . '<input type="hidden" name="op" value="opreste-qr"><button type="submit" class="' . e(btn('secondary', 's')) . '">Opriți codul</button></form></div></div>';
 }
 
 /** An SVG QR code (the panel draws it; nothing leaves the server), or null without the library. */
@@ -419,6 +499,22 @@ function qr_svg(string $text, int $size = 240): ?string
         app_log('error', 'cod QR: ' . $e->getMessage());
         return null;
     }
+}
+
+/** The files of an upload field, one or many („fisiere[]”), without the empty ones. */
+function uploaded_files(string $field): array
+{
+    $f = $_FILES[$field] ?? [];
+    if (!is_array($f['error'] ?? null)) {
+        return isset($f['error']) && (int) $f['error'] !== UPLOAD_ERR_NO_FILE ? [$f] : [];
+    }
+    $out = [];
+    foreach ($f['error'] as $i => $err) {
+        if ((int) $err !== UPLOAD_ERR_NO_FILE) {
+            $out[] = ['name' => $f['name'][$i] ?? '', 'type' => $f['type'][$i] ?? '', 'tmp_name' => $f['tmp_name'][$i] ?? '', 'error' => $err, 'size' => $f['size'][$i] ?? 0];
+        }
+    }
+    return $out;
 }
 
 function format_size(int $bytes): string

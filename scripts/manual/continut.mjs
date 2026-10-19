@@ -320,6 +320,8 @@ ${img("documente", "Documentele și acordurile pacientului.")}
 <p>Alegeți fișierul (PDF, JPG, PNG sau WebP, cel mult 25 MB), tipul (radiografie panoramică, retroalveolară, CBCT, fotografie, consimțământ, deviz, scrisoare medicală) și un titlu, apoi ${b("Încărcați")}. Documentele se păstrează în afara site-ului și se deschid doar din panou, de cei care au acces la pacient. ${rol === "admin" ? "Doar administratorul poate șterge un document." : "Ștergerea o poate face doar administratorul."}</p>
 <h3>Sterilizare</h3>
 <p>Fila ${b("Sterilizare")} din fișa pacientului ține pozele cu eticheta pungii, indicatorul sau bonul autoclavului pentru instrumentele folosite la pacient. Scrieți, dacă vreți, o notă (de exemplu lotul), apoi apăsați ${b("Încarcă poză")}: pe telefon sau tabletă se deschide camera, pe calculator alegeți pozele (se pot alege mai multe deodată). Pozele se încarcă imediat și apar cu data, ora și cine le-a pus.</p>
+<h3>Orice fișier al pacientului</h3>
+<p>Pe prima pagină a fișei, la ${b("Fișiere")}: ${b("Încărcați fișiere")} (puteți alege mai multe deodată: poze, radiografii, PDF, Word, Excel, video, scanări 3D STL, ZIP) sau ${b("Cod QR pentru telefon")}, care deschide codul la ${b("Documente și acorduri")}: scanat cu telefonul, trimite poze făcute pe loc sau orice fișier de pe telefon, timp de o oră. Ultimele fișiere apar ca miniaturi; toate sunt la ${b("Documente și acorduri")}.</p>
 <p><strong>Direct de pe telefon:</strong> apăsați ${b("Cod QR pentru telefon")} și scanați codul cu camera telefonului. Se deschide o pagină cu ${b("Faceți o poză")} și ${b("Alegeți din galerie")}; nu trebuie să intrați în panou pe telefon. Pozele apar singure în fila deschisă pe calculator, în câteva secunde. Codul e valabil o oră, doar pentru acel pacient (cel mult 40 de poze); ${b("Opriți codul")} îl închide mai devreme. Pe telefon se vede doar numele de familie cu inițiala și numărul fișei.</p>`,
 });
 
@@ -482,7 +484,7 @@ ${rol !== "receptie" ? `<h3>Adaugă procedură (medicul, după fiecare interven�
 ${pasi([
   `În fișa pacientului, fila ${b("Proceduri și plăți")} → ${b("Adaugă procedură")}. Mai repede: din programarea pacientului care a sosit (sau din meniul ei din calendar), ${b("Proceduri efectuate")}: ziua, medicul și clinica sunt deja completate.`,
   `Alegeți procedura din lista de prețuri: prețul se completează singur (îl puteți schimba). Dacă nu e în listă, scrieți-o la „Sau scrieți procedura”.`,
-  `Dintele: un număr (16) sau mai mulți (13, 14, 15): se face câte un rând pentru fiecare dinte, fiecare cu prețul de sus.`,
+  `Dinții: dați clic pe ei în ${b("odontograma")} din formular (încă un clic îl scoate) sau scrieți-i (16, sau 13, 14, 15). Se face câte un rând pentru fiecare dinte, fiecare cu prețul de sus. Pe odontogramă se văd și cariile, obturațiile etc. notate la pacient.`,
   `Opțional: reducerea (%), costul de laborator, observații. Debifați „Procedura e efectuată” pentru una începută, care încă nu se plătește.`,
   `${b("Adăugați procedura")}.`,
 ])}

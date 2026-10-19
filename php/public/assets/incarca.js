@@ -1,8 +1,8 @@
 /*
  * /incarca/<code> (src/upload.php): the photos chosen or taken on the phone are made smaller here
- * (at most 2000 px, JPEG) and sent one by one, each with its little preview and its state, so the
- * hosting's upload limit and a slow mobile connection are not a problem. Without the script the
- * form still works (the „Trimiteți” button in <noscript>).
+ * (at most 2000 px, JPEG; other files go as they are) and sent one by one, each with its preview
+ * (or its name) and its state, so the hosting's upload limit and a slow mobile connection are not a
+ * problem. Without the script the form still works (the „Trimiteți” button in <noscript>).
  */
 (function () {
   "use strict";
@@ -34,10 +34,18 @@
   function item(file) {
     var li = document.createElement("li");
     li.className = "flex flex-col overflow-hidden rounded-control border border-linie bg-suprafata";
-    var img = document.createElement("img");
-    img.alt = "";
-    img.className = "aspect-square w-full object-cover";
-    try { img.src = URL.createObjectURL(file); } catch (e) { /* no preview */ }
+    var img;
+    if (/^image\/(jpeg|png|webp|gif)$/.test(file.type)) {
+      img = document.createElement("img");
+      img.alt = "";
+      img.className = "aspect-square w-full object-cover";
+      try { img.src = URL.createObjectURL(file); } catch (e) { /* no preview */ }
+    } else {
+      // Not a photo: its name instead of a preview.
+      img = document.createElement("span");
+      img.className = "flex aspect-square w-full items-center justify-center break-all bg-fundal p-1.5 text-center text-mic";
+      img.textContent = file.name || "fișier";
+    }
     var st = document.createElement("span");
     st.className = "px-1.5 py-1 text-mic text-discret";
     st.textContent = "Se trimite…";
@@ -51,13 +59,19 @@
     var st = item(file);
     return shrink(file).then(function (blob) {
       var fd = new FormData();
-      fd.append("poza", blob, blob === file && file.name ? file.name : "poza.jpg");
+      // A photo is „poza.*” (the server gives it the date as title); any other file keeps its name.
+      var photo = /^image\/(jpeg|png|webp)$/.test(blob.type || file.type);
+      fd.append("poza", blob, photo ? "poza." + ((blob.type || file.type).split("/")[1] === "jpeg" ? "jpg" : (blob.type || file.type).split("/")[1]) : file.name || "fisier");
       fd.append("note", note ? note.value : "");
       return fetch(form.action || location.href, { method: "POST", body: fd, headers: { Accept: "application/json" }, credentials: "same-origin" })
-        .then(function (r) { return r.json(); })
+        .then(function (r) {
+          return r.json().catch(function () {
+            return { ok: false, error: r.status === 413 ? "Fișierul e prea mare pentru server." : "Nu s-a putut trimite." };
+          });
+        })
         .then(function (d) {
           if (d.ok) {
-            st.textContent = "✓ Trimisă";
+            st.textContent = "✓ Trimis";
             st.className = "px-1.5 py-1 text-mic font-semibold text-actiune";
           } else {
             st.textContent = d.error || "Nu s-a putut trimite.";

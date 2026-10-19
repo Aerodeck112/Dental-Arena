@@ -159,6 +159,11 @@ function csrf_check(): void
 {
     session_begin();
     $sent = $_POST['_csrf'] ?? '';
+    if ($_POST === [] && (int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) {
+        // Over post_max_size PHP drops the whole form, the security field too.
+        http_response_code(413);
+        exit('Fișierul trimis este prea mare pentru server (cel mult ' . ini_get('post_max_size') . ' odată). Mergeți înapoi și alegeți un fișier mai mic sau mai puține deodată.');
+    }
     if (!is_string($sent) || empty($_SESSION['csrf']) || !hash_equals($_SESSION['csrf'], $sent)) {
         http_response_code(419);
         exit('Formularul a expirat. Reîncărcați pagina și încercați din nou.');

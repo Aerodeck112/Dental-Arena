@@ -460,6 +460,27 @@ $balanceNote = $balance !== null && $balance['balance'] !== 0
     ? '<a href="/admin/pacienti/' . $id . '/financiar" class="' . e(cn('mb-6 flex items-center gap-3 rounded-panou p-4 text-corp', $balance['balance'] > 0 ? 'border border-carmin bg-carmin-pal' : 'bg-menta-pal')) . '">' . icon('wallet', 20)
         . ($balance['balance'] > 0 ? 'Rest de plată: <strong class="cifre">' . e(lei($balance['balance'])) . '</strong>' : 'Avans în cont: <strong class="cifre">' . e(lei(-$balance['balance'])) . '</strong>') . '<span class="ml-auto text-link underline">Facturi și plăți</span></a>'
     : '';
+// Files: upload anything for the patient from here (it goes to „Documente și acorduri”), or by the
+// QR code from a phone; the latest ones as thumbnails.
+$docsUrl = '/admin/pacienti/' . $id . '/documente';
+$recentDocs = db_all("SELECT id, title, mime, created_at FROM patient_documents WHERE patient_id = ? AND kind <> 'sterilizare' AND deleted_at IS NULL ORDER BY created_at DESC, id DESC LIMIT 6", [$id]);
+$docCount = (int) db_value("SELECT COUNT(*) FROM patient_documents WHERE patient_id = ? AND kind <> 'sterilizare' AND deleted_at IS NULL", [$id]);
+$thumbs = '';
+foreach ($recentDocs as $d) {
+    $thumbs .= '<li><a href="/admin/documente/' . (int) $d['id'] . '" target="_blank" rel="noopener" title="' . e($d['title'] . ' · ' . format_date($d['created_at'])) . '" class="relative block aspect-square overflow-hidden rounded-control border border-linie bg-fundal">'
+        . (in_array($d['mime'], DOC_PREVIEW, true) ? '<img src="/admin/documente/' . (int) $d['id'] . '" alt="' . e($d['title']) . '" loading="lazy" class="absolute inset-0 size-full object-cover">'
+            : '<span class="absolute inset-0 flex flex-col items-center justify-center gap-1 p-1 text-center">' . icon('file', 22, 'text-discret') . '<span class="line-clamp-2 break-all text-[0.6875rem] leading-tight text-discret">' . e($d['title']) . '</span></span>') . '</a></li>';
+}
+$fileSection = admin_section_open('Fișiere', 'fisiere', 'Poze, radiografii, PDF, Word, video, scanări: orice fișier al pacientului. Se păstrează la „Documente și acorduri”.')
+    . ($p['anonymized_at'] === null ? '<div class="mt-4 flex flex-wrap gap-2">'
+        . '<form method="post" action="' . $docsUrl . '" enctype="multipart/form-data">' . csrf_field() . '<input type="hidden" name="op" value="incarca"><input type="hidden" name="kind" value="auto"><input type="hidden" name="inapoi" value="/admin/pacienti/' . $id . '#fisiere">'
+        . '<input id="fisa-fisiere" type="file" name="fisiere[]" multiple data-trimite-la-schimbare class="peer sr-only">'
+        . '<label for="fisa-fisiere" class="' . e(cn(btn('primary'), 'cursor-pointer peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus')) . '">' . icon('upload', 18) . 'Încărcați fișiere</label>'
+        . '<noscript><button type="submit" class="' . e(btn('secondary')) . '">Trimiteți</button></noscript></form>'
+        . '<form method="post" action="' . $docsUrl . '">' . csrf_field() . '<input type="hidden" name="op" value="qr"><button type="submit" class="' . e(btn('secondary')) . '">' . admin_icon('qr', 18) . 'Cod QR pentru telefon</button></form></div>' : '')
+    . ($thumbs !== '' ? '<ul class="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-6 lg:grid-cols-3">' . $thumbs . '</ul>' : '')
+    . '<p class="mt-3"><a href="' . $docsUrl . '#documente" class="text-link underline underline-offset-4">' . ($docCount > 0 ? 'Toate documentele (' . $docCount . ')' : 'Documente și acorduri') . '</a></p></section>';
+
 $body = patient_header($p, $user, '', can('medical', $user) && $p['anonymized_at'] === null ? '<a href="/admin/pacienti/' . $id . '/consultatie-ai" class="' . e(btn('secondary')) . '">' . admin_icon('sparkles', 18) . 'Consultație cu AI</a>' : '')
     . $balanceNote . $familyNote
     . '<div class="grid gap-8 lg:grid-cols-12">'
@@ -471,6 +492,7 @@ $body = patient_header($p, $user, '', can('medical', $user) && $p['anonymized_at
     . $implantSection
     . '</div>'
     . '<div class="flex flex-col gap-8 lg:col-span-5">'
+    . $fileSection
     . $tagSection
     . admin_section_open('Programări', 'programari') . ($apptRows !== '' ? '<ul class="mt-2">' . $apptRows . '</ul>' : '<p class="mt-3 text-corp text-discret">Nicio programare.</p>') . '</section>'
     . admin_section_open('Rechemări', 'rechemari') . ($recallRows !== '' ? '<ul class="mt-2">' . $recallRows . '</ul>' : '<p class="mt-3 text-corp text-discret">Nicio rechemare.</p>')

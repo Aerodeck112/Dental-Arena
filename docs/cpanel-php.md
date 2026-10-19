@@ -563,3 +563,14 @@ din copia bazei de date nu mai pot fi citite.
 - Codul: o oră, un pacient, doar adăugare de poze, cel mult 40; **Opriți codul** îl închide. În baza
   de date se păstrează doar amprenta lui (SHA-256). Pe telefon se vede doar „Nume I.” și fișa.
 - Actualizarea aplică singură migrarea `016_upload_links.sql`.
+
+## Odontogramă la proceduri, orice fișier în fișă (octombrie 2026)
+
+- **Adaugă procedură** are odontograma pacientului (cu ce e notat pe ea, pentru medici): clic pe un
+  dinte îl adaugă la „Dintele (dinții)”, încă un clic îl scoate; fiecare dinte devine un rând.
+- Prima pagină a fișei are secțiunea **Fișiere**: **Încărcați fișiere** (mai multe deodată) și **Cod QR
+  pentru telefon** (la „Documente și acorduri”, ca la Sterilizare, dar pentru orice fișier).
+- Se primesc: poze (JPG, PNG, WebP, HEIC, GIF, TIFF), PDF, Word, Excel, ODT, text, video (MP4, MOV,
+  WebM), ZIP, DICOM, scanări 3D (STL, PLY, OBJ, 3MF), cel mult 100 MB (sau limita găzduirii). Ce nu
+  poate arăta browserul (Word, STL…) se descarcă. Un fișier prea mare pentru server dă acum un mesaj
+  clar în loc de „Formularul a expirat”.

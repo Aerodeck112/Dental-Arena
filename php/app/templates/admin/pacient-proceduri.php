@@ -199,7 +199,21 @@ $locOptions = [];
 foreach ($allowed as $l) {
     $locOptions[(string) $l] = $names[$l];
 }
-$procForm = static function (array $v, string $op, ?int $id) use ($opts, $docOptions, $locOptions, $err): string {
+// „Adaugă procedură”: the tooth chart. A click puts the tooth in „Dintele (dinții)”, another click
+// takes it out (admin.js); the doctors also see on it what the odontogram notes.
+$findings = [];
+if (can('medical', $user)) {
+    foreach (db_all('SELECT tooth, kind, surfaces FROM tooth_conditions WHERE patient_id = ? AND resolved_at IS NULL', [$pid]) as $c) {
+        $findings[(int) $c['tooth']][] = $c;
+    }
+}
+$age = !empty($p['birth_date']) ? (new DateTimeImmutable($p['birth_date']))->diff(new DateTimeImmutable())->y : null;
+$milk = query('temporari') !== '' ? query('temporari') === '1' : (array_filter(array_keys($findings), static fn ($t) => intdiv($t, 10) >= 5) !== [] || ($age !== null && $age < 13));
+$toothChart = '<div class="flex flex-col gap-2"><div class="flex flex-wrap items-baseline justify-between gap-2"><p class="text-control font-medium">Alegeți dinții pe odontogramă</p>'
+    . '<a class="text-mic text-link underline underline-offset-4" href="' . e(admin_url($back, ['adauga' => '1', 'temporari' => $milk ? '0' : '1'] + array_diff_key($_GET, ['adauga' => 1, 'temporari' => 1]))) . '#adauga">' . ($milk ? 'Ascundeți dinții temporari' : 'Arătați dinții temporari') . '</a></div>'
+    . '<p class="-mt-1 text-mic text-discret">Clic pe dinte: intră la „Dintele (dinții)”; încă un clic îl scoate. Fiecare dinte devine un rând, cu prețul lui.</p>'
+    . '<div class="overflow-x-auto rounded-control border border-linie bg-fundal p-2" data-alege-dinti="#field-tooth">' . odontogram_svg($findings, null, static fn (int $t) => '#dinte-' . $t, $milk) . '</div></div>';
+$procForm = static function (array $v, string $op, ?int $id) use ($opts, $docOptions, $locOptions, $err, $toothChart): string {
     $sid = $id !== null ? "-{$id}" : '';
     return '<form method="post" novalidate class="flex flex-col gap-5">' . csrf_field()
         . '<input type="hidden" name="op" value="' . $op . '">' . ($id !== null ? '<input type="hidden" name="id" value="' . $id . '">' : '')
@@ -208,6 +222,7 @@ $procForm = static function (array $v, string $op, ?int $id) use ($opts, $docOpt
         . '<select id="field-service_id' . $sid . '" name="service_id" data-pret-sursa="#field-price' . $sid . '" class="' . e(input_classes('h-control')) . '">' . $opts($v['service_id']) . '</select>'
         . field_error("field-service_id{$sid}-error", $id === null ? $err('service_id') : null) . '</div>'
         . text_field('name', 'Sau scrieți procedura', ['id' => "field-name{$sid}", 'value' => $v['name'], 'optional' => true, 'maxlength' => 255, 'hint' => 'Doar dacă nu e în listă (sau ca s-o numiți altfel).'])
+        . ($id === null ? $toothChart : '')
         . '<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">'
         . text_field('performed_on', 'Data', ['id' => "field-performed_on{$sid}", 'type' => 'date', 'value' => $v['performed_on'], 'max' => date('Y-m-d'), 'error' => $id === null ? $err('performed_on') : null])
         . text_field('tooth', 'Dintele (dinții)', ['id' => "field-tooth{$sid}", 'value' => $v['tooth'], 'optional' => true, 'maxlength' => 80, 'hint' => $id === null ? 'De exemplu 16 sau 13, 14, 15 (câte un rând pe dinte).' : null, 'error' => $id === null ? $err('tooth') : null])

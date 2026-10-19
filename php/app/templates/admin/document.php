@@ -19,11 +19,13 @@ if (!str_starts_with($d['mime'], 'image/') || query('descarca') === '1') {
 $name = preg_replace('/[^\pL\pN._ -]+/u', '_', $d['original_name']) ?: 'document';
 header('Content-Type: ' . (isset(DOC_MIME[$d['mime']]) ? $d['mime'] : 'application/octet-stream'));
 header('Content-Length: ' . filesize($file));
-header('Content-Disposition: ' . (query('descarca') === '1' ? 'attachment' : 'inline') . '; filename="' . str_replace('"', '', preg_replace('/[^\x20-\x7e]/', '_', $name) ?: 'document') . '"; filename*=UTF-8\'\'' . rawurlencode($name));
+// What the browser can show opens in it; Word, Excel, 3D scans… download.
+$inline = query('descarca') !== '1' && (in_array($d['mime'], DOC_PREVIEW, true) || in_array($d['mime'], ['application/pdf', 'text/plain'], true) || str_starts_with($d['mime'], 'video/'));
+header('Content-Disposition: ' . ($inline ? 'inline' : 'attachment') . '; filename="' . str_replace('"', '', preg_replace('/[^\x20-\x7e]/', '_', $name) ?: 'document') . '"; filename*=UTF-8\'\'' . rawurlencode($name));
 header('X-Content-Type-Options: nosniff');
 if ($d['mime'] !== 'application/pdf') {
     // Chrome does not open PDFs under a sandbox policy; images get the strictest one.
-    header("Content-Security-Policy: default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; sandbox");
+    header("Content-Security-Policy: default-src 'none'; img-src 'self'; media-src 'self'; style-src 'unsafe-inline'; sandbox");
 }
 header('Cache-Control: private, no-store');
 readfile($file);

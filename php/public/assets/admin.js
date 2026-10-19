@@ -450,6 +450,36 @@
     }
   }
 
+  // „Adaugă procedură”: a click on a tooth of the chart puts it in „Dintele (dinții)”, another click
+  // takes it out; what is typed in the field shows on the chart too.
+  Array.prototype.forEach.call(document.querySelectorAll("[data-alege-dinti]"), function (box) {
+    var input = document.querySelector(box.getAttribute("data-alege-dinti"));
+    if (!input) return;
+    var teeth = function () { return input.value.split(/[\s,;]+/).filter(Boolean); };
+    var toothOf = function (a) { return (a.getAttribute("href") || "").replace("#dinte-", ""); };
+    var paint = function () {
+      var sel = teeth();
+      Array.prototype.forEach.call(box.querySelectorAll("a.dinte"), function (a) {
+        var on = sel.indexOf(toothOf(a)) !== -1;
+        a.setAttribute("role", "button");
+        a.setAttribute("aria-pressed", on ? "true" : "false");
+        var r = a.querySelector("rect");
+        if (r) r.setAttribute("class", on ? "fill-menta-pal stroke-actiune" : "fill-transparent stroke-transparent");
+      });
+    };
+    box.addEventListener("click", function (e) {
+      var a = e.target.closest && e.target.closest("a.dinte");
+      if (!a) return;
+      e.preventDefault();
+      var sel = teeth(), t = toothOf(a), i = sel.indexOf(t);
+      if (i === -1) sel.push(t); else sel.splice(i, 1);
+      input.value = sel.join(", ");
+      paint();
+    });
+    input.addEventListener("input", paint);
+    paint();
+  });
+
   // „Sterilizare”, while the QR code is shown: the page reloads when a photo arrives from the phone.
   var poze = document.querySelector("[data-poze-noi]");
   if (poze && window.fetch) {

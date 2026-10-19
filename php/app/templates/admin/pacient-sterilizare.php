@@ -23,26 +23,17 @@ if (query('numar') === '1') {
     exit;
 }
 
-// The code shown on this computer: the database keeps only its hash, the session the code itself.
-session_begin();
-$qr = $_SESSION['qr_poze'][$pid] ?? null;
-$qrLink = is_array($qr) ? db_one('SELECT * FROM upload_links WHERE id = ? AND patient_id = ?', [(int) $qr['id'], $pid]) : null;
-if ($qrLink === null || $qrLink['revoked_at'] !== null || $qrLink['expires_at'] <= now_sql() || (int) $qrLink['uploads'] >= UPLOAD_LINK_MAX_PHOTOS) {
-    unset($_SESSION['qr_poze'][$pid]);
-    $qr = $qrLink = null;
-}
+$qr = upload_qr_current($pid, 'sterilizare');
 
 if (is_post() && $writable) {
     csrf_check();
     $op = post('op');
     if ($op === 'qr') {
-        $link = upload_link_create($pid, 'sterilizare', $user);
-        $_SESSION['qr_poze'][$pid] = ['id' => $link['id'], 'token' => $link['token']];
+        upload_qr_start($pid, 'sterilizare', $user);
         redirect($base . '#telefon');
     }
-    if ($op === 'opreste-qr' && $qrLink !== null) {
-        db_update('upload_links', ['revoked_at' => now_sql()], 'id = :id', ['id' => $qrLink['id']]);
-        unset($_SESSION['qr_poze'][$pid]);
+    if ($op === 'opreste-qr') {
+        upload_qr_stop($pid, 'sterilizare');
         flash('Codul QR a fost oprit; telefonul nu mai poate trimite poze.', 'info');
         redirect($base);
     }
@@ -86,7 +77,7 @@ $photos = db_all("SELECT d.*, u.name AS author FROM patient_documents d LEFT JOI
 $grid = '';
 foreach ($photos as $d) {
     $url = '/admin/documente/' . (int) $d['id'];
-    $isImage = str_starts_with($d['mime'], 'image/');
+    $isImage = in_array($d['mime'], DOC_PREVIEW, true);
     // The title is „Sterilizare 19.10.2026 (telefon): Lot 7”; the card shows what follows the date.
     $extra = (string) preg_replace('/^Sterilizare \d\d\.\d\d\.\d{4}/u', '', $d['title']);
     $grid .= '<li class="flex flex-col overflow-hidden rounded-panou border border-linie bg-suprafata">'
@@ -107,23 +98,7 @@ $upload = $writable ? '<form method="post" enctype="multipart/form-data" novalid
     . field_error('poze-eroare', $error) : '';
 
 // From the phone: the QR code, or the button that makes one.
-$phone = '';
-if ($writable) {
-    if ($qr !== null) {
-        $url = absolute_url('/incarca/' . $qr['token']);
-        $svg = qr_svg($url);
-        $phone = '<div id="telefon" class="mt-4 flex flex-col gap-5 rounded-panou border-2 border-actiune bg-menta-pal p-4 sm:flex-row sm:items-center" data-poze-noi="' . e($base . '?numar=1') . '" data-poze-numar="' . count($photos) . '">'
-            . ($svg !== null ? '<div class="w-[15rem] max-w-full shrink-0 self-center rounded-control bg-white p-2 [&>svg]:h-auto [&>svg]:w-full" role="img" aria-label="Cod QR pentru telefon">' . $svg . '</div>' : '')
-            . '<div class="min-w-0 flex-1"><p class="flex items-center gap-2 text-h3 font-semibold">' . admin_icon('camera', 20) . 'Scanați codul cu telefonul</p>'
-            . '<p class="mt-1 text-corp">Se deschide o pagină unde faceți poza sau o alegeți din galerie; apare aici imediat. Nu trebuie să intrați în panou pe telefon.</p>'
-            . '<p class="mt-2 text-mic text-discret">Valabil până la ' . e(hm($qrLink['expires_at'])) . ', doar pentru acest pacient, cel mult ' . UPLOAD_LINK_MAX_PHOTOS . ' poze' . ((int) $qrLink['uploads'] > 0 ? '; trimise până acum: ' . (int) $qrLink['uploads'] : '') . '.</p>'
-            . '<p class="mt-2 break-all text-mic"><a class="text-link underline underline-offset-4" href="' . e($url) . '" target="_blank" rel="noopener">' . e($url) . '</a></p>'
-            . '<form method="post" class="mt-3">' . csrf_field() . '<input type="hidden" name="op" value="opreste-qr"><button type="submit" class="' . e(btn('secondary', 's')) . '">Opriți codul</button></form></div></div>';
-    } else {
-        $phone = '<form method="post" class="mt-4">' . csrf_field() . '<input type="hidden" name="op" value="qr"><button type="submit" class="' . e(btn('secondary')) . '">' . admin_icon('qr', 18) . 'Cod QR pentru telefon</button>'
-            . '<span class="ml-3 text-mic text-discret">Scanați-l și trimiteți pozele direct de pe telefon.</span></form>';
-    }
-}
+$phone = $writable ? '<div class="mt-4">' . upload_qr_panel($qr, $base . '?numar=1', count($photos), 'Se deschide o pagină unde faceți poza sau o alegeți din galerie.') . '</div>' : '';
 
 $body = patient_header($p, $user, 'sterilizare')
     . admin_section_open('Sterilizare', 'sterilizare', 'Pozele cu eticheta pungii, indicatorul sau bonul autoclavului pentru instrumentele folosite la pacient. Pe telefon, butonul deschide camera.')
