@@ -480,6 +480,32 @@
       st.textContent = "Acum: " + d.stare;
       apptMenu.appendChild(h);
       apptMenu.appendChild(st);
+      // „Sunat, nu răspunde”: ticking it makes the appointment blink until the patient confirms.
+      if ("nuRaspunde" in d) {
+        var nf = document.createElement("form");
+        nf.method = "post";
+        nf.action = "/admin/programari/" + d.id;
+        [["_csrf", csrfCal.value], ["op", "nu-raspunde"], ["inapoi", d.inapoi], ["valoare", "0"]].forEach(function (x) {
+          var i = document.createElement("input");
+          i.type = "hidden";
+          i.name = x[0];
+          i.value = x[1];
+          nf.appendChild(i);
+        });
+        var nl = document.createElement("label");
+        nl.className = "mb-1 flex min-h-control cursor-pointer items-center gap-2 rounded-control border px-3 font-medium " + (d.nuRaspunde ? "da-alarma border-carmin text-carmin" : "border-linie-control hover:bg-adancit");
+        var nc = document.createElement("input");
+        nc.type = "checkbox";
+        nc.name = "valoare";
+        nc.value = "1";
+        nc.checked = !!d.nuRaspunde;
+        nc.className = "size-5 accent-carmin";
+        nc.addEventListener("change", function () { nf.submit(); });
+        nl.appendChild(nc);
+        nl.appendChild(document.createTextNode(d.nuRaspunde ? "Sunat " + d.nuRaspunde + ", nu răspunde" : "Sunat, nu răspunde"));
+        nf.appendChild(nl);
+        apptMenu.appendChild(nf);
+      }
       Object.keys(d.actiuni).forEach(function (k) {
         var f = document.createElement("form");
         f.method = "post";

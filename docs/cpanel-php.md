@@ -544,3 +544,11 @@ din copia bazei de date nu mai pot fi citite.
   care depindeau (procedurile după pacienți).
 - **Setări → Actualizare → Date aduse din QDental** arată fiecare listă: adăugată (cu câte), în curs,
   în așteptare sau motivul pentru care n-a reușit, cu butonul **Adăugați acum**.
+
+## Sunat, nu răspunde (octombrie 2026)
+
+- Bifa **Sunat, nu răspunde** apare la programările încă neconfirmate: în meniul de la clic din
+  calendar, în lista de pe **Azi** și pe pagina programării. Bifată, programarea clipește în roșu
+  (cu ora apelului) în calendar și pe **Azi**, până când pacientul confirmă, ajunge sau se scoate
+  bifa. Cu „mișcare redusă” din sistem rămâne doar conturul roșu, fix.
+- Actualizarea aplică singură migrarea `015_appointment_no_answer.sql`.

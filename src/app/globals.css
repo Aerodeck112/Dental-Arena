@@ -388,6 +388,10 @@
 @keyframes da-spin {
   to { transform: rotate(360deg); }
 }
+@keyframes da-alarma {
+  0%, 100% { background-color: var(--da-carmin-pal); box-shadow: 0 0 0 2px var(--da-carmin); }
+  50% { background-color: var(--da-suprafata); box-shadow: 0 0 0 2px transparent; }
+}
 
 /* Line drawings (DentalArt): the hairline keeps its weight at every size. */
 .desen * {
@@ -409,6 +413,13 @@
   @media (prefers-reduced-motion: reduce) {
     animation: none;
   }
+}
+/* Panel: an appointment whose patient did not answer the phone blinks red until confirmed. With
+   reduced motion it keeps the red ring, still. */
+@utility da-alarma {
+  border-color: var(--da-carmin);
+  box-shadow: 0 0 0 2px var(--da-carmin);
+  animation: da-alarma 1100ms ease-in-out infinite;
 }
 /* A booking-summary row that just received a value. */
 @utility da-flash {

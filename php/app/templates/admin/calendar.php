@@ -94,9 +94,13 @@ $block = static function (array $a, bool $compact = false) use ($movable, $url, 
         'anulat' => 'border-linie bg-adancit text-discret line-through',
         default => 'border-dashed border-linie-control bg-suprafata',
     };
+    // „Sunat, nu răspunde”: the appointment blinks red until the patient confirms.
+    $noAnswer = appt_no_answer($a);
     $menu = ['id' => (int) $a['id'], 'stare' => APPT_STATUS[$a['status']] ?? $a['status'], 'nume' => patient_name($a), 'ora' => hm($a['starts_at']) . '–' . hm($a['ends_at']), 'actiuni' => appt_quick_actions($a['status']), 'inapoi' => $url([])]
+        + (in_array($a['status'], ['programat', 'confirmat'], true) ? ['nuRaspunde' => $noAnswer ? hm($a['no_answer_at']) : ''] : [])
         + ($canProcedures && in_array($a['status'], ['sosit', 'in-tratament', 'finalizat'], true) ? ['proceduri' => admin_url('/admin/pacienti/' . (int) $a['patient_id'] . '/proceduri', ['programare' => $a['id'], 'medic' => $a['doctor_id'], 'data' => substr($a['starts_at'], 0, 10), 'clinica' => $a['location_id']]) . '#adauga'] : []);
-    return '<a href="/admin/programari/' . (int) $a['id'] . '" data-meniu-stare="' . e((string) json_encode($menu, JSON_UNESCAPED_UNICODE)) . '" title="' . e(hm($a['starts_at']) . ' ' . patient_name($a) . ' · ' . (APPT_STATUS[$a['status']] ?? '')) . '" class="' . e(cn('block h-full overflow-hidden rounded-control border-l-4 border px-1.5 text-mic shadow-sm hover:shadow-float', $compact ? 'flex items-center gap-1 whitespace-nowrap py-0 text-[0.6875rem] leading-none' : 'py-0.5 leading-tight', $cls, $movable($a) ? 'cursor-grab' : '')) . '" draggable="false">'
+    return '<a href="/admin/programari/' . (int) $a['id'] . '" data-meniu-stare="' . e((string) json_encode($menu, JSON_UNESCAPED_UNICODE)) . '" title="' . e(hm($a['starts_at']) . ' ' . patient_name($a) . ' · ' . (APPT_STATUS[$a['status']] ?? '') . ($noAnswer ? ' · sunat la ' . hm($a['no_answer_at']) . ', nu răspunde' : '')) . '" class="' . e(cn('block h-full overflow-hidden rounded-control border-l-4 border px-1.5 text-mic shadow-sm hover:shadow-float', $compact ? 'flex items-center gap-1 whitespace-nowrap py-0 text-[0.6875rem] leading-none' : 'py-0.5 leading-tight', $cls, $noAnswer ? 'da-alarma' : '', $movable($a) ? 'cursor-grab' : '')) . '" draggable="false">'
+        . ($noAnswer ? admin_icon('phone-missed', 12, 'mr-0.5 inline-block shrink-0 align-[-1px] text-carmin', 'Nu răspunde') : '')
         . '<span class="shrink-0 font-semibold cifre" data-ora>' . e(hm($a['starts_at'])) . '</span> <span class="' . ($compact ? 'min-w-0 truncate font-semibold' : 'font-semibold') . '">' . e(patient_name($a)) . '</span>'
         . (in_array($a['comfort'], ['emotii', 'frica'], true) ? ' <span aria-label="emoții" class="inline-block size-2 shrink-0 rounded-full bg-mustar"></span>' : '')
         // A 15-minute appointment has room for one line: the time and the name; the rest is in the title and the menu.
@@ -271,7 +275,7 @@ if ($view === 'zi') {
                 . '<td class="px-3 py-2"><a class="font-semibold underline-offset-4 hover:underline" href="/admin/pacienti/' . (int) $a['patient_id'] . '">' . e(patient_name($a)) . '</a><span class="block text-mic text-discret">' . e(format_phone((string) $a['phone'])) . '</span></td>'
                 . '<td class="px-3 py-2">' . e($docs[(int) $a['doctor_id']] ?? '') . ($a['cabinet'] ? '<span class="block text-mic text-discret">Cabinetul ' . (int) $a['cabinet'] . '</span>' : '') . '</td>'
                 . '<td class="px-3 py-2">' . e($a['reason'] ?: service_title($a['category_slug'])) . '</td>'
-                . '<td class="px-3 py-2">' . appt_status_chip($a['status']) . '</td></tr>';
+                . '<td class="px-3 py-2"><span class="flex flex-wrap gap-1">' . appt_status_chip($a['status']) . (appt_no_answer($a) ? appt_no_answer_chip($a) : '') . '</span></td></tr>';
         }
         $off = in_array($key, $holidays, true) ? ' · sărbătoare legală' : '';
         $content .= '<section aria-label="' . e(format_date($d, true)) . '"><h2 class="mb-2 text-h3 font-semibold first-letter:uppercase">' . e(format_date($d, true)) . '<span class="text-corp font-normal text-discret">' . e($off) . ' · ' . (isset($byDay[$key]) ? count_ro(count($byDay[$key]), 'o programare', 'programări') : 'nicio programare') . '</span></h2>'
@@ -324,7 +328,8 @@ $legendItem = static fn (string $cls, string $label) => '<li class="flex items-c
 $legendList = $view !== 'lista' ? '<ul class="flex flex-wrap gap-x-4 gap-y-1 text-mic text-discret" aria-label="Culorile programărilor">'
     . $legendItem('border-dashed border-linie-control bg-suprafata', 'Programat') . $legendItem('border-portocaliu bg-portocaliu-pal', 'Confirmat')
     . $legendItem('border-actiune bg-menta-pal', 'A sosit') . $legendItem('border-actiune bg-menta/45', 'În tratament')
-    . $legendItem('border-carmin bg-carmin-pal', 'Nu a venit') . $legendItem('border-linie bg-adancit', 'Finalizat / anulat') . '</ul>' : '';
+    . $legendItem('border-carmin bg-carmin-pal', 'Nu a venit') . $legendItem('border-linie bg-adancit', 'Finalizat / anulat')
+    . $legendItem('da-alarma border-carmin bg-suprafata', 'Sunat, nu răspunde (clipește)') . '</ul>' : '';
 // Beside the title on a wide screen; under the calendar on a tablet, so the day keeps its height.
 $legend = $legendList !== '' ? '<div class="hidden 2xl:block">' . $legendList . '</div>' : '';
 $legendBelow = $legendList !== '' ? '<div class="mt-3 2xl:hidden">' . $legendList . '</div>' : '';

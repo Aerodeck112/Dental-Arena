@@ -391,6 +391,10 @@ function set_appointment_status(int $id, string $status, array $user, ?string $r
         'neprezentat' => 'no_show_at',
     ][$status] ?? null;
     $row = ['status' => $status, 'updated_by' => $user['id'] ?? null, 'updated_at' => now_sql()];
+    if ($status !== 'programat') {
+        // Confirmed, arrived, cancelled…: the „no answer” alarm has done its job.
+        $row += ['no_answer_at' => null, 'no_answer_by' => null];
+    }
     if ($stamp !== null) {
         $row[$stamp] = now_sql();
     }
@@ -450,6 +454,34 @@ function auto_recall(array $a, array $user): ?string
     ]);
     audit('rechemare-noua', "#{$rid} automată, peste {$months} " . ($months === 1 ? 'lună' : 'luni'), $user['id'] ?? 0, $pid);
     return 'Pacientul a fost trecut pe lista de rechemări, pentru control peste ' . ($months === 1 ? 'o lună' : "{$months} luni") . '.';
+}
+
+/** „Sunat, nu răspunde”: checked on an appointment not confirmed yet, it blinks until it is. */
+function appt_no_answer(array $a): bool
+{
+    return ($a['no_answer_at'] ?? null) !== null && in_array($a['status'], ['programat', 'confirmat'], true);
+}
+
+function set_appointment_no_answer(array $a, bool $on, array $user): void
+{
+    db_update('appointments', ['no_answer_at' => $on ? now_sql() : null, 'no_answer_by' => $on ? $user['id'] : null, 'updated_by' => $user['id'], 'updated_at' => now_sql()], 'id = :id', ['id' => $a['id']]);
+    audit($on ? 'programare-nu-raspunde' : 'programare-nu-raspunde-scos', "#{$a['id']}", null, (int) $a['patient_id']);
+}
+
+/** The blinking chip „Nu răspunde (14:20)”. */
+function appt_no_answer_chip(array $a): string
+{
+    return '<span class="da-alarma inline-flex items-center gap-1 whitespace-nowrap rounded-chip border border-carmin px-2.5 py-0.5 text-mic font-semibold text-carmin">' . admin_icon('phone-missed', 14) . 'Nu răspunde · ' . e(hm($a['no_answer_at'])) . '</span>';
+}
+
+/** The checkbox „Sunat, nu răspunde”: it is sent as soon as it is ticked or unticked. */
+function appt_no_answer_form(array $a, ?string $back): string
+{
+    return '<form method="post" action="/admin/programari/' . (int) $a['id'] . '" class="inline-flex">' . csrf_field() . '<input type="hidden" name="op" value="nu-raspunde">'
+        . ($back !== null ? '<input type="hidden" name="inapoi" value="' . e($back) . '">' : '') . '<input type="hidden" name="valoare" value="0">'
+        . '<label class="inline-flex min-h-control cursor-pointer items-center gap-2 rounded-control border border-linie-control px-3 text-control font-medium hover:bg-adancit">'
+        . '<input type="checkbox" name="valoare" value="1" data-trimite-la-schimbare class="size-5 accent-carmin"' . (appt_no_answer($a) ? ' checked' : '') . '>Sunat, nu răspunde</label>'
+        . '<noscript><button type="submit" class="' . e(btn('text', 's')) . '">Salvați</button></noscript></form>';
 }
 
 function appt_status_chip(string $status): string

@@ -42,6 +42,17 @@ if (!$isNew && is_post() && post('op') === 'stare') {
     redirect($back ?? "/admin/programari/{$appt['id']}");
 }
 
+// ── „Sunat, nu răspunde” (calendar menu, „Azi”, this page) ──────────────────────
+if (!$isNew && is_post() && post('op') === 'nu-raspunde') {
+    csrf_check();
+    $on = post('valoare') === '1';
+    if ($on === false || in_array($appt['status'], ['programat', 'confirmat'], true)) {
+        set_appointment_no_answer($appt, $on, $user);
+        flash($on ? 'Sunat, nu răspunde: programarea clipește până confirmă pacientul.' : 'Bifa „Sunat, nu răspunde” a fost scoasă.', 'info');
+    }
+    redirect($back ?? "/admin/programari/{$appt['id']}");
+}
+
 // ── Where a new appointment starts from ──────────────────────────────────────
 $lead = null;
 $recall = null;
@@ -345,6 +356,9 @@ if (!$isNew) {
         . '<span class="text-corp">Starea:</span> ' . appt_status_chip($appt['status'])
         . ($appt['status'] === 'anulat' && $appt['cancel_reason'] ? '<span class="text-mic text-discret">(' . e($appt['cancel_reason']) . ')</span>' : '')
         . '<span class="flex flex-wrap gap-2 sm:ml-auto">' . $btns . '</span></form>';
+    if (in_array($appt['status'], ['programat', 'confirmat'], true)) {
+        $statusBar .= '<div class="-mt-3 mb-6 flex flex-wrap items-center gap-3">' . appt_no_answer_form($appt, $back) . (appt_no_answer($appt) ? appt_no_answer_chip($appt) : '') . '</div>';
+    }
 }
 $actions = '';
 if (!$isNew) {

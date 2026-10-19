@@ -56,8 +56,9 @@ foreach ($appts as $a) {
     $rows .= '<li class="' . e(cn('grid gap-3 border-t border-linie py-4 first:border-t-0 sm:grid-cols-[4.5rem_1fr_auto] sm:items-center', $muted ? 'opacity-60' : '')) . '">'
         . '<p class="font-display text-[1.75rem] leading-none cifre">' . e(hm($a['starts_at'])) . '<span class="block pt-1 font-sans text-mic text-discret">până la ' . e(hm($a['ends_at'])) . '</span></p>'
         . '<div class="min-w-0"><p><a href="/admin/pacienti/' . (int) $a['patient_id'] . '" class="text-h3 font-semibold text-cerneala underline-offset-4 hover:underline">' . e(patient_name($a)) . '</a></p>'
-        . (($chips = alert_chips($alerts) . comfort_chip($a['comfort'])) !== '' ? '<p class="mt-1 flex flex-wrap gap-1.5">' . $chips . '</p>' : '')
-        . '<p class="mt-1 text-mic text-discret">' . e(implode(', ', array_filter([$docs[(int) $a['doctor_id']] ?? '', $a['reason'] ?: service_title($a['category_slug'])]))) . '</p></div>'
+        . (($chips = (appt_no_answer($a) ? appt_no_answer_chip($a) : '') . alert_chips($alerts) . comfort_chip($a['comfort'])) !== '' ? '<p class="mt-1 flex flex-wrap gap-1.5">' . $chips . '</p>' : '')
+        . '<p class="mt-1 text-mic text-discret">' . e(implode(', ', array_filter([$docs[(int) $a['doctor_id']] ?? '', $a['reason'] ?: service_title($a['category_slug'])]))) . '</p>'
+        . (in_array($a['status'], ['programat', 'confirmat'], true) ? '<div class="mt-2">' . appt_no_answer_form($a, '/admin') . '</div>' : '') . '</div>'
         . '<form method="post" action="/admin/programari/' . $id . '" class="flex flex-wrap items-center gap-2 sm:justify-end">' . csrf_field()
         . '<input type="hidden" name="op" value="stare"><input type="hidden" name="inapoi" value="/admin">'
         . appt_status_chip($a['status']) . $buttons
