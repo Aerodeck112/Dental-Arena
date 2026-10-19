@@ -261,7 +261,7 @@ $body = admin_header('Setări', 'Unde ajung cererile, datele clinicilor și firm
     . text_field('inv_paymentTermDays', 'Termen de plată (zile)', ['value' => (string) $inv['paymentTermDays'], 'inputmode' => 'numeric', 'error' => $err('inv_paymentTermDays'), 'hint' => '0 = fără scadență pe factură.'])
     . text_field('inv_vatNote', 'Mențiunea despre TVA pe factură', ['value' => $inv['vatNote'], 'class' => 'md:col-span-2', 'hint' => 'Verificați formularea cu contabilul.'])
     . '</div></section>' : '')
-    . admin_section_open('Textele acordurilor', 'acorduri', 'Ce scrie pe formularele tipărite din fișa pacientului. {{pacient}}, {{firma}}, {{clinica}} și {{email}} se completează singure. Lăsați gol ca să reveniți la textul inițial.')
+    . admin_section_open('Textele acordurilor', 'acorduri', 'Ce scrie pe formularele tipărite din fișa pacientului. {{pacient}}, {{firma}}, {{clinica}}, {{email}}, {{telefon}} și {{adresa}} se completează singure; {{medic}} și {{interventie}} se aleg la codul pentru tabletă (pe hârtie rămâne loc de scris). Lăsați gol ca să reveniți la textul inițial.')
     . '<div class="mt-4 flex flex-col gap-5">' . implode('', array_map(static fn ($t) => text_area("consent_{$t}", CONSENT_TYPES[$t], ['value' => $consentTexts[$t], 'rows' => 8]), array_keys(CONSENT_TYPES))) . '</div>'
     . '<p class="mt-3 text-mic text-discret">Versiunea textelor: ' . e(consent_version()) . '. Se schimbă singură când modificați un text, iar fiecare acord semnat păstrează versiunea de atunci.</p></section>'
     . $clinicSections

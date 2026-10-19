@@ -37,9 +37,11 @@ function kiosk_pair(string $name, ?int $locationId, array $user): int
 }
 
 /** A new 6-digit code, unused among the codes still valid. */
-function consent_session_create(array $p, array $types, bool $history, bool $marketing, array $user): array
+/** @param array{medic?:string,interventie?:string} $details the doctor and the intervention, for the consents that name them */
+function consent_session_create(array $p, array $types, bool $history, bool $marketing, array $user, array $details = []): array
 {
     $types = array_values(array_intersect(array_keys(CONSENT_TYPES), $types));
+    $details = array_intersect_key(array_filter(array_map(static fn ($v) => mb_substr(trim((string) $v), 0, 250), $details)), ['medic' => 1, 'interventie' => 1]);
     // Older open sessions of the patient are closed: one code at a time.
     db_run("UPDATE consent_sessions SET status = 'anulat' WHERE patient_id = ? AND status = 'asteptare'", [(int) $p['id']]);
     do {
@@ -47,10 +49,18 @@ function consent_session_create(array $p, array $types, bool $history, bool $mar
     } while (db_value("SELECT 1 FROM consent_sessions WHERE code = ? AND status = 'asteptare' AND expires_at > ?", [$code, now_sql()]));
     $id = db_insert('consent_sessions', [
         'patient_id' => (int) $p['id'], 'code' => $code, 'types' => implode(',', $types), 'with_history' => (int) $history, 'with_marketing' => (int) $marketing,
+        'details' => $details !== [] ? json_encode($details, JSON_UNESCAPED_UNICODE) : null,
         'status' => 'asteptare', 'created_by' => $user['id'], 'created_at' => now_sql(), 'expires_at' => date('Y-m-d H:i:s', time() + KIOSK_CODE_MINUTES * 60),
     ]);
     audit('cod-tableta', implode(', ', array_map(static fn ($t) => CONSENT_TYPES[$t], $types)) . ($history ? ' + chestionar' : ''), null, (int) $p['id']);
     return db_one('SELECT * FROM consent_sessions WHERE id = ?', [$id]);
+}
+
+/** The doctor and the intervention chosen with the code. */
+function consent_session_details(array $s): array
+{
+    $d = json_decode((string) ($s['details'] ?? ''), true);
+    return is_array($d) ? $d : [];
 }
 
 function consent_session_open(string $code): ?array
@@ -110,7 +120,7 @@ function consent_session_sign(array $s, array $device, array $accepted, string $
         $signedAt = now_sql();
         $sigHash = hash('sha256', $raw);
         foreach ($accepted as $type) {
-            $text = consent_text_for($type, $p, $device['location_id'] ? (int) $device['location_id'] : null);
+            $text = consent_text_for($type, $p, $device['location_id'] ? (int) $device['location_id'] : null, consent_session_details($s));
             db_insert('consents', [
                 'patient_id' => $p['id'], 'type' => $type, 'method' => 'tableta', 'signed_on' => date('Y-m-d'), 'signed_at' => $signedAt,
                 'text_version' => consent_version(), 'text_snapshot' => $text, 'document_id' => $docId, 'session_id' => $s['id'],

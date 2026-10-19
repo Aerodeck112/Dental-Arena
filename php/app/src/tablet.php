@@ -192,7 +192,7 @@ if ($path === '/tableta/semnare') {
     $consents = '';
     foreach ($types as $t) {
         $paras = '';
-        foreach (preg_split('/\n{2,}/', trim(consent_text_for($t, $p, $device && $device['location_id'] ? (int) $device['location_id'] : null))) ?: [] as $para) {
+        foreach (preg_split('/\n{2,}/', trim(consent_text_for($t, $p, $device && $device['location_id'] ? (int) $device['location_id'] : null, consent_session_details($s)))) ?: [] as $para) {
             $paras .= '<p class="mt-3 whitespace-pre-line first:mt-0">' . e($para) . '</p>';
         }
         $consents .= '<article class="rounded-panou border border-linie">'

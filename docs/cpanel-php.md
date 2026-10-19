@@ -574,3 +574,14 @@ din copia bazei de date nu mai pot fi citite.
   WebM), ZIP, DICOM, scanări 3D (STL, PLY, OBJ, 3MF), cel mult 100 MB (sau limita găzduirii). Ce nu
   poate arăta browserul (Word, STL…) se descarcă. Un fișier prea mare pentru server dă acum un mesaj
   clar în loc de „Formularul a expirat”.
+
+## Consimțăminte noi pe tabletă (octombrie 2026)
+
+- Trei formulare ale clinicii, de semnat pe tabletă sau tipărit: **tratamentul endodontic (de canal)**,
+  **tratamente chirurgicale** (formularul CMDR, fără sigla lui) și **tratamentul pe implanturi** (un
+  singur formular pentru toți medicii; numele medicului se completează).
+- La „Dați un cod pentru tabletă” se aleg **Medicul** și **Intervenția / dinții**; intră în text
+  (`{{medic}}`, `{{interventie}}`), iar la chirurgie și adresa și telefonul pacientului (`{{adresa}}`,
+  `{{telefon}}`). Pe hârtie rămân linii de completat. Textele se pot schimba din Setări → Textele
+  acordurilor. Seria și numărul buletinului din formularul de chirurgie nu se cer (panoul nu le ține).
+- Actualizarea aplică singură migrarea `017_consent_details.sql`.

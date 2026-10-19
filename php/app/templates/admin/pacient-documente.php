@@ -72,7 +72,16 @@ if (is_post() && $writable) {
             if (array_intersect(array_keys(CONSENT_TYPES), $types) === [] && !$history) {
                 throw new DomainException('Alegeți cel puțin un acord sau chestionarul.');
             }
-            consent_session_create($p, $types, $history, post('with_marketing') === '1', $user);
+            // Endodontics, surgery, implants: the text names the doctor and what is done.
+            $details = [];
+            if (array_intersect(CONSENT_WITH_DETAILS, $types) !== []) {
+                $doctorName = db_value('SELECT public_name FROM doctors WHERE id = ?', [(int) post('medic')]);
+                if (!$doctorName || trim(post('interventie')) === '') {
+                    throw new DomainException('Pentru endodonție, chirurgie sau implanturi alegeți medicul și scrieți intervenția (de exemplu „extracția dintelui 38” sau „dinții 36, 46”).');
+                }
+                $details = ['medic' => (string) $doctorName, 'interventie' => post('interventie')];
+            }
+            consent_session_create($p, $types, $history, post('with_marketing') === '1', $user, $details);
             redirect($base . '#tableta');
         }
         if ($op === 'anuleaza-cod') {
@@ -162,6 +171,9 @@ $session = db_one("SELECT * FROM consent_sessions WHERE patient_id = ? AND statu
 $hasTablet = (bool) db_value('SELECT 1 FROM kiosk_devices WHERE revoked_at IS NULL LIMIT 1');
 if ($session !== null) {
     $what = array_map(static fn ($t) => CONSENT_TYPES[$t] ?? CONSENT_RETIRED[$t] ?? $t, array_filter(explode(',', (string) $session['types'])));
+    if (($sd = consent_session_details($session)) !== []) {
+        $what[] = implode(', ', array_filter([$sd['medic'] ?? '', $sd['interventie'] ?? '']));
+    }
     if ((int) $session['with_history'] === 1) {
         $what[] = 'chestionarul medical';
     }
@@ -182,9 +194,14 @@ if ($session !== null) {
         $boxes .= checkbox_field('types[]', e($label), ['id' => "tip-{$t}", 'value' => $t, 'checked' => in_array($t, $preset, true)]);
     }
     $h = db_one('SELECT reviewed_at FROM medical_histories WHERE patient_id = ?', [$pid]);
+    $doctorOpts = ['' => 'Alegeți medicul…'] + array_map('strval', array_column(db_all('SELECT id, public_name FROM doctors ORDER BY sort_order, id'), 'public_name', 'id'));
+    $details = '<fieldset class="mt-2 grid gap-4 rounded-panou border border-linie bg-fundal p-4 sm:grid-cols-2"><legend class="px-1 text-mic font-medium text-discret">Pentru endodonție, chirurgie și implanturi (apar în text)</legend>'
+        . select_field('medic', 'Medicul', $doctorOpts, ['value' => post('medic') ?: (string) ($user['doctor_id'] ?? $p['primary_doctor_id'] ?? '')])
+        . text_field('interventie', 'Intervenția / dinții', ['value' => post('interventie'), 'maxlength' => 250, 'placeholder' => 'de ex. extracția dintelui 38; implanturi 36, 46'])
+        . '</fieldset>';
     $tablet = '<form method="post" novalidate class="mt-4 flex flex-col gap-4">' . csrf_field() . '<input type="hidden" name="op" value="cod-tableta">'
         . (isset($errors['tableta']) ? field_error('tableta-eroare', $errors['tableta']) : '')
-        . '<div class="grid gap-x-6 md:grid-cols-2"><fieldset><legend class="mb-1 text-control font-medium">Ce semnează</legend>' . $boxes . '</fieldset>'
+        . '<div class="grid gap-x-6 md:grid-cols-2"><fieldset><legend class="mb-1 text-control font-medium">Ce semnează</legend>' . $boxes . $details . '</fieldset>'
         . '<fieldset><legend class="mb-1 text-control font-medium">Ce mai completează</legend>'
         . checkbox_field('with_history', 'Chestionarul medical', ['checked' => !$h, 'description' => 'Alergii, medicamente, boli. Intră în fișă după ce îl verifică medicul.'])
         . checkbox_field('with_marketing', 'Acordul pentru oferte', ['checked' => ((int) $p['marketing_sms'] + (int) $p['marketing_whatsapp'] + (int) $p['marketing_email']) === 0, 'description' => 'SMS, WhatsApp, e-mail; opțional pentru pacient.'])

@@ -332,6 +332,7 @@ export const tableta = (rol) => ({
 <h3>La recepție</h3>
 ${pasi([
   `În fișa pacientului → ${b("Documente și acorduri")} → ${b("Semnare pe tabletă")}, bifați ce semnează. Panoul le bifează singur pe cele nesemnate încă.`,
+  `Pentru ${b("tratamentul endodontic (de canal)")}, ${b("tratamente chirurgicale")} sau ${b("tratamentul pe implanturi")} (formularele clinicii), alegeți și ${b("Medicul")} și scrieți ${b("Intervenția / dinții")} (de exemplu „extracția dintelui 38” sau „implanturi 36, 46”): apar în textul pe care îl semnează pacientul. La chirurgie apar singure și adresa și telefonul din fișă.`,
   `Dacă vreți, bifați și ${b("Chestionarul medical")} (alergii, medicamente, boli) și ${b("Acordul pentru oferte")}.`,
   `Apăsați ${b("Dați un cod pentru tabletă")}. Codul apare mare pe ecran: spuneți-l pacientului și dați-i tableta. E valabil 30 de minute, o singură dată.`,
   `Pe ecran vedeți „Pacientul semnează acum pe tabletă…”; când termină, pagina se reîncarcă singură și acordurile apar ca „Semnat pe tabletă”.`,
