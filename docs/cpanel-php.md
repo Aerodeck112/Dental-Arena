@@ -531,3 +531,16 @@ din copia bazei de date nu mai pot fi citite.
   Stefan, Stoica Ramona) merg pe fișa mai nouă, cu nota „De verificat”.
 - Actualizarea aplică singură migrările `013_procedures.sql` și `014_procedures_notes.sql` (scoate nota
   „De verificat” de la pacienții cu două fișe QDental care aici sunt un singur pacient).
+
+## Sterilizare și importuri sigure (octombrie 2026)
+
+- Fișa pacientului are fila **Sterilizare**: butonul **Încarcă poză** (pe telefon deschide camera; se
+  pot alege mai multe poze), cu o notă opțională (lotul, autoclavul). Pozele se păstrează ca
+  documentele pacientului (în `storage/documente`, în afara public_html), dar nu apar la
+  „Documente și acorduri”. Le șterge administratorul.
+- Importurile din `data/import` se fac mult mai repede (câte 500 de rânduri odată) și se reiau
+  singure dacă serverul le-a oprit la jumătate (lacătul rămas se ignoră după 10 minute). Cele care
+  n-au reușit se încearcă din nou imediat după o actualizare, sau imediat ce s-a adăugat lista de
+  care depindeau (procedurile după pacienți).
+- **Setări → Actualizare → Date aduse din QDental** arată fiecare listă: adăugată (cu câte), în curs,
+  în așteptare sau motivul pentru care n-a reușit, cu butonul **Adăugați acum**.

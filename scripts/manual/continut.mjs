@@ -214,7 +214,7 @@ ${img("pacient-nou", "Fișa nouă de pacient.")}
 <p>La salvarea unei fișe noi, panoul caută pacienți cu același telefon, CNP, e-mail sau cu același nume (și aceeași dată a nașterii). Dacă găsește, arată lista: deschideți fișa existentă sau, dacă e altă persoană (de exemplu un membru al familiei cu același telefon), bifați ${b("Este altă persoană: creați fișa nouă")}.</p>
 ${img("pacient-nou-dubluri", "Posibile fișe dublate, la o fișă nouă.")}
 <h3>Fișa</h3>
-<p>Sus: numele, numărul fișei, vârsta, telefonul și alertele. Butoanele ${b("Programare nouă")} și ${b("Sunați")} sunt mereu la îndemână. Filele: ${rol === "medic" ? `${b("Fișa")}, ${b("Odontogramă")}, ${b("Planuri de tratament")}, ${b("Documente și acorduri")}, ${b("Mesaje")}` : `${b("Fișa")}, ${b("Planuri de tratament")}, ${b("Documente și acorduri")}, ${b("Mesaje")}`}.</p>
+<p>Sus: numele, numărul fișei, vârsta, telefonul și alertele. Butoanele ${b("Programare nouă")} și ${b("Sunați")} sunt mereu la îndemână. Filele: ${rol === "medic" ? `${b("Fișa")}, ${b("Odontogramă")}, ${b("Planuri de tratament")}, ${b("Documente și acorduri")}, ${b("Sterilizare")}, ${b("Mesaje")}` : `${b("Fișa")}, ${b("Planuri de tratament")}, ${b("Documente și acorduri")}, ${b("Sterilizare")}, ${b("Mesaje")}`}.</p>
 ${img(rol === "medic" ? "fisa-medic" : "fisa-receptie", rol === "medic" ? "Fișa văzută de medic: anamneza completă, programările, rechemările." : "Fișa văzută de recepție: alertele, datele, etichetele, programările, rechemările, notele.")}
 <p>Pe fila ${b("Fișa")}: ${rol === "medic" ? "anamneza (alergii, medicamente, afecțiuni), " : "alertele medicale, "}datele pacientului, ${rol === "medic" ? "implanturile, " : ""}etichetele, programările, rechemările și notele.</p>
 <h3>Etichetele</h3>
@@ -316,7 +316,9 @@ ${img("documente", "Documentele și acordurile pacientului.")}
 <li>${b("Retras")}: când pacientul își retrage acordul.</li>
 </ul>
 <h3>Documentele</h3>
-<p>Alegeți fișierul (PDF, JPG, PNG sau WebP, cel mult 25 MB), tipul (radiografie panoramică, retroalveolară, CBCT, fotografie, consimțământ, deviz, scrisoare medicală) și un titlu, apoi ${b("Încărcați")}. Documentele se păstrează în afara site-ului și se deschid doar din panou, de cei care au acces la pacient. ${rol === "admin" ? "Doar administratorul poate șterge un document." : "Ștergerea o poate face doar administratorul."}</p>`,
+<p>Alegeți fișierul (PDF, JPG, PNG sau WebP, cel mult 25 MB), tipul (radiografie panoramică, retroalveolară, CBCT, fotografie, consimțământ, deviz, scrisoare medicală) și un titlu, apoi ${b("Încărcați")}. Documentele se păstrează în afara site-ului și se deschid doar din panou, de cei care au acces la pacient. ${rol === "admin" ? "Doar administratorul poate șterge un document." : "Ștergerea o poate face doar administratorul."}</p>
+<h3>Sterilizare</h3>
+<p>Fila ${b("Sterilizare")} din fișa pacientului ține pozele cu eticheta pungii, indicatorul sau bonul autoclavului pentru instrumentele folosite la pacient. Scrieți, dacă vreți, o notă (de exemplu lotul), apoi apăsați ${b("Încarcă poză")}: pe telefon sau tabletă se deschide camera, pe calculator alegeți pozele (se pot alege mai multe deodată). Pozele se încarcă imediat și apar cu data, ora și cine le-a pus.</p>`,
 });
 
 export const tableta = (rol) => ({

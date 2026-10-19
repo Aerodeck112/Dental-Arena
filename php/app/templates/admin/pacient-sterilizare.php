@@ -58,8 +58,8 @@ foreach ($photos as $d) {
     $url = '/admin/documente/' . (int) $d['id'];
     $isImage = str_starts_with($d['mime'], 'image/');
     $grid .= '<li class="flex flex-col overflow-hidden rounded-panou border border-linie bg-suprafata">'
-        . '<a href="' . $url . '" target="_blank" rel="noopener" class="block aspect-[4/3] bg-fundal">'
-        . ($isImage ? '<img src="' . $url . '" alt="' . e($d['title']) . '" loading="lazy" class="size-full object-cover">' : '<span class="flex size-full items-center justify-center">' . icon('file', 32, 'text-discret') . '</span>') . '</a>'
+        . '<a href="' . $url . '" target="_blank" rel="noopener" class="relative block aspect-[4/3] overflow-hidden bg-fundal">'
+        . ($isImage ? '<img src="' . $url . '" alt="' . e($d['title']) . '" loading="lazy" class="absolute inset-0 size-full object-cover">' : '<span class="absolute inset-0 flex items-center justify-center">' . icon('file', 32, 'text-discret') . '</span>') . '</a>'
         . '<div class="flex items-start justify-between gap-2 p-3"><div class="min-w-0"><p class="text-mic font-semibold cifre">' . e(date('d.m.Y H:i', strtotime($d['created_at']))) . '</p>'
         . '<p class="text-mic text-discret">' . e(implode(' · ', array_filter([preg_replace('/^Sterilizare \d\d\.\d\d\.\d{4}:? ?/u', '', $d['title']), $d['author']]))) . '</p></div>'
         . (can('documents.delete', $user) && $writable ? '<form method="post" data-confirma="Ștergeți poza?">' . csrf_field() . '<input type="hidden" name="op" value="sterge"><input type="hidden" name="id" value="' . (int) $d['id'] . '"><button type="submit" class="' . e(btn('text', 's')) . '" aria-label="Ștergeți poza din ' . e(date('d.m.Y H:i', strtotime($d['created_at']))) . '">' . icon('trash-2', 16) . '</button></form>' : '')
