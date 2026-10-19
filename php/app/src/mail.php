@@ -1,15 +1,47 @@
 <?php
 /**
  * E-mail: through the server's own mail() (works on cPanel without settings), or through an
- * e-mail account over SMTP when config.php has 'smtp' (better delivery to Gmail and Yahoo).
- * A test copy of the site (site_mode = test) only writes the message to the log.
+ * e-mail account over SMTP (better delivery to Gmail and Yahoo), set in Setări → Mesaje → E-mail
+ * or in config.php ('smtp'). A test copy of the site (site_mode = test) only writes the message to
+ * the log. Setări → Mesaje shows how e-mail goes and sends a test message.
  */
 declare(strict_types=1);
 
+/**
+ * How e-mail leaves: the SMTP account from the panel (its password sealed), else the one in
+ * config.php, else PHP mail(); and the sender address.
+ *
+ * @return array{smtp:?array,from:string,source:string}
+ */
+function mail_settings(): array
+{
+    $s = setting('smtp');
+    if (is_array($s) && trim((string) ($s['host'] ?? '')) !== '') {
+        $s['pass'] = secret_open((string) ($s['pass'] ?? ''));
+        return ['smtp' => $s, 'from' => trim((string) ($s['from'] ?? '')) ?: (string) ($s['user'] ?? ''), 'source' => 'panou'];
+    }
+    if (!empty(CONFIG['smtp']['host'])) {
+        return ['smtp' => CONFIG['smtp'], 'from' => CONFIG['mail_from'] ?? (CONFIG['smtp']['user'] ?? 'office@dentalarena.ro'), 'source' => 'config.php'];
+    }
+    return ['smtp' => null, 'from' => CONFIG['mail_from'] ?? 'office@dentalarena.ro', 'source' => 'mail()'];
+}
+
+/** The reason the last e-mail of this request did not leave (for the test in Setări → Mesaje). */
+function mail_last_error(?string $set = null): ?string
+{
+    static $last = null;
+    if (func_num_args() > 0) {
+        $last = $set;
+    }
+    return $last;
+}
+
 function send_mail(string $to, string $subject, string $text, ?string $replyTo = null): bool
 {
-    $from = CONFIG['mail_from'] ?? 'office@dentalarena.ro';
+    $cfg = mail_settings();
+    $from = filter_var($cfg['from'], FILTER_VALIDATE_EMAIL) ? $cfg['from'] : 'office@dentalarena.ro';
     $fromName = 'Dental Arena';
+    mail_last_error(null);
     if (is_test_site()) {
         app_log('mail', "[test] către {$to}: {$subject}\n{$text}");
         return true;
@@ -28,17 +60,22 @@ function send_mail(string $to, string $subject, string $text, ?string $replyTo =
     }
     $body = chunk_split(base64_encode($text));
     try {
-        if (!empty(CONFIG['smtp']['host'])) {
-            smtp_send(CONFIG['smtp'], $from, $to, $encodedSubject, $headers, $body);
+        if ($cfg['smtp'] !== null) {
+            smtp_send($cfg['smtp'], $from, $to, $encodedSubject, $headers, $body);
             return true;
+        }
+        if (!function_exists('mail')) {
+            throw new RuntimeException('funcția mail() e oprită pe server; folosiți un cont SMTP.');
         }
         $headerLines = implode("\r\n", array_map(static fn ($k, $v) => "{$k}: {$v}", array_keys($headers), $headers));
         $ok = mail($to, $encodedSubject, $body, $headerLines, '-f' . $from);
         if (!$ok) {
+            mail_last_error('Serverul (mail()) a refuzat mesajul.');
             app_log('mail', "mail() a refuzat mesajul către {$to}: {$subject}");
         }
         return $ok;
     } catch (Throwable $e) {
+        mail_last_error($e->getMessage());
         app_log('mail', "Eroare la trimiterea către {$to}: " . $e->getMessage());
         return false;
     }
@@ -50,7 +87,7 @@ function smtp_send(array $s, string $from, string $to, string $subject, array $h
     $port = (int) ($s['port'] ?? 465);
     $secure = $s['secure'] ?? ($port === 465 ? 'ssl' : 'tls');
     $host = ($secure === 'ssl' ? 'ssl://' : '') . $s['host'];
-    $fp = @stream_socket_client("{$host}:{$port}", $errno, $errstr, 15);
+    $fp = @stream_socket_client("{$host}:{$port}", $errno, $errstr, 15, STREAM_CLIENT_CONNECT, stream_context_create(['ssl' => ['peer_name' => $s['host'], 'SNI_enabled' => true]]));
     if ($fp === false) {
         throw new RuntimeException("SMTP: nu mă pot conecta la {$s['host']}:{$port} ({$errstr})");
     }
@@ -82,6 +119,9 @@ function smtp_send(array $s, string $from, string $to, string $subject, array $h
             throw new RuntimeException('SMTP: STARTTLS a eșuat');
         }
         $cmd($ehlo, [250]);
+    }
+    if (trim((string) ($s['user'] ?? '')) === '') {
+        throw new RuntimeException('SMTP: lipsește utilizatorul (adresa contului de e-mail).');
     }
     $cmd('AUTH LOGIN', [334]);
     $cmd(base64_encode((string) $s['user']), [334]);

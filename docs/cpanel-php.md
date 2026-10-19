@@ -602,3 +602,15 @@ din copia bazei de date nu mai pot fi citite.
   tratamente și tarife. Răspunsurile intră la „Alte afecțiuni” când medicul aplică chestionarul.
 - Formularele tipărite au și varianta în engleză (butonul „EN” de lângă „Formularul”).
 - Actualizarea aplică singură migrarea `018_tablet_language.sql`.
+
+## E-mail: verificare, probă și cont SMTP din panou (octombrie 2026)
+
+- **Setări → Mesaje → E-mail: verificare și probă** arată ce oprește e-mailurile (copie de test,
+  „Mod de probă”, funcția mail() oprită pe server), cum pleacă (mail() sau contul SMTP), expeditorul,
+  e-mailurile din ultimele 7 zile și ultimele erori. **Trimiteți proba** trimite pe loc și spune
+  dacă a plecat sau de ce nu (de ex. „SMTP: 535 … credentials invalid” = parolă greșită).
+- **E-mail: contul de trimitere (SMTP)**: serverul, portul (465 SSL / 587 STARTTLS), contul, parola
+  (păstrată criptat) și expeditorul, direct din panou (are prioritate față de `'smtp'` din
+  config.php). Date din cPanel → Email Accounts → Connect Devices.
+- Erorile e-mailurilor din coadă se văd acum cu motivul exact în Jurnalul mesajelor.
+- Dacă proba pleacă dar nu ajunge: cPanel → Email Deliverability → „Repair” la SPF și DKIM.

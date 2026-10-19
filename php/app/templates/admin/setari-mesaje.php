@@ -2,6 +2,7 @@
 /**
  * /admin/setari/mesaje (administrators): the SMS and WhatsApp accounts, „probă” or live sending,
  * a test message, and for every notice: on/off per channel, the texts and the WhatsApp template.
+ * „E-mail”: how e-mail leaves (what could stop it), the SMTP account, and a test e-mail.
  * Passwords and tokens are stored encrypted; the form never shows them back.
  */
 declare(strict_types=1);
@@ -15,6 +16,21 @@ if ($m['wa_verify'] === '') {
 
 if (is_post()) {
     csrf_check();
+    if (post('op') === 'proba-email') {
+        $to = trim(post('mail_to'));
+        if (!filter_var($to, FILTER_VALIDATE_EMAIL)) {
+            flash('Scrieți o adresă de e-mail.', 'eroare');
+        } else {
+            $ok = send_mail($to, 'Dental Arena: e-mail de probă', "Acesta este un e-mail de probă din panoul Dental Arena, trimis la " . date('d.m.Y H:i') . ' de ' . $user['name'] . ".\n\nDacă l-ați primit, e-mailurile pleacă și ajung.\n\n" . absolute_url('/admin'));
+            $how = mail_settings();
+            flash($ok
+                ? (is_test_site() ? 'Copie de test: e-mailul NU a plecat, e doar scris în jurnal.' : 'E-mailul a plecat de pe server (' . ($how['smtp'] ? 'SMTP ' . $how['smtp']['host'] : 'funcția mail() a serverului') . '). Verificați Inbox și Spam la ' . $to . ' în 1–2 minute.'
+                    . ($how['smtp'] ? ' Dacă nu ajunge, verificați SPF și DKIM în cPanel → Email Deliverability.' : ' Dacă nu ajunge, e respins pe drum: completați contul SMTP mai jos.'))
+                : 'E-mailul NU a plecat: ' . rtrim(mail_last_error() ?? 'eroare necunoscută', '.') . '.', $ok ? 'succes' : 'eroare');
+            audit('mesaj-proba', 'E-mail către ' . $to . ($ok ? '' : ' (eșuat)'));
+        }
+        redirect('/admin/setari/mesaje#email');
+    }
     if (post('op') === 'proba') {
         $to = post('test_to');
         $channel = post('test_channel');
@@ -46,6 +62,23 @@ if (is_post()) {
     }
     $m['wa_version'] = preg_match('/^v\d{2}\.\d$/', trim(post('wa_version'))) ? trim(post('wa_version')) : 'v23.0';
     $m['wa_lang'] = preg_match('/^[a-z]{2}(_[A-Z]{2})?$/', trim(post('wa_lang'))) ? trim(post('wa_lang')) : 'ro';
+    // The e-mail account (SMTP); without a server, the server's own mail().
+    $smtp = setting('smtp');
+    $smtp = is_array($smtp) ? $smtp : [];
+    $smtp['host'] = trim(post('smtp_host'));
+    $smtp['port'] = (int) post('smtp_port') ?: 465;
+    $smtp['secure'] = post('smtp_secure') === 'tls' ? 'tls' : 'ssl';
+    $smtp['user'] = trim(post('smtp_user'));
+    $smtp['from'] = trim(post('smtp_from'));
+    if (post('smtp_pass') !== '') {
+        $smtp['pass'] = secret_seal(post('smtp_pass'));
+    }
+    if ($smtp['host'] !== '' && (!filter_var($smtp['user'], FILTER_VALIDATE_EMAIL) || ($smtp['pass'] ?? '') === '')) {
+        $errors['smtp_user'] = 'Pentru SMTP scrieți adresa contului de e-mail și parola lui.';
+    }
+    if ($smtp['from'] !== '' && !filter_var($smtp['from'], FILTER_VALIDATE_EMAIL)) {
+        $errors['smtp_from'] = 'Adresa expeditorului nu e bună.';
+    }
     $m['review_link'] = trim(post('review_link'));
     if ($m['review_link'] !== '' && !preg_match('#^https://#', $m['review_link'])) {
         $errors['review_link'] = 'Linkul începe cu https://';
@@ -75,6 +108,7 @@ if (is_post()) {
     if ($errors === []) {
         setting_save('mesagerie', $m);
         setting_save('notificari', $notices);
+        setting_save('smtp', $smtp);
         audit('setari-mesaje', $m['mode'] === 'live' ? 'trimitere reală' : 'mod de probă');
         flash('Setările mesajelor au fost salvate.' . ($m['mode'] === 'live' ? ' Mesajele pleacă de acum la pacienți.' : ' Mod de probă: mesajele nu pleacă, apar doar în jurnal.'));
         redirect('/admin/setari/mesaje');
@@ -82,6 +116,48 @@ if (is_post()) {
 }
 
 $err = static fn (string $k): ?string => $errors[$k] ?? null;
+$smtpNow = is_array(setting('smtp')) ? setting('smtp') : [];
+if (isset($smtp) && $errors !== []) {
+    $smtpNow = $smtp;
+}
+
+// E-mail: what could stop it, how it leaves, what happened to the last ones, and a test.
+$how = mail_settings();
+$warn = [];
+if (is_test_site()) {
+    $warn[] = '<strong>Copie de test:</strong> niciun e-mail nu pleacă, se scriu doar în jurnalul serverului. Se schimbă la instalare (site_mode în config.php).';
+}
+if (!messaging_live()) {
+    $warn[] = '<strong>Mod de probă:</strong> confirmările, reamintirile și celelalte mesaje către pacienți și echipă NU pleacă (apar „Probă” în Jurnalul mesajelor). Alegeți „Trimitere reală” mai jos și salvați. E-mailurile cerute de pe site pleacă oricum.';
+}
+if ($how['smtp'] === null && !function_exists('mail')) {
+    $warn[] = '<strong>Funcția mail() e oprită pe acest server:</strong> completați contul SMTP mai jos.';
+}
+$mailRows = db_all("SELECT status, COUNT(*) AS n FROM messages WHERE channel = 'email' AND created_at > ? GROUP BY status", [date('Y-m-d H:i:s', time() - 7 * 86400)]);
+$failed = db_all("SELECT to_address, subject, error, updated_at FROM messages WHERE channel = 'email' AND status IN ('esuat', 'in-asteptare') AND error IS NOT NULL ORDER BY updated_at DESC LIMIT 5");
+$logLines = [];
+$log = APP_DIR . '/storage/logs/app.log';
+if (is_file($log)) {
+    $fh = @fopen($log, 'r');
+    if ($fh) {
+        fseek($fh, max(0, filesize($log) - 60000));
+        $chunk = (string) stream_get_contents($fh);
+        fclose($fh);
+        $logLines = array_slice(array_values(array_filter(explode("\n", $chunk), static fn ($l) => str_contains($l, '[mail]') || str_contains($l, '[email]') || str_contains($l, 'E-mail:'))), -6);
+    }
+}
+$emailBox = admin_section_open('E-mail: verificare și probă', 'email', 'Dacă e-mailurile nu ajung: trimiteți o probă la adresa dumneavoastră. Mesajul de mai jos spune dacă a plecat de pe server sau de ce nu.')
+    . ($warn !== [] ? '<ul class="mt-4 flex flex-col gap-2">' . implode('', array_map(static fn ($w) => '<li class="rounded-panou border border-carmin bg-carmin-pal p-3 text-corp">' . $w . '</li>', $warn)) . '</ul>' : '<p class="mt-4 rounded-panou bg-menta-pal p-3 text-corp">' . icon('check', 18, 'inline') . ' Trimitere reală pornită.</p>')
+    . '<dl class="mt-4 grid grid-cols-[10rem_1fr] gap-y-2 text-corp">'
+    . '<dt class="text-discret">Cum pleacă</dt><dd>' . ($how['smtp'] ? 'Cont SMTP: ' . e($how['smtp']['user'] ?? '') . ' prin ' . e($how['smtp']['host'] . ':' . ($how['smtp']['port'] ?? 465)) . ($how['source'] === 'config.php' ? ' (din config.php)' : '') : 'Serverul site-ului (funcția mail() din PHP). Merge, dar Gmail/Yahoo îl pun des în Spam: recomandăm contul SMTP.') . '</dd>'
+    . '<dt class="text-discret">Expeditor</dt><dd>' . e($how['from']) . '</dd>'
+    . '<dt class="text-discret">Ultimele 7 zile</dt><dd>' . ($mailRows !== [] ? e(implode(', ', array_map(static fn ($r) => (MSG_STATUS[$r['status']] ?? $r['status']) . ': ' . $r['n'], $mailRows))) : 'niciun e-mail în coada de mesaje') . '</dd></dl>'
+    . ($failed !== [] ? '<div class="mt-4"><p class="text-control font-medium">Ultimele erori</p><ul class="mt-1 flex flex-col gap-1 text-mic">' . implode('', array_map(static fn ($f) => '<li><span class="cifre">' . e(format_datetime($f['updated_at'])) . '</span> · ' . e($f['to_address']) . ': <span class="text-carmin">' . e((string) $f['error']) . '</span></li>', $failed)) . '</ul></div>' : '')
+    . ($logLines !== [] ? '<details class="mt-3"><summary class="cursor-pointer text-mic text-link underline">Jurnalul serverului (e-mail)</summary><pre class="mt-2 overflow-x-auto whitespace-pre-wrap rounded-control bg-fundal p-3 text-[12px]">' . e(implode("\n", $logLines)) . '</pre></details>' : '')
+    . '<form method="post" class="mt-5 flex flex-wrap items-end gap-3">' . csrf_field() . '<input type="hidden" name="op" value="proba-email">'
+    . text_field('mail_to', 'Trimiteți un e-mail de probă la', ['type' => 'email', 'value' => (string) ($user['email'] ?? ''), 'class' => 'min-w-0 flex-1 sm:max-w-sm'])
+    . '<button type="submit" class="' . e(btn('primary')) . '">' . icon('mail', 18) . 'Trimiteți proba</button></form>'
+    . '<p class="mt-3 text-mic text-discret">Dacă proba „a plecat” dar nu ajunge nici în Spam: în cPanel → Email Deliverability, apăsați „Repair” la SPF și DKIM pentru dentalarena.ro, sau folosiți contul SMTP de mai jos.</p></section>';
 $hours = static fn (int $a, int $b) => array_combine(array_map('strval', range($a, $b)), array_map(static fn ($h) => sprintf('%02d:00', $h), range($a, $b)));
 $set = static fn (string $k) => $m[$k] !== '' ? 'Salvat. Scrieți altul doar ca să-l schimbați.' : null;
 
@@ -107,6 +183,14 @@ $accounts = admin_section_open('Cum pleacă mesajele', 'mod')
     . '<p class="mt-1">Callback URL: <code class="break-all">' . e(absolute_url('/webhook/whatsapp')) . '</code></p>'
     . '<p>Verify token: <code class="break-all">' . e($m['wa_verify']) . '</code></p>'
     . '<p class="mt-1 text-discret">Abonați câmpul „messages”. Așa aflăm când mesajele au fost livrate și citite și primim răspunsurile pacienților în panou.</p></div></section>'
+    . admin_section_open('E-mail: contul de trimitere (SMTP)', 'smtp', 'Recomandat: e-mailurile pleacă din contul clinicii, deci ajung mai sigur în Inbox, nu în Spam. Din cPanel → Email Accounts → contul (de ex. office@dentalarena.ro) → Connect Devices: serverul de ieșire (SMTP), portul 465 (SSL). Lăsați serverul gol ca să trimită serverul site-ului (mail()).')
+    . '<div class="mt-4 grid gap-4 md:grid-cols-2">'
+    . text_field('smtp_host', 'Serverul SMTP', ['value' => (string) ($smtpNow['host'] ?? ''), 'optional' => true, 'placeholder' => 'mail.dentalarena.ro', 'autocomplete' => 'off'])
+    . '<div class="grid grid-cols-2 gap-4">' . text_field('smtp_port', 'Portul', ['value' => (string) ($smtpNow['port'] ?? 465), 'inputmode' => 'numeric']) . select_field('smtp_secure', 'Securitatea', ['ssl' => 'SSL (465)', 'tls' => 'STARTTLS (587)'], ['value' => (string) ($smtpNow['secure'] ?? 'ssl')]) . '</div>'
+    . text_field('smtp_user', 'Contul (adresa de e-mail)', ['value' => (string) ($smtpNow['user'] ?? ''), 'optional' => true, 'autocomplete' => 'off', 'error' => $err('smtp_user')])
+    . text_field('smtp_pass', 'Parola contului', ['type' => 'password', 'autocomplete' => 'new-password', 'optional' => true, 'hint' => ($smtpNow['pass'] ?? '') !== '' ? 'Salvată. Scrieți alta doar ca s-o schimbați.' : null])
+    . text_field('smtp_from', 'Expeditorul afișat', ['value' => (string) ($smtpNow['from'] ?? ''), 'optional' => true, 'error' => $err('smtp_from'), 'hint' => 'Gol = adresa contului. Trebuie să fie a aceluiași domeniu.'])
+    . '</div></section>'
     . admin_section_open('Linkul pentru recenzii', 'recenzii')
     . '<div class="mt-4">' . text_field('review_link', 'Linkul Google pentru recenzii', ['value' => $m['review_link'], 'optional' => true, 'error' => $err('review_link'), 'hint' => 'Din Google Business Profile → „Cereți recenzii”. Apare în mesajul de mulțumire după vizită.']) . '</div></section>';
 
@@ -145,6 +229,7 @@ $test = admin_section_open('Mesaj de probă', 'proba', 'Pleacă de-adevăratelea
 
 $body = '<p class="mb-4"><a href="/admin/setari" class="inline-flex min-h-control items-center gap-1 text-link underline underline-offset-4">' . icon('chevron-left', 18) . 'Setări</a></p>'
     . admin_header('Mesaje: SMS, WhatsApp, e-mail', 'Ce mesaje primesc pacienții și echipa, pe ce canal și cu ce text. Fiecare om din echipă își alege notificările în „Contul meu”.', '<a href="/admin/mesaje" class="' . e(btn('secondary')) . '">Jurnalul mesajelor</a>')
+    . '<div class="mb-8 max-w-4xl">' . $emailBox . '</div>'
     . '<form method="post" novalidate class="flex max-w-4xl flex-col gap-8">' . csrf_field() . error_summary($errors)
     . $accounts
     . admin_section_open('Mesaje către pacienți', 'pacienti', 'Notificările pleacă pe canalul ales de pacient în fișă (SMS, WhatsApp sau deloc) și pe e-mail. Ofertele pleacă doar pacienților care și-au dat acordul pentru acel canal.') . '<div class="mt-4 flex flex-col gap-3">' . $noticeRows . '</div></section>'

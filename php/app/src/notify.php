@@ -764,7 +764,7 @@ function deliver_message(array $msg): array
     return match ($msg['channel']) {
         'sms' => smslink_send($msg['to_address'], $msg['body']),
         'whatsapp' => whatsapp_send($msg['to_address'], $msg['template'], $msg['template'] ? (json_decode((string) $msg['template_params'], true) ?: []) : [], $msg['body']),
-        'email' => send_mail($msg['to_address'], (string) $msg['subject'], $msg['body']) ? ['ok' => true, 'id' => null, 'error' => null] : ['ok' => false, 'id' => null, 'error' => 'E-mailul nu a putut fi trimis.'],
+        'email' => send_mail($msg['to_address'], (string) $msg['subject'], $msg['body']) ? ['ok' => true, 'id' => null, 'error' => null] : ['ok' => false, 'id' => null, 'error' => mb_substr('E-mail: ' . (mail_last_error() ?? 'nu a putut fi trimis.'), 0, 250)],
         default => ['ok' => false, 'id' => null, 'error' => 'Canal necunoscut.'],
     };
 }
