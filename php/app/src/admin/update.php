@@ -334,6 +334,8 @@ function update_apply(string $unpacked, string $version, array $user): array
         @opcache_reset();
     }
     @unlink(APP_DIR . '/storage/migrations.txt');
+    // The new code may add what the old one could not: the lists in data/import are tried again at once.
+    array_map('unlink', glob(APP_DIR . '/storage/import-*.failed') ?: []);
     $history = json_decode((string) @file_get_contents(update_dir() . '/istoric.json'), true) ?: [];
     array_unshift($history, ['at' => now_sql(), 'by' => $user['name'], 'from' => $from, 'to' => $version, 'files' => $n]);
     @file_put_contents(update_dir() . '/istoric.json', json_encode(array_slice($history, 0, 50), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));

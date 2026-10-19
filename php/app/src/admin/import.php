@@ -45,6 +45,7 @@ function run_pending_imports(bool $now = false): void
     });
     foreach (pending_imports() as $file) {
         $failed = import_marker($file, 'failed');
+        // A list added just now (the patients) can be what the next one was waiting for.
         if (!$now && is_file($failed) && filemtime($failed) > time() - 3600) {
             continue;
         }
@@ -65,6 +66,7 @@ function run_pending_imports(bool $now = false): void
             $r = $kind === 'procedures' ? import_procedures($file) : import_patients($file);
             file_put_contents(import_marker($file, 'done'), json_encode($r + ['at' => now_sql()], JSON_UNESCAPED_UNICODE));
             @unlink($failed);
+            $now = true;
         } catch (Throwable $e) {
             app_log('error', 'import ' . basename($file) . ': ' . $e->getMessage());
             @file_put_contents($failed, $e->getMessage());
