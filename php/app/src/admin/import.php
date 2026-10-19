@@ -1,9 +1,13 @@
 <?php
 /**
- * Patients brought over from the clinic's previous program. An update can carry a list in
- * data/import/*.json ({source, patients: [{last, first, phones, fisa, note}]}); it is added once,
- * on the first request after the update (bootstrap.php), and storage/import-<name>.done keeps the
- * result. A patient already in the panel (same phone and same name) is not added twice.
+ * Data brought over from the clinic's previous program (QDental). An update can carry lists in
+ * data/import/*.json, added once, in the order of their names, on the first page of the panel
+ * after the update; storage/import-<name>.done keeps the result:
+ *  - patients ({source, patients: [{last, first, phones, fisa, note}]}): a patient already in the
+ *    panel (same phone and same name) is not added twice;
+ *  - procedures ({kind: "procedures", source, location, procedures: [{fise, date, name, price,
+ *    payments: [{date, amount}], note}]}): each goes to the patient with that QDental file number,
+ *    with its payments.
  */
 declare(strict_types=1);
 
@@ -26,16 +30,22 @@ function run_pending_imports(): void
 {
     @mkdir(APP_DIR . '/storage', 0750, true);
     foreach (pending_imports() as $file) {
+        // A list that could not be added waits an hour before the next try.
+        if (is_file(import_marker($file, 'failed')) && filemtime(import_marker($file, 'failed')) > time() - 3600) {
+            continue;
+        }
         $lock = @fopen(import_marker($file, 'lock'), 'x');
         if ($lock === false) {
             continue; // another request is adding it
         }
         try {
             @set_time_limit(300);
-            $r = import_patients($file);
+            $kind = json_decode((string) file_get_contents($file), true)['kind'] ?? 'patients';
+            $r = $kind === 'procedures' ? import_procedures($file) : import_patients($file);
             file_put_contents(import_marker($file, 'done'), json_encode($r + ['at' => now_sql()], JSON_UNESCAPED_UNICODE));
         } catch (Throwable $e) {
             app_log('error', 'import ' . basename($file) . ': ' . $e->getMessage());
+            @touch(import_marker($file, 'failed'));
         } finally {
             fclose($lock);
             @unlink(import_marker($file, 'lock'));
@@ -130,3 +140,78 @@ function import_patients(string $file): array
     audit('import-pacienti', "{$source}: {$added} pacienți adăugați, {$existing} existau deja" . ($withoutPhone ? ", {$withoutPhone} fără telefon" : ''));
     return ['source' => $source, 'added' => $added, 'existing' => $existing, 'without_phone' => $withoutPhone];
 }
+
+/**
+ * The procedures of the old program, with what was paid for each, on the patients by their QDental
+ * file number (kept in the patient's note at the patient import). Two files with the same name in
+ * QDental: the newer one, and the procedure says so.
+ *
+ * @return array{source:string,added:int,payments:int,skipped:int}
+ */
+function import_procedures(string $file): array
+{
+    require_once APP_DIR . '/src/admin/procedures.php';
+    $data = json_decode((string) file_get_contents($file), true);
+    if (!is_array($data) || !is_array($data['procedures'] ?? null)) {
+        throw new RuntimeException('Lista procedurilor nu poate fi citită.');
+    }
+    $source = (string) ($data['source'] ?? basename($file));
+    $loc = db_value('SELECT id FROM locations WHERE slug = ?', [(string) ($data['location'] ?? 'cristesti')]);
+    $byFile = [];
+    foreach (db_all("SELECT id, notes FROM patients WHERE notes LIKE '%QDental%'") as $p) {
+        if (preg_match('/fișa nr\. ([\d, ]+)/u', (string) $p['notes'], $m)) {
+            foreach (preg_split('/\D+/', $m[1]) ?: [] as $n) {
+                if ($n !== '') {
+                    $byFile[$n] = (int) $p['id'];
+                }
+            }
+        }
+    }
+    if ($byFile === []) {
+        throw new RuntimeException('Pacienții din QDental nu sunt încă în panou.');
+    }
+    $added = $payments = $skipped = 0;
+    $missing = [];
+    db_tx(static function () use ($data, $loc, $byFile, &$added, &$payments, &$skipped, &$missing): void {
+        $now = now_sql();
+        foreach ($data['procedures'] as $r) {
+            $fise = array_values(array_filter(array_map('strval', (array) ($r['fise'] ?? []))));
+            usort($fise, static fn ($a, $b) => (int) $b <=> (int) $a);
+            $pid = null;
+            foreach ($fise as $f) {
+                if (isset($byFile[$f])) {
+                    $pid = $byFile[$f];
+                    break;
+                }
+            }
+            if ($pid === null || !preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) ($r['date'] ?? ''))) {
+                $skipped++;
+                $missing[(string) ($r['patient'] ?? '?')] = true;
+                continue;
+            }
+            $procId = db_insert('procedures', [
+                'patient_id' => $pid, 'location_id' => $loc !== null ? (int) $loc : null, 'doctor_id' => null,
+                'performed_on' => $r['date'], 'tooth' => null, 'name' => mb_substr(trim((string) $r['name']) ?: 'Procedură', 0, 255),
+                'price' => max(0, (int) ($r['price'] ?? 0)), 'discount' => 0, 'lab_cost' => 0, 'done' => 1,
+                'notes' => isset($r['note']) && $r['note'] !== null ? mb_substr((string) $r['note'], 0, 500) : null,
+                'source' => 'qdental', 'created_at' => $now, 'updated_at' => $now,
+            ]);
+            $added++;
+            foreach ((array) ($r['payments'] ?? []) as $pay) {
+                $amount = (int) ($pay['amount'] ?? 0);
+                if ($amount <= 0 || !preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) ($pay['date'] ?? ''))) {
+                    continue;
+                }
+                $payId = db_insert('procedure_payments', [
+                    'patient_id' => $pid, 'location_id' => $loc !== null ? (int) $loc : null, 'amount' => $amount,
+                    'paid_on' => $pay['date'], 'method' => 'qdental', 'created_at' => $now,
+                ]);
+                db_insert('procedure_payment_items', ['payment_id' => $payId, 'procedure_id' => $procId, 'amount' => $amount]);
+                $payments++;
+            }
+        }
+    });
+    audit('import-proceduri', "{$source}: {$added} proceduri, {$payments} plăți" . ($skipped ? ", {$skipped} fără pacient (" . implode(', ', array_slice(array_keys($missing), 0, 20)) . ')' : ''));
+    return ['source' => $source, 'added' => $added, 'payments' => $payments, 'skipped' => $skipped];
+}
+

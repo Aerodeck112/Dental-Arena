@@ -350,6 +350,10 @@ $actions = '';
 if (!$isNew) {
     $actions = '<a href="' . e(admin_url('/admin/calendar', ['data' => substr($appt['starts_at'], 0, 10), 'clinica' => $appt['location_id']])) . '" class="' . e(btn('secondary')) . '">' . icon('calendar', 18) . 'În calendar</a>';
 }
+if (!$isNew && can('procedures', $user) && in_array($appt['status'], ['sosit', 'in-tratament', 'finalizat'], true)) {
+    // After the visit, the doctor adds what was done, with the day, the doctor and the clinic filled in.
+    $actions = '<a href="' . e(admin_url('/admin/pacienti/' . (int) $appt['patient_id'] . '/proceduri', ['programare' => $appt['id'], 'medic' => $appt['doctor_id'], 'data' => substr($appt['starts_at'], 0, 10), 'clinica' => $appt['location_id']])) . '#adauga" class="' . e(btn('primary')) . '">' . icon('clipboard-list', 18) . 'Proceduri efectuate</a>' . $actions;
+}
 $body = admin_header($isNew ? 'Programare nouă' : 'Programarea din ' . short_day($appt['starts_at']) . ', ' . hm($appt['starts_at']), $isNew ? '' : 'Starea: ' . (APPT_STATUS[$appt['status']] ?? ''), $actions)
     . $leadNote . $recallNote . $statusBar
     . '<form id="cauta-pacient" method="get" action="/admin/programari/noua">'

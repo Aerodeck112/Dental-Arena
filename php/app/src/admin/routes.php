@@ -8,6 +8,7 @@ declare(strict_types=1);
 require __DIR__ . '/lib.php';
 require __DIR__ . '/crm.php';
 require __DIR__ . '/billing.php';
+require __DIR__ . '/procedures.php';
 require __DIR__ . '/clinical.php';
 require __DIR__ . '/ai.php';
 require __DIR__ . '/kiosk.php';
@@ -80,6 +81,8 @@ $routes = [
     '#^/admin/rechemari$#' => ['rechemari', null],
     '#^/admin/absente$#' => ['absente', null],
     '#^/admin/implanturi$#' => ['implanturi', 'medical'],
+    '#^/admin/proceduri$#' => ['proceduri', 'procedures'],
+    '#^/admin/pacienti/(\d+)/proceduri$#' => ['pacient-proceduri', 'procedures'],
     '#^/admin/setari/programari$#' => ['setari-programari', 'config'],
     '#^/admin/cereri$#' => ['cereri', null],
     '#^/admin/cereri/(\d+)$#' => ['cerere', null],

@@ -525,6 +525,9 @@ function patient_tabs(array $user): array
         $tabs['odontograma'] = 'Odontogramă';
     }
     $tabs['planuri'] = 'Planuri de tratament';
+    if (can('procedures', $user)) {
+        $tabs['proceduri'] = 'Proceduri și plăți';
+    }
     if (can('billing', $user)) {
         $tabs['financiar'] = 'Facturi și plăți';
     }

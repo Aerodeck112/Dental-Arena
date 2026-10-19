@@ -514,3 +514,19 @@ din copia bazei de date nu mai pot fi citite.
   la 30 de minute se arată pe un rând (ora și numele).
 - Actualizarea aplică singură migrarea `012_service_pages.sql`.
 
+## Proceduri și plăți (octombrie 2026)
+
+- Fișa pacientului are fila **Proceduri și plăți** (ca în QDental): procedurile efectuate (data,
+  dintele, procedura, medicul, de plată, achitat, rămas) și plățile, cu totalurile: total de plată,
+  achitat, rămas de plată, avans. Medicul adaugă procedurile (din lista de prețuri, prețul se
+  completează singur; mai mulți dinți = câte un rând pe dinte), recepția înregistrează plățile; o
+  plată se trece pe procedurile neachitate de la cea mai veche, surplusul rămâne avans.
+- Din programarea pacientului sosit (și din meniul ei din calendar): **Proceduri efectuate**.
+- Meniul **Proceduri**: procedurile unei perioade, pe medic și clinică, doar neachitate, cu totaluri.
+- Separat de facturi (partea financiară a etapei 2 rămâne oprită).
+- **Importul din QDental**: procedurile din 01.01–16.10.2026 (3.556, cu 3.668 plăți; total
+  1.412.851,19 lei, achitat 1.337.967,39 lei) se adaugă o singură dată, la prima pagină de panou după
+  actualizare, la pacienții cu fișa QDental respectivă. 7 rânduri fără pacient real („Liber”,
+  „Pacient X”) nu se iau. Trei nume cu două fișe diferite în QDental (Moldovan Vasile, Ghiurca
+  Stefan, Stoica Ramona) merg pe fișa mai nouă, cu nota „De verificat”.
+- Actualizarea aplică singură migrarea `013_procedures.sql`.

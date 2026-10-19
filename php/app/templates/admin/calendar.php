@@ -83,7 +83,8 @@ $toolbar = '<div class="mb-3 flex flex-wrap items-center gap-2">'
 $movable = static fn (array $a) => in_array($a['status'], ['programat', 'confirmat', 'sosit', 'in-tratament'], true);
 // The colour says the state at a glance: white not confirmed yet, orange confirmed, green arrived
 // (darker in treatment), red did not come, grey done or cancelled. A click opens the quick menu.
-$block = static function (array $a, bool $compact = false) use ($movable, $url): string {
+$canProcedures = can('procedures', $user);
+$block = static function (array $a, bool $compact = false) use ($movable, $url, $canProcedures): string {
     $cls = match ($a['status']) {
         'confirmat' => 'border-portocaliu bg-portocaliu-pal',
         'sosit' => 'border-actiune bg-menta-pal',
@@ -93,7 +94,8 @@ $block = static function (array $a, bool $compact = false) use ($movable, $url):
         'anulat' => 'border-linie bg-adancit text-discret line-through',
         default => 'border-dashed border-linie-control bg-suprafata',
     };
-    $menu = ['id' => (int) $a['id'], 'stare' => APPT_STATUS[$a['status']] ?? $a['status'], 'nume' => patient_name($a), 'ora' => hm($a['starts_at']) . '–' . hm($a['ends_at']), 'actiuni' => appt_quick_actions($a['status']), 'inapoi' => $url([])];
+    $menu = ['id' => (int) $a['id'], 'stare' => APPT_STATUS[$a['status']] ?? $a['status'], 'nume' => patient_name($a), 'ora' => hm($a['starts_at']) . '–' . hm($a['ends_at']), 'actiuni' => appt_quick_actions($a['status']), 'inapoi' => $url([])]
+        + ($canProcedures && in_array($a['status'], ['sosit', 'in-tratament', 'finalizat'], true) ? ['proceduri' => admin_url('/admin/pacienti/' . (int) $a['patient_id'] . '/proceduri', ['programare' => $a['id'], 'medic' => $a['doctor_id'], 'data' => substr($a['starts_at'], 0, 10), 'clinica' => $a['location_id']]) . '#adauga'] : []);
     return '<a href="/admin/programari/' . (int) $a['id'] . '" data-meniu-stare="' . e((string) json_encode($menu, JSON_UNESCAPED_UNICODE)) . '" title="' . e(hm($a['starts_at']) . ' ' . patient_name($a) . ' · ' . (APPT_STATUS[$a['status']] ?? '')) . '" class="' . e(cn('block h-full overflow-hidden rounded-control border-l-4 border px-1.5 text-mic shadow-sm hover:shadow-float', $compact ? 'flex items-center gap-1 whitespace-nowrap py-0 text-[0.6875rem] leading-none' : 'py-0.5 leading-tight', $cls, $movable($a) ? 'cursor-grab' : '')) . '" draggable="false">'
         . '<span class="shrink-0 font-semibold cifre" data-ora>' . e(hm($a['starts_at'])) . '</span> <span class="' . ($compact ? 'min-w-0 truncate font-semibold' : 'font-semibold') . '">' . e(patient_name($a)) . '</span>'
         . (in_array($a['comfort'], ['emotii', 'frica'], true) ? ' <span aria-label="emoții" class="inline-block size-2 shrink-0 rounded-full bg-mustar"></span>' : '')

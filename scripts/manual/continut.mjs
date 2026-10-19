@@ -470,6 +470,29 @@ ${tabel(["Starea planului", "Ce înseamnă"], [
 ${img("plan-tipar", "Planul tipărit (devizul).", { mic: true })}`,
 });
 
+export const proceduri = (rol) => ({
+  titlu: "Proceduri și plăți",
+  html: `
+<p>Fila ${b("Proceduri și plăți")} din fișa pacientului arată, ca în QDental, <strong>procedurile efectuate</strong> (data, dintele, procedura, medicul, cât e de plată, cât s-a achitat și cât a rămas) și <strong>plățile pacientului</strong>. Sus sunt totalurile: ${b("Total de plată")}, ${b("Achitat")}, ${b("Rămas de plată")} și ${b("Avans")} (ce a plătit în plus). Procedurile din 2026 aduse din QDental au medicul necompletat și plățile „Din QDental”.</p>
+${rol !== "receptie" ? `<h3>Adaugă procedură (medicul, după fiecare intervenție)</h3>
+${pasi([
+  `În fișa pacientului, fila ${b("Proceduri și plăți")} → ${b("Adaugă procedură")}. Mai repede: din programarea pacientului care a sosit (sau din meniul ei din calendar), ${b("Proceduri efectuate")}: ziua, medicul și clinica sunt deja completate.`,
+  `Alegeți procedura din lista de prețuri: prețul se completează singur (îl puteți schimba). Dacă nu e în listă, scrieți-o la „Sau scrieți procedura”.`,
+  `Dintele: un număr (16) sau mai mulți (13, 14, 15): se face câte un rând pentru fiecare dinte, fiecare cu prețul de sus.`,
+  `Opțional: reducerea (%), costul de laborator, observații. Debifați „Procedura e efectuată” pentru una începută, care încă nu se plătește.`,
+  `${b("Adăugați procedura")}.`,
+])}
+${sfat("O procedură greșită se poate modifica sau șterge din rândul ei („Modificați”), de cel care a adăugat-o, în aceeași săptămână; după aceea, de administrator. Ce se plătise pentru ea rămâne ca avans.")}` : ""}
+${rol !== "medic" ? `<h3>Încasare (recepția)</h3>
+${pasi([
+  `Jos, la ${b("Încasare")}: suma (e completat ce mai are de plată), data, numărul chitanței, clinica și cum a plătit (numerar, card, transfer, altă plată).`,
+  `${b("Înregistrați plata")}: plata se trece pe procedurile neachitate, de la cea mai veche. Ce rămâne în plus e avans și se folosește singur la următoarea procedură.`,
+])}
+${sfat("O plată greșită o anulează administratorul (rămâne în listă, tăiată).")}` : ""}
+<h3>Pagina Proceduri (meniu)</h3>
+<p>${b("Proceduri")} din meniu arată procedurile dintr-o perioadă (ca „Statistică proceduri” din QDental), pe medic și pe clinică, cu totalurile: de plată, achitat, rămas și încasat în perioadă. Bifați ${b("Doar neachitate")} ca să vedeți cine mai are de plată. Un medic își vede implicit procedurile lui. Un clic pe pacient deschide fișa lui.</p>`,
+});
+
 export const consultatieAi = () => ({
   titlu: "Consultația cu AI",
   html: `

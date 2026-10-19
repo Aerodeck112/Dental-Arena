@@ -498,6 +498,13 @@
         f.appendChild(b);
         apptMenu.appendChild(f);
       });
+      if (d.proceduri) {
+        var pr = document.createElement("a");
+        pr.href = d.proceduri;
+        pr.className = "mt-1.5 flex min-h-control w-full items-center justify-center rounded-control border border-actiune px-3 font-semibold text-actiune hover:bg-menta-pal";
+        pr.textContent = "Proceduri efectuate";
+        apptMenu.appendChild(pr);
+      }
       var open = document.createElement("a");
       open.href = a.getAttribute("href");
       open.className = "mt-2 flex min-h-control items-center justify-center font-medium text-link underline underline-offset-4";
@@ -517,6 +524,32 @@
     });
     window.addEventListener("scroll", function () { if (!apptMenu.hidden) { apptMenu.hidden = true; menuFor = null; } }, { passive: true });
   }
+
+  // Procedures: choosing one from the price list fills in its price (until the price is typed by
+  // hand); a button with data-deschide opens the <details> it names („Adaugă procedură”).
+  document.addEventListener("change", function (e) {
+    var sel = e.target.closest && e.target.closest("select[data-pret-sursa]");
+    if (!sel) return;
+    var input = document.querySelector(sel.getAttribute("data-pret-sursa"));
+    var opt = sel.options[sel.selectedIndex];
+    if (!input || !opt) return;
+    if (input.value === "" || input.getAttribute("data-auto") === input.value) {
+      input.value = opt.getAttribute("data-pret") || "";
+      input.setAttribute("data-auto", input.value);
+    }
+  });
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("[data-deschide]");
+    if (!b) return;
+    var d = document.getElementById(b.getAttribute("data-deschide"));
+    if (d && d.tagName === "DETAILS") {
+      e.preventDefault();
+      d.open = true;
+      d.scrollIntoView({ behavior: "smooth", block: "start" });
+      var f = d.querySelector("select, input:not([type=hidden])");
+      if (f) setTimeout(function () { f.focus(); }, 300);
+    }
+  });
 
   // A request: why it is lost, only when it is being closed.
   var lost = document.querySelector("[data-motiv-pierdut]");
