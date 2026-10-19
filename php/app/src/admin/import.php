@@ -2,7 +2,8 @@
 /**
  * Data brought over from the clinic's previous program (QDental). An update can carry lists in
  * data/import/*.json, added once, in the order of their names, on the first page of the panel
- * after the update; storage/import-<name>.done keeps the result:
+ * after the update; storage/import-<name>.done keeps the result, .failed why it could not be added
+ * (Setări → Actualizare shows both and can try again):
  *  - patients ({source, patients: [{last, first, phones, fisa, note}]}): a patient already in the
  *    panel (same phone and same name) is not added twice;
  *  - procedures ({kind: "procedures", source, location, procedures: [{fise, date, name, price,
@@ -25,31 +26,97 @@ function import_marker(string $file, string $kind): string
     return APP_DIR . '/storage/import-' . basename($file, '.json') . ".{$kind}";
 }
 
-/** Adds every pending list; one request does it, the others go on as usual. */
-function run_pending_imports(): void
+/**
+ * Adds every pending list; one request does it, the others go on as usual. A list that could not be
+ * added waits an hour before the next try ($now: try again at once, from Setări → Actualizare).
+ */
+function run_pending_imports(bool $now = false): void
 {
     @mkdir(APP_DIR . '/storage', 0750, true);
+    // The hosting can stop a long request (its time limit): the transaction is rolled back, the
+    // reason is kept and the lock removed, so the next try can start.
+    $running = null;
+    register_shutdown_function(static function () use (&$running): void {
+        if ($running !== null) {
+            $err = error_get_last();
+            @file_put_contents(import_marker($running, 'failed'), 'Serverul a oprit importul' . ($err !== null ? ': ' . $err['message'] : '') . '.');
+            @unlink(import_marker($running, 'lock'));
+        }
+    });
     foreach (pending_imports() as $file) {
-        // A list that could not be added waits an hour before the next try.
-        if (is_file(import_marker($file, 'failed')) && filemtime(import_marker($file, 'failed')) > time() - 3600) {
+        $failed = import_marker($file, 'failed');
+        if (!$now && is_file($failed) && filemtime($failed) > time() - 3600) {
             continue;
         }
-        $lock = @fopen(import_marker($file, 'lock'), 'x');
+        $lockFile = import_marker($file, 'lock');
+        // A lock older than 10 minutes was left by a request the server stopped.
+        if (is_file($lockFile) && filemtime($lockFile) < time() - 600) {
+            @unlink($lockFile);
+        }
+        $lock = @fopen($lockFile, 'x');
         if ($lock === false) {
             continue; // another request is adding it
         }
+        $running = $file;
         try {
-            @set_time_limit(300);
+            @set_time_limit(600);
+            @ignore_user_abort(true);
             $kind = json_decode((string) file_get_contents($file), true)['kind'] ?? 'patients';
             $r = $kind === 'procedures' ? import_procedures($file) : import_patients($file);
             file_put_contents(import_marker($file, 'done'), json_encode($r + ['at' => now_sql()], JSON_UNESCAPED_UNICODE));
+            @unlink($failed);
         } catch (Throwable $e) {
             app_log('error', 'import ' . basename($file) . ': ' . $e->getMessage());
-            @touch(import_marker($file, 'failed'));
+            @file_put_contents($failed, $e->getMessage());
         } finally {
+            $running = null;
             fclose($lock);
-            @unlink(import_marker($file, 'lock'));
+            @unlink($lockFile);
         }
+    }
+}
+
+/**
+ * The lists in data/import and how each went, for Setări → Actualizare.
+ *
+ * @return list<array{name:string,source:string,state:string,detail:string,at:?string}>
+ */
+function import_status(): array
+{
+    $out = [];
+    foreach (glob(APP_DIR . '/data/import/*.json') ?: [] as $file) {
+        $done = is_file(import_marker($file, 'done')) ? json_decode((string) file_get_contents(import_marker($file, 'done')), true) : null;
+        $failed = import_marker($file, 'failed');
+        $source = is_array($done) ? (string) ($done['source'] ?? '') : '';
+        if ($source === '' && preg_match('/"source"\s*:\s*"((?:[^"\\\\]|\\\\.)*)"/', (string) file_get_contents($file, false, null, 0, 2000), $m)) {
+            $source = (string) json_decode('"' . $m[1] . '"');
+        }
+        [$state, $detail, $at] = match (true) {
+            is_array($done) => ['gata', isset($done['payments'])
+                ? "{$done['added']} proceduri, {$done['payments']} plăți" . (($done['skipped'] ?? 0) ? ", {$done['skipped']} fără pacient" : '')
+                : "{$done['added']} pacienți adăugați, {$done['existing']} existau deja", $done['at'] ?? null],
+            is_file(import_marker($file, 'lock')) && filemtime(import_marker($file, 'lock')) > time() - 600 => ['acum', 'Se adaugă acum.', null],
+            is_file($failed) => ['eroare', trim((string) file_get_contents($failed)) ?: 'Nu s-a putut adăuga.', date('Y-m-d H:i:s', (int) filemtime($failed))],
+            default => ['asteapta', 'Se adaugă la prima pagină de panou.', null],
+        };
+        $out[] = ['name' => basename($file, '.json'), 'source' => $source ?: basename($file), 'state' => $state, 'detail' => $detail, 'at' => $at];
+    }
+    return $out;
+}
+
+/** Inserts many rows, 500 in one statement (fast also when the hosting's database is far). */
+function import_insert_many(string $table, array $rows): void
+{
+    foreach (array_chunk($rows, 500) as $chunk) {
+        $cols = array_keys($chunk[0]);
+        $one = '(' . implode(', ', array_fill(0, count($cols), '?')) . ')';
+        $params = [];
+        foreach ($chunk as $r) {
+            foreach ($cols as $c) {
+                $params[] = $r[$c];
+            }
+        }
+        db_run(sprintf('INSERT INTO `%s` (%s) VALUES %s', $table, implode(', ', array_map(static fn ($c) => "`{$c}`", $cols)), implode(', ', array_fill(0, count($chunk), $one))), $params);
     }
 }
 
@@ -93,6 +160,7 @@ function import_patients(string $file): array
     db_tx(static function () use ($data, $source, &$byPhone, &$byName, &$added, &$existing, &$withoutPhone): void {
         $next = next_file_number();
         $now = now_sql();
+        $rows = [];
         foreach ($data['patients'] as $row) {
             $last = mb_substr(trim((string) ($row['last'] ?? '')), 0, 80);
             $first = mb_substr(trim((string) ($row['first'] ?? '')), 0, 80);
@@ -120,14 +188,14 @@ function import_patients(string $file): array
                 $notes[] = 'Notă din QDental: ' . trim((string) $row['note']) . '.';
             }
             $p = ['last_name' => $last, 'first_name' => $first, 'phone' => $phone ?? '', 'email' => null];
-            db_insert('patients', $p + [
+            $rows[] = $p + [
                 'file_number' => $next++,
                 // The old file number is searchable too („4416” finds the patient).
                 'search_text' => mb_substr(patient_search_text($p) . ($fise !== [] ? ' ' . implode(' ', $fise) : ''), 0, 400),
                 'notes' => implode("\n", $notes),
                 'created_at' => $now,
                 'updated_at' => $now,
-            ]);
+            ];
             $added++;
             $withoutPhone += (int) ($phone === null);
             if ($key !== null) {
@@ -135,6 +203,9 @@ function import_patients(string $file): array
             } else {
                 $byName[$name] = true;
             }
+        }
+        if ($rows !== []) {
+            import_insert_many('patients', $rows);
         }
     });
     audit('import-pacienti', "{$source}: {$added} pacienți adăugați, {$existing} existau deja" . ($withoutPhone ? ", {$withoutPhone} fără telefon" : ''));
@@ -174,6 +245,10 @@ function import_procedures(string $file): array
     $missing = [];
     db_tx(static function () use ($data, $loc, $byFile, &$added, &$payments, &$skipped, &$missing): void {
         $now = now_sql();
+        // The procedures go in first; their ids (in the same order) then link the payments.
+        $before = (int) db_value('SELECT COALESCE(MAX(id), 0) FROM procedures');
+        $procs = [];
+        $pays = [];
         foreach ($data['procedures'] as $r) {
             $fise = array_values(array_filter(array_map('strval', (array) ($r['fise'] ?? []))));
             usort($fise, static fn ($a, $b) => (int) $b <=> (int) $a);
@@ -194,26 +269,45 @@ function import_procedures(string $file): array
                 $missing[(string) ($r['patient'] ?? '?')] = true;
                 continue;
             }
-            $procId = db_insert('procedures', [
+            $procs[] = [
                 'patient_id' => $pid, 'location_id' => $loc !== null ? (int) $loc : null, 'doctor_id' => null,
                 'performed_on' => $r['date'], 'tooth' => null, 'name' => mb_substr(trim((string) $r['name']) ?: 'Procedură', 0, 255),
                 'price' => max(0, (int) ($r['price'] ?? 0)), 'discount' => 0, 'lab_cost' => 0, 'done' => 1,
                 'notes' => $note !== null ? mb_substr((string) $note, 0, 500) : null,
                 'source' => 'qdental', 'created_at' => $now, 'updated_at' => $now,
-            ]);
+            ];
             $added++;
             foreach ((array) ($r['payments'] ?? []) as $pay) {
                 $amount = (int) ($pay['amount'] ?? 0);
                 if ($amount <= 0 || !preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) ($pay['date'] ?? ''))) {
                     continue;
                 }
-                $payId = db_insert('procedure_payments', [
-                    'patient_id' => $pid, 'location_id' => $loc !== null ? (int) $loc : null, 'amount' => $amount,
-                    'paid_on' => $pay['date'], 'method' => 'qdental', 'created_at' => $now,
-                ]);
-                db_insert('procedure_payment_items', ['payment_id' => $payId, 'procedure_id' => $procId, 'amount' => $amount]);
+                $pays[] = [
+                    'row' => [
+                        'patient_id' => $pid, 'location_id' => $loc !== null ? (int) $loc : null, 'amount' => $amount,
+                        'paid_on' => $pay['date'], 'method' => 'qdental', 'created_at' => $now,
+                    ],
+                    'proc' => count($procs) - 1,
+                ];
                 $payments++;
             }
+        }
+        if ($procs === []) {
+            return;
+        }
+        import_insert_many('procedures', $procs);
+        $procIds = array_map('intval', array_column(db_all("SELECT id FROM procedures WHERE id > ? AND source = 'qdental' ORDER BY id", [$before]), 'id'));
+        if (count($procIds) !== count($procs)) {
+            throw new RuntimeException('Procedurile nu s-au putut lega de plăți.');
+        }
+        if ($pays !== []) {
+            $beforePay = (int) db_value('SELECT COALESCE(MAX(id), 0) FROM procedure_payments');
+            import_insert_many('procedure_payments', array_column($pays, 'row'));
+            $payIds = array_map('intval', array_column(db_all("SELECT id FROM procedure_payments WHERE id > ? AND method = 'qdental' ORDER BY id", [$beforePay]), 'id'));
+            if (count($payIds) !== count($pays)) {
+                throw new RuntimeException('Plățile nu s-au putut lega de proceduri.');
+            }
+            import_insert_many('procedure_payment_items', array_map(static fn ($pay, $id) => ['payment_id' => $id, 'procedure_id' => $procIds[$pay['proc']], 'amount' => $pay['row']['amount']], $pays, $payIds));
         }
     });
     audit('import-proceduri', "{$source}: {$added} proceduri, {$payments} plăți" . ($skipped ? ", {$skipped} fără pacient (" . implode(', ', array_slice(array_keys($missing), 0, 20)) . ')' : ''));

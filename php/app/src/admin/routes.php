@@ -66,6 +66,7 @@ $routes = [
     '#^/admin/pacienti/(\d+)/planuri/(\d+)/tipar$#' => ['plan-tipar', null],
     '#^/admin/pacienti/(\d+)/financiar$#' => ['pacient-financiar', 'billing'],
     '#^/admin/pacienti/(\d+)/documente$#' => ['pacient-documente', null],
+    '#^/admin/pacienti/(\d+)/sterilizare$#' => ['pacient-sterilizare', null],
     '#^/admin/pacienti/(\d+)/acord/([a-z]+)$#' => ['acord-tipar', null],
     '#^/admin/pacienti/(\d+)/gdpr$#' => ['pacient-gdpr', 'gdpr'],
     '#^/admin/pacienti/(\d+)/mesaje$#' => ['pacient-mesaje', null],

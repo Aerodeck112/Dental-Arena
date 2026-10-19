@@ -158,7 +158,7 @@ if ($session !== null) {
 }
 
 // Documents.
-$docs = db_all('SELECT d.*, u.name AS author FROM patient_documents d LEFT JOIN users u ON u.id = d.created_by WHERE d.patient_id = ? AND d.deleted_at IS NULL ORDER BY d.created_at DESC', [$pid]);
+$docs = db_all('SELECT d.*, u.name AS author FROM patient_documents d LEFT JOIN users u ON u.id = d.created_by WHERE d.patient_id = ? AND d.kind <> \'sterilizare\' AND d.deleted_at IS NULL ORDER BY d.created_at DESC', [$pid]);
 $docRows = '';
 foreach ($docs as $d) {
     $isImage = str_starts_with($d['mime'], 'image/');
@@ -175,7 +175,7 @@ $uploadForm = $writable ? '<form method="post" enctype="multipart/form-data" nov
     . '<div class="flex min-w-0 flex-col gap-1.5 md:col-span-5">' . field_label('field-fisier', 'Fișierul (PDF, JPG, PNG, WebP; cel mult ' . min(DOC_MAX_MB, upload_limit_mb()) . ' MB)')
     . '<input id="field-fisier" type="file" name="fisier" required accept="application/pdf,image/jpeg,image/png,image/webp"' . (isset($errors['fisier']) ? ' aria-invalid="true" aria-describedby="fisier-eroare"' : '') . ' class="w-full min-w-0 max-w-full text-corp file:mr-3 file:rounded-control file:border file:border-linie-control file:bg-suprafata file:px-3 file:py-2">'
     . field_error('fisier-eroare', $errors['fisier'] ?? null) . '</div>'
-    . select_field('kind', 'Tipul', DOC_KINDS, ['value' => post('kind') ?: 'radiografie-panoramica', 'class' => 'min-w-0 md:col-span-3'])
+    . select_field('kind', 'Tipul', array_diff_key(DOC_KINDS, ['sterilizare' => 1]), ['value' => post('kind') ?: 'radiografie-panoramica', 'class' => 'min-w-0 md:col-span-3'])
     . text_field('title', 'Titlul', ['optional' => true, 'value' => post('title'), 'class' => 'min-w-0 md:col-span-4'])
     . '<div class="md:col-span-12"><button type="submit" class="' . e(btn('primary')) . '">' . icon('upload', 18) . 'Încărcați</button></div></form>' : '';
 

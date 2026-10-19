@@ -315,6 +315,7 @@ const DOC_KINDS = [
     'consimtamant' => 'Consimțământ semnat',
     'deviz' => 'Deviz / plan semnat',
     'scrisoare-medicala' => 'Scrisoare medicală',
+    'sterilizare' => 'Sterilizare',
     'alt' => 'Alt document',
 ];
 const DOC_MIME = ['application/pdf' => 'pdf', 'image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
@@ -532,6 +533,7 @@ function patient_tabs(array $user): array
         $tabs['financiar'] = 'Facturi și plăți';
     }
     $tabs['documente'] = 'Documente și acorduri';
+    $tabs['sterilizare'] = 'Sterilizare';
     $tabs['mesaje'] = 'Mesaje';
     if (can('gdpr', $user)) {
         $tabs['gdpr'] = 'GDPR';

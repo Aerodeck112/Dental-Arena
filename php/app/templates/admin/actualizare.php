@@ -50,6 +50,13 @@ if (is_post()) {
             move_uploaded_file($f['tmp_name'], "{$dir}/incarcare-{$id}.zip");
             redirect("{$base}?pachet={$id}");
         }
+        if ($op === 'importa') {
+            require_once APP_DIR . '/src/admin/import.php';
+            run_pending_imports(true);
+            $failed = array_filter(import_status(), static fn ($i) => $i['state'] === 'eroare');
+            flash($failed === [] ? 'Datele au fost adăugate.' : 'Nu s-au putut adăuga toate datele; motivul e la „Date aduse din QDental”.', $failed === [] ? 'ok' : 'eroare');
+            redirect($base . '#importuri');
+        }
         if ($op === 'renunta' && $pachetFile !== '') {
             @unlink($pachetFile);
             redirect($base);
@@ -125,6 +132,29 @@ foreach ($copies as $c) {
 $history = json_decode((string) @file_get_contents("{$dir}/istoric.json"), true) ?: [];
 $histRows = implode('', array_map(static fn ($h) => '<li class="border-t border-linie py-2 text-corp first:border-t-0"><span class="cifre">' . e(format_datetime($h['at'])) . '</span> · ' . e($h['by']) . '<br><span class="text-mic text-discret">' . e($h['from']) . ' → ' . e($h['to']) . ', ' . (int) $h['files'] . ' fișiere</span></li>', array_slice($history, 0, 10)));
 
+// The lists brought by updates (data/import): added, waiting, or why not.
+$imports = '';
+if (glob(APP_DIR . '/data/import/*.json')) {
+    require_once APP_DIR . '/src/admin/import.php';
+    $rows = '';
+    $retry = false;
+    foreach (import_status() as $i) {
+        [$label, $cls] = match ($i['state']) {
+            'gata' => ['Adăugat', 'bg-menta-pal text-cerneala'],
+            'acum' => ['Se adaugă', 'bg-portocaliu-pal text-portocaliu'],
+            'eroare' => ['Nu s-a putut', 'bg-carmin-pal text-carmin'],
+            default => ['Așteaptă', 'bg-adancit text-discret'],
+        };
+        $retry = $retry || in_array($i['state'], ['eroare', 'asteapta'], true);
+        $rows .= '<li class="border-t border-linie py-3 first:border-t-0"><p class="flex flex-wrap items-center gap-2"><span class="' . e(cn('rounded-chip px-2.5 py-0.5 text-mic font-medium', $cls)) . '">' . e($label) . '</span><span class="font-semibold">' . e($i['source']) . '</span></p>'
+            . '<p class="mt-1 text-mic text-discret">' . e($i['detail']) . ($i['at'] ? ' · ' . e(format_datetime($i['at'])) : '') . '</p></li>';
+    }
+    $imports = admin_section_open('Date aduse din QDental', 'importuri', 'Listele venite cu actualizările se adaugă o singură dată, la prima pagină de panou.')
+        . '<ul class="mt-3">' . $rows . '</ul>'
+        . ($retry ? '<form method="post" class="mt-3">' . csrf_field() . '<input type="hidden" name="op" value="importa"><button type="submit" data-pending="Se adaugă" class="' . e(btn('secondary', 's')) . '">Adăugați acum</button></form>' : '')
+        . '</section>';
+}
+
 $env = '<dl class="mt-4 grid grid-cols-[9rem_1fr] gap-y-2 text-corp">'
     . '<dt class="text-discret">Versiunea</dt><dd class="font-semibold">' . e(app_version()) . '</dd>'
     . '<dt class="text-discret">PHP</dt><dd>' . e(PHP_VERSION) . '</dd>'
@@ -136,7 +166,7 @@ $body = '<p class="mb-4"><a href="/admin/setari" class="inline-flex min-h-contro
     . '<div class="grid max-w-6xl gap-8 lg:grid-cols-12"><div class="flex min-w-0 flex-col gap-8 lg:col-span-7">' . error_summary($errors, 'Actualizarea nu s-a făcut') . $waiting . $upload
     . admin_section_open('Copii de siguranță', 'copii', 'Versiunile de dinaintea ultimelor actualizări (se păstrează ultimele ' . UPDATE_KEEP_COPIES . '). Conțin doar fișierele site-ului, nu baza de date.')
     . ($copyRows !== '' ? '<ul class="mt-3">' . $copyRows . '</ul>' : '<p class="mt-3 text-corp text-discret">Nicio copie încă.</p>') . '</section></div>'
-    . '<div class="flex min-w-0 flex-col gap-8 lg:col-span-5">' . admin_section_open('Acum', 'acum') . $env . '</section>'
+    . '<div class="flex min-w-0 flex-col gap-8 lg:col-span-5">' . admin_section_open('Acum', 'acum') . $env . '</section>' . $imports
     . admin_section_open('Cum se face', 'pasi') . '<ol class="mt-3 list-decimal pl-5 text-corp"><li>Faceți o copie a bazei de date din cPanel → Backup (recomandat).</li><li>Încărcați arhiva și verificați versiunea.</li><li>Scrieți parola și apăsați „Instalați actualizarea”. Durează de obicei sub un minut; site-ul afișează între timp „Actualizăm site-ul”.</li><li>Dacă ceva nu e în regulă, „Puneți înapoi” versiunea de dinainte.</li></ol></section>'
     . ($histRows !== '' ? admin_section_open('Istoric', 'istoric') . '<ul class="mt-3">' . $histRows . '</ul></section>' : '')
     . '</div></div>';

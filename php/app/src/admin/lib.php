@@ -9,6 +9,7 @@ const ADMIN_PER_PAGE = 50;
 
 /** Lucide icons only the panel needs (the site's set is data/icons.json). */
 const ADMIN_ICONS = [
+    'camera' => '<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/>',
     'implant' => '<path d="M8 3h8l-1 4H9z"/><path d="M10 7v11l2 3 2-3V7"/><path d="M9.5 10.5h5M9.5 13.5h5M9.5 16.5h5"/>',
     'pin' => '<path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/>',
     'coloane' => '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="M15 3v18"/>',
