@@ -12,10 +12,12 @@ $label = CONSENT_TYPES[$type] ?? (query('semnat') !== '' ? (CONSENT_RETIRED[$typ
 if ($label === null) {
     admin_not_found($user);
 }
+// ?lang=en: the form in English, for a foreign patient.
+$lang = query('lang') === 'en' && isset(CONSENT_TYPES_EN[$type]) ? 'en' : 'ro';
 // ?semnat={id}: the consent as it was signed on the tablet (the text of that moment, the
 // signature, and whether the fingerprint still matches).
 if (query('semnat') !== '') {
-    $c = db_one('SELECT c.*, s.device_id, k.name AS tablet FROM consents c LEFT JOIN consent_sessions s ON s.id = c.session_id LEFT JOIN kiosk_devices k ON k.id = s.device_id WHERE c.id = ? AND c.patient_id = ? AND c.type = ? AND c.text_snapshot IS NOT NULL', [(int) query('semnat'), (int) $p['id'], $type]);
+    $c = db_one('SELECT c.*, s.device_id, s.lang, k.name AS tablet FROM consents c LEFT JOIN consent_sessions s ON s.id = c.session_id LEFT JOIN kiosk_devices k ON k.id = s.device_id WHERE c.id = ? AND c.patient_id = ? AND c.type = ? AND c.text_snapshot IS NOT NULL', [(int) query('semnat'), (int) $p['id'], $type]);
     if ($c === null) {
         admin_not_found($user);
     }
@@ -30,7 +32,8 @@ if (query('semnat') !== '') {
     $body = '<div class="flex flex-wrap items-start justify-between gap-6 border-b border-linie pb-6">'
         . '<div>' . logo('h-12 w-auto', true, '160px', 'Dental Arena') . '</div>'
         . '<div class="text-right text-mic"><p>Fișa nr. <span class="cifre">' . (int) $p['file_number'] . '</span></p><p>Versiunea textului: ' . e((string) $c['text_version']) . '</p></div></div>'
-        . '<h1 class="mt-6 font-display text-[1.6rem] leading-tight">' . e($label) . '</h1>'
+        . '<h1 class="mt-6 font-display text-[1.6rem] leading-tight">' . e(($c['lang'] ?? 'ro') === 'en' ? consent_label($type, 'en') : $label) . '</h1>'
+        . (($c['lang'] ?? 'ro') === 'en' ? '<p class="mt-1 text-mic text-discret">Semnat în engleză: ' . e($label) . '</p>' : '')
         . '<p class="mt-4">Pacient: <strong>' . e(patient_name($p)) . '</strong></p>' . $paras
         . '<div class="mt-10 grid gap-6 sm:grid-cols-2 sm:items-end"><div class="text-mic"><p>Semnat electronic pe tabletă' . ($c['tablet'] ? ' („' . e($c['tablet']) . '”)' : '') . '</p><p class="font-semibold cifre">' . e(format_datetime((string) $c['signed_at'])) . '</p>'
         . ($c['withdrawn_at'] ? '<p class="mt-2 font-semibold text-carmin">Retras ' . e(format_date($c['withdrawn_at'])) . '</p>' : '') . '</div>'
@@ -44,7 +47,8 @@ if (query('semnat') !== '') {
 // The clinic where it is signed: chosen in the address, else the clinic the user works at now, else the patient's.
 $clinicId = admin_int(query('clinica')) ?? current_clinic_id($user) ?? ($p['preferred_location_id'] ? (int) $p['preferred_location_id'] : null);
 $clinic = ($clinicId ? db_one('SELECT * FROM locations WHERE id = ?', [$clinicId]) : null) ?? db_one('SELECT * FROM locations ORDER BY sort_order LIMIT 1');
-$text = consent_text_for($type, $p, (int) $clinic['id']);
+$text = consent_text_for($type, $p, (int) $clinic['id'], [], $lang);
+$en = $lang === 'en';
 $paras = '';
 foreach (preg_split('/\n{2,}/', trim($text)) ?: [] as $para) {
     $paras .= '<p class="mt-4 whitespace-pre-line">' . e($para) . '</p>';
@@ -54,10 +58,10 @@ audit('acord-tiparit', $label, null, (int) $p['id']);
 
 $body = '<div class="flex flex-wrap items-start justify-between gap-6 border-b border-linie pb-6">'
     . '<div>' . logo('h-12 w-auto', true, '160px', 'Dental Arena') . '<div class="mt-3 text-mic">' . seller_block($clinic) . '</div></div>'
-    . '<div class="text-right text-mic"><p>Fișa nr. <span class="cifre">' . (int) $p['file_number'] . '</span></p><p>Versiunea textului: ' . e(consent_version()) . '</p></div></div>'
-    . '<h1 class="mt-6 font-display text-[1.6rem] leading-tight">' . e($label) . '</h1>'
-    . '<p class="mt-4">Pacient: <strong>' . e(patient_name($p)) . '</strong>' . ($p['birth_date'] ? ', născut(ă) la ' . e(date('d.m.Y', strtotime($p['birth_date']))) : '') . '</p>'
+    . '<div class="text-right text-mic"><p>' . ($en ? 'File no.' : 'Fișa nr.') . ' <span class="cifre">' . (int) $p['file_number'] . '</span></p><p>' . ($en ? 'Text version' : 'Versiunea textului') . ': ' . e(consent_version()) . '</p></div></div>'
+    . '<h1 class="mt-6 font-display text-[1.6rem] leading-tight">' . e($en ? consent_label($type, 'en') : $label) . '</h1>'
+    . '<p class="mt-4">' . ($en ? 'Patient' : 'Pacient') . ': <strong>' . e(patient_name($p)) . '</strong>' . ($p['birth_date'] ? ($en ? ', born on ' : ', născut(ă) la ') . e(date('d.m.Y', strtotime($p['birth_date']))) : '') . '</p>'
     . $paras . $guardian
-    . '<div class="mt-14 grid grid-cols-2 gap-12"><p class="border-t border-cerneala pt-1 text-center text-mic">Data</p><p class="border-t border-cerneala pt-1 text-center text-mic">Semnătura pacientului / reprezentantului legal</p></div>'
-    . ($type === 'tratament' ? '<div class="mt-10 grid grid-cols-2 gap-12"><span></span><p class="border-t border-cerneala pt-1 text-center text-mic">Medicul (semnătura și parafa)</p></div>' : '');
+    . '<div class="mt-14 grid grid-cols-2 gap-12"><p class="border-t border-cerneala pt-1 text-center text-mic">' . ($en ? 'Date' : 'Data') . '</p><p class="border-t border-cerneala pt-1 text-center text-mic">' . ($en ? 'Signature of the patient / legal representative' : 'Semnătura pacientului / reprezentantului legal') . '</p></div>'
+    . (in_array($type, ['tratament', 'implant'], true) ? '<div class="mt-10 grid grid-cols-2 gap-12"><span></span><p class="border-t border-cerneala pt-1 text-center text-mic">' . ($en ? 'The dentist (signature and stamp)' : 'Medicul (semnătura și parafa)') . '</p></div>' : '');
 print_page($label . ': ' . patient_name($p), $body, '/admin/pacienti/' . (int) $p['id'] . '/documente');

@@ -585,3 +585,20 @@ din copia bazei de date nu mai pot fi citite.
   `{{telefon}}`). Pe hârtie rămân linii de completat. Textele se pot schimba din Setări → Textele
   acordurilor. Seria și numărul buletinului din formularul de chirurgie nu se cer (panoul nu le ține).
 - Actualizarea aplică singură migrarea `017_consent_details.sql`.
+
+## Tableta în engleză și chestionarul clinicii (octombrie 2026)
+
+- La codul pentru tabletă se alege **Limba pe tabletă: Română / English**. În engleză: ecranele
+  tabletei, toate acordurile (GDPR, tratament, fotografii, endodonție (textul clinicii), chirurgie,
+  implanturi), chestionarul și declarația; pentru pacient nou, indicațiile clinicii („Because you are a
+  new patient…”). Acordul semnat se păstrează în limba în care a fost semnat; ecranul codului e bilingv.
+- Textele în engleză se pot schimba din Setări → Textele acordurilor → „Textele în engleză”.
+  Traducerile pentru GDPR, tratament, fotografii, chirurgie și implanturi sunt făcute de noi: de
+  verificat de clinică.
+- Chestionarul de pe tabletă (română și engleză) urmează „Fișa de tratament / Chestionar de sănătate”
+  a clinicii: pe lângă afecțiunile din anamneză, internări, accidente/operații, gingii care sângerează,
+  sângerare după extracții, bruxism, boli infecțioase, reumatism, boli respiratorii, de rinichi,
+  probleme psihice, plus profesia, medicul de familie, țigări pe zi, luna sarcinii și declarația despre
+  tratamente și tarife. Răspunsurile intră la „Alte afecțiuni” când medicul aplică chestionarul.
+- Formularele tipărite au și varianta în engleză (butonul „EN” de lângă „Formularul”).
+- Actualizarea aplică singură migrarea `018_tablet_language.sql`.

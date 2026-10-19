@@ -81,7 +81,7 @@ if (is_post() && $writable) {
                 }
                 $details = ['medic' => (string) $doctorName, 'interventie' => post('interventie')];
             }
-            consent_session_create($p, $types, $history, post('with_marketing') === '1', $user, $details);
+            consent_session_create($p, $types, $history, post('with_marketing') === '1', $user, $details, post('lang') === 'en' ? 'en' : 'ro');
             redirect($base . '#tableta');
         }
         if ($op === 'anuleaza-cod') {
@@ -153,7 +153,8 @@ foreach (CONSENT_TYPES + array_intersect_key(CONSENT_RETIRED, $latest) as $type 
                     : ($c['document_id'] ? ' · <a class="text-link underline" href="/admin/documente/' . (int) $c['document_id'] . '">copia scanată</a>' : '')));
     $consentRows .= '<li class="flex flex-wrap items-center justify-between gap-3 border-t border-linie py-3 first:border-t-0">'
         . '<div class="min-w-0"><p class="font-semibold">' . e($label) . '</p><p class="text-mic">' . $state . '</p></div>'
-        . '<div class="flex flex-wrap items-center gap-2">' . ($retired ? '' : '<a href="/admin/pacienti/' . $pid . '/acord/' . $type . '" class="' . e(btn('secondary', 's')) . '">' . icon('printer', 16) . 'Formularul</a>')
+        . '<div class="flex flex-wrap items-center gap-2">' . ($retired ? '' : '<a href="/admin/pacienti/' . $pid . '/acord/' . $type . '" class="' . e(btn('secondary', 's')) . '">' . icon('printer', 16) . 'Formularul</a>'
+            . '<a href="/admin/pacienti/' . $pid . '/acord/' . $type . '?lang=en" class="' . e(btn('text', 's')) . '" title="Formularul în engleză" lang="en">EN</a>')
         . ($c !== null && $c['withdrawn_at'] === null && $writable ? '<form method="post" data-confirma="Pacientul își retrage acordul?">' . csrf_field() . '<input type="hidden" name="op" value="retrage"><input type="hidden" name="id" value="' . (int) $c['id'] . '"><button type="submit" class="' . e(btn('text', 's')) . '">Retras</button></form>' : '')
         . '</div></li>';
 }
@@ -171,6 +172,9 @@ $session = db_one("SELECT * FROM consent_sessions WHERE patient_id = ? AND statu
 $hasTablet = (bool) db_value('SELECT 1 FROM kiosk_devices WHERE revoked_at IS NULL LIMIT 1');
 if ($session !== null) {
     $what = array_map(static fn ($t) => CONSENT_TYPES[$t] ?? CONSENT_RETIRED[$t] ?? $t, array_filter(explode(',', (string) $session['types'])));
+    if (($session['lang'] ?? 'ro') === 'en') {
+        $what[] = 'în engleză';
+    }
     if (($sd = consent_session_details($session)) !== []) {
         $what[] = implode(', ', array_filter([$sd['medic'] ?? '', $sd['interventie'] ?? '']));
     }
@@ -206,7 +210,8 @@ if ($session !== null) {
         . checkbox_field('with_history', 'Chestionarul medical', ['checked' => !$h, 'description' => 'Alergii, medicamente, boli. Intră în fișă după ce îl verifică medicul.'])
         . checkbox_field('with_marketing', 'Acordul pentru oferte', ['checked' => ((int) $p['marketing_sms'] + (int) $p['marketing_whatsapp'] + (int) $p['marketing_email']) === 0, 'description' => 'SMS, WhatsApp, e-mail; opțional pentru pacient.'])
         . '</fieldset></div>'
-        . '<div class="flex flex-wrap items-center gap-4"><button type="submit" class="' . e(btn('primary')) . '">' . admin_icon('tablet', 18) . 'Dați un cod pentru tabletă</button>'
+        . '<div class="flex flex-wrap items-end gap-4">' . select_field('lang', 'Limba pe tabletă', ['ro' => 'Română', 'en' => 'English (pacient străin)'], ['value' => post('lang') ?: 'ro', 'class' => 'w-60'])
+        . '<button type="submit" class="' . e(btn('primary')) . '">' . admin_icon('tablet', 18) . 'Dați un cod pentru tabletă</button>'
         . ($hasTablet ? '' : '<span class="text-mic text-mustar-text">Nicio tabletă asociată încă' . (can_configure($user) ? ': <a class="underline" href="/admin/tablete">Setări → Tablete</a>.' : '; o asociază suportul tehnic (VITIM).') . '</span>') . '</div></form>';
 } else {
     $tablet = '';

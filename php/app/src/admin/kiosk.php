@@ -37,8 +37,45 @@ function kiosk_pair(string $name, ?int $locationId, array $user): int
 }
 
 /** A new 6-digit code, unused among the codes still valid. */
+/**
+ * The tablet questionnaire, as the clinic's „Fișa de tratament / Chestionar de sănătate”: the
+ * conditions of the medical history (HISTORY_FLAGS) and these questions, in Romanian and English.
+ * The answers to these go into „Alte afecțiuni” when the doctor applies the questionnaire.
+ */
+const HISTORY_FLAGS_EN = [
+    'anticoagulants' => 'Blood thinners (anticoagulants)', 'cardiac_disease' => 'Heart disease', 'hypertension' => 'High blood pressure',
+    'diabetes' => 'Diabetes', 'asthma' => 'Asthma', 'epilepsy' => 'Epilepsy', 'hepatitis' => 'Hepatitis', 'hiv' => 'HIV / AIDS',
+    'bleeding_disorder' => 'Blood clotting disorders (prolonged bleeding)', 'bisphosphonates' => 'Treatment with bisphosphonates (Fosamax, Fosavance, Actonel, Bonviva, Zometa, Aclasta)',
+    'pregnancy' => 'Pregnancy', 'smoker' => 'Smoker',
+];
+const HISTORY_EXTRA = [
+    'spital' => ['Internare în spital sau tratamente medicale în ultimii ani', 'Hospitalised or under medical treatment in recent years'],
+    'operatie' => ['Accident sau intervenție chirurgicală', 'Accident or surgery'],
+    'gingii' => ['Gingiile sângerează ușor', 'My gums bleed easily'],
+    'extractii' => ['Sângerez mult timp după extracții', 'I bleed for a long time after extractions'],
+    'bruxism' => ['Scrâșnesc din dinți noaptea', 'I grind my teeth at night'],
+    'infectioase' => ['Boli infecțioase (TBC, boli venerice)', 'Infectious diseases (TB, venereal diseases)'],
+    'reumatism' => ['Reumatism', 'Rheumatism'],
+    'respiratorii' => ['Boli respiratorii', 'Respiratory diseases'],
+    'rinichi' => ['Boli ale rinichilor', 'Kidney disease'],
+    'psihice' => ['Probleme psihice', 'Mental health problems'],
+];
+/** The questionnaire's short answers: [Romanian, English, placeholder RO, placeholder EN, in the medical history]. */
+const HISTORY_DETAILS = [
+    'operatie_detalii' => ['Accident / operație: unde și când?', 'Accident / surgery: where and when?', 'Lăsați gol dacă nu e cazul.', 'Leave empty if not applicable.', 'Accident / operație'],
+    'tigari' => ['Dacă fumați: câte țigări pe zi?', 'If you smoke: how many cigarettes a day?', '', '', 'Țigări pe zi'],
+    'sarcina_luna' => ['Dacă sunteți însărcinată: în ce lună?', 'If you are pregnant: which month?', '', '', 'Sarcină, luna'],
+    'profesie' => ['Profesia', 'Occupation', '', '', 'Profesia'],
+    'medic_familie' => ['Numele medicului de familie', 'Name of your family doctor', '', '', 'Medicul de familie'],
+];
+/** The statement at the end of the clinic's treatment sheet, signed with the questionnaire. */
+const HISTORY_STATEMENT = [
+    'ro' => 'Am fost informat(ă) despre tratamentele care urmează să-mi fie efectuate, cu indicațiile, contraindicațiile și complicațiile care pot apărea în timp din cauza nerespectării planului de tratament, a indicațiilor date de medic, precum și a controalelor periodice. Am luat la cunoștință tarifele practicate în această clinică și mă oblig să achit contravaloarea tratamentelor care mi se efectuează.',
+    'en' => 'I have been informed about the treatments to be performed, with their indications, contraindications and the complications that may appear over time if the treatment plan, the dentist\'s instructions and the periodic check-ups are not followed. I have taken note of the fees charged in this clinic and I undertake to pay for the treatments performed on me.',
+];
+
 /** @param array{medic?:string,interventie?:string} $details the doctor and the intervention, for the consents that name them */
-function consent_session_create(array $p, array $types, bool $history, bool $marketing, array $user, array $details = []): array
+function consent_session_create(array $p, array $types, bool $history, bool $marketing, array $user, array $details = [], string $lang = 'ro'): array
 {
     $types = array_values(array_intersect(array_keys(CONSENT_TYPES), $types));
     $details = array_intersect_key(array_filter(array_map(static fn ($v) => mb_substr(trim((string) $v), 0, 250), $details)), ['medic' => 1, 'interventie' => 1]);
@@ -49,10 +86,10 @@ function consent_session_create(array $p, array $types, bool $history, bool $mar
     } while (db_value("SELECT 1 FROM consent_sessions WHERE code = ? AND status = 'asteptare' AND expires_at > ?", [$code, now_sql()]));
     $id = db_insert('consent_sessions', [
         'patient_id' => (int) $p['id'], 'code' => $code, 'types' => implode(',', $types), 'with_history' => (int) $history, 'with_marketing' => (int) $marketing,
-        'details' => $details !== [] ? json_encode($details, JSON_UNESCAPED_UNICODE) : null,
+        'details' => $details !== [] ? json_encode($details, JSON_UNESCAPED_UNICODE) : null, 'lang' => isset(CONSENT_LANGS[$lang]) ? $lang : 'ro',
         'status' => 'asteptare', 'created_by' => $user['id'], 'created_at' => now_sql(), 'expires_at' => date('Y-m-d H:i:s', time() + KIOSK_CODE_MINUTES * 60),
     ]);
-    audit('cod-tableta', implode(', ', array_map(static fn ($t) => CONSENT_TYPES[$t], $types)) . ($history ? ' + chestionar' : ''), null, (int) $p['id']);
+    audit('cod-tableta', implode(', ', array_map(static fn ($t) => CONSENT_TYPES[$t], $types)) . ($history ? ' + chestionar' : '') . ($lang === 'en' ? ' (în engleză)' : ''), null, (int) $p['id']);
     return db_one('SELECT * FROM consent_sessions WHERE id = ?', [$id]);
 }
 
@@ -120,7 +157,7 @@ function consent_session_sign(array $s, array $device, array $accepted, string $
         $signedAt = now_sql();
         $sigHash = hash('sha256', $raw);
         foreach ($accepted as $type) {
-            $text = consent_text_for($type, $p, $device['location_id'] ? (int) $device['location_id'] : null, consent_session_details($s));
+            $text = consent_text_for($type, $p, $device['location_id'] ? (int) $device['location_id'] : null, consent_session_details($s), (string) ($s['lang'] ?? 'ro'));
             db_insert('consents', [
                 'patient_id' => $p['id'], 'type' => $type, 'method' => 'tableta', 'signed_on' => date('Y-m-d'), 'signed_at' => $signedAt,
                 'text_version' => consent_version(), 'text_snapshot' => $text, 'document_id' => $docId, 'session_id' => $s['id'],
@@ -179,7 +216,26 @@ function history_form_lines(array $d): array
     if ($flags !== []) {
         $out[] = 'Afecțiuni: ' . implode(', ', array_map(static fn ($k) => HISTORY_FLAGS[$k], $flags));
     }
+    $extra = history_form_extra($d);
+    if ($extra !== '') {
+        $out[] = $extra;
+    }
+    if (($d['lang'] ?? 'ro') === 'en') {
+        $out[] = '(Completat în engleză; textele scrise sunt ale pacientului.)';
+    }
     return $out ?: ['Nu a declarat nimic.'];
+}
+
+/** The answers to the clinic's own questions, in one line, in Romanian (for „Alte afecțiuni”). */
+function history_form_extra(array $d): string
+{
+    $parts = array_map(static fn ($k) => HISTORY_EXTRA[$k][0], array_values(array_filter(array_keys(HISTORY_EXTRA), static fn ($k) => !empty($d['flags'][$k]))));
+    foreach (HISTORY_DETAILS as $k => $l) {
+        if (trim((string) ($d['details'][$k] ?? '')) !== '') {
+            $parts[] = $l[4] . ': ' . trim((string) $d['details'][$k]);
+        }
+    }
+    return $parts !== [] ? 'Din chestionar: ' . implode('; ', $parts) . '.' : '';
 }
 
 /**
@@ -190,6 +246,8 @@ function apply_history_form(int $patientId, array $d, array $user): void
 {
     $h = db_one('SELECT * FROM medical_histories WHERE patient_id = ?', [$patientId]) ?? [];
     $row = [];
+    // The clinic's own questions go with the other conditions.
+    $d['other_conditions'] = trim(trim((string) ($d['other_conditions'] ?? '')) . "\n" . history_form_extra($d));
     foreach (['allergies', 'medications', 'other_conditions'] as $k) {
         $old = trim((string) ($h[$k] ?? ''));
         $new = trim((string) ($d[$k] ?? ''));

@@ -15,8 +15,10 @@ $inv = invoicing();
 $finance = finance_on();
 $before = ['facebook' => $facebook, 'notify' => $notify, 'retention' => $retention, 'inv' => $inv, 'locations' => $locations];
 $consentTexts = [];
+$consentTextsEn = [];
 foreach (array_keys(CONSENT_TYPES) as $t) {
     $consentTexts[$t] = consent_text($t);
+    $consentTextsEn[$t] = consent_text($t, 'en');
 }
 
 if (is_post()) {
@@ -59,6 +61,11 @@ if (is_post()) {
             $consentChanged = true;
         }
         $consentTexts[$t] = $text;
+        $textEn = str_replace("\r\n", "\n", trim(post("consent_en_{$t}")));
+        if ($textEn !== $consentTextsEn[$t]) {
+            $consentChanged = true;
+        }
+        $consentTextsEn[$t] = $textEn;
     }
     $locIn = [];
     foreach ($locations as $l) {
@@ -148,7 +155,7 @@ if (is_post()) {
         }
     }
     if ($errors === []) {
-        db_tx(static function () use ($facebook, $notify, $retention, $locIn, $inv, $numbers, $consentTexts, $consentChanged, $finance, $wasFinance): void {
+        db_tx(static function () use ($facebook, $notify, $retention, $locIn, $inv, $numbers, $consentTexts, $consentTextsEn, $consentChanged, $finance, $wasFinance): void {
             if ($wasFinance) {
                 setting_save('invoicing', $inv);
             }
@@ -162,6 +169,11 @@ if (is_post()) {
                     $store[$k] = $text === '' || $text === CONSENT_DEFAULTS[$k] ? null : $text;
                 }
                 setting_save('consent_texts', $store);
+                $store = [];
+                foreach ($consentTextsEn as $k => $text) {
+                    $store[$k] = $text === '' || $text === CONSENT_DEFAULTS_EN[$k] ? null : $text;
+                }
+                setting_save('consent_texts_en', $store);
                 setting_save('consent_version', date('Y-m-d'));
             }
             setting_save('facebook', $facebook);
@@ -263,6 +275,8 @@ $body = admin_header('Setări', 'Unde ajung cererile, datele clinicilor și firm
     . '</div></section>' : '')
     . admin_section_open('Textele acordurilor', 'acorduri', 'Ce scrie pe formularele tipărite din fișa pacientului. {{pacient}}, {{firma}}, {{clinica}}, {{email}}, {{telefon}} și {{adresa}} se completează singure; {{medic}} și {{interventie}} se aleg la codul pentru tabletă (pe hârtie rămâne loc de scris). Lăsați gol ca să reveniți la textul inițial.')
     . '<div class="mt-4 flex flex-col gap-5">' . implode('', array_map(static fn ($t) => text_area("consent_{$t}", CONSENT_TYPES[$t], ['value' => $consentTexts[$t], 'rows' => 8]), array_keys(CONSENT_TYPES))) . '</div>'
+    . '<details class="mt-5 rounded-panou border border-linie p-4"><summary class="cursor-pointer font-semibold">Textele în engleză (tableta în engleză, pentru pacienții străini)</summary>'
+    . '<div class="mt-4 flex flex-col gap-5" lang="en">' . implode('', array_map(static fn ($t) => text_area("consent_en_{$t}", CONSENT_TYPES_EN[$t], ['value' => $consentTextsEn[$t], 'rows' => 8]), array_keys(CONSENT_TYPES))) . '</div></details>'
     . '<p class="mt-3 text-mic text-discret">Versiunea textelor: ' . e(consent_version()) . '. Se schimbă singură când modificați un text, iar fiecare acord semnat păstrează versiunea de atunci.</p></section>'
     . $clinicSections
     . '<div class="sticky bottom-0 -mx-4 border-t border-linie bg-fundal/95 px-4 py-3 backdrop-blur-sm md:mx-0 md:rounded-panou md:border"><button type="submit" class="' . e(btn('primary', 'l')) . '">Salvați setările</button></div>'

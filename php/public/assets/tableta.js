@@ -144,7 +144,7 @@
       var ticked = form.querySelectorAll("input[name='accept[]']:checked");
       if (boxes.length && !ticked.length) {
         e.preventDefault();
-        say("Bifați acordurile pe care le dați.", boxes[0].closest("article"));
+        say(form.getAttribute("data-msg-acorduri") || "Bifați acordurile pe care le dați.", boxes[0].closest("article"));
         return;
       }
       if (nothing) {
@@ -155,13 +155,13 @@
         });
         if (!answered) {
           e.preventDefault();
-          say("Completați chestionarul sau bifați „Nu am nimic de declarat”.", nothing.closest("section"));
+          say(form.getAttribute("data-msg-chestionar") || "Completați chestionarul sau bifați „Nu am nimic de declarat”.", nothing.closest("section"));
           return;
         }
       }
       if (!signed) {
         e.preventDefault();
-        say("Semnați în chenar cu degetul.", canvas);
+        say(form.getAttribute("data-msg-semnatura") || "Semnați în chenar cu degetul.", canvas);
         return;
       }
       if (form.getAttribute("data-trimis")) {
