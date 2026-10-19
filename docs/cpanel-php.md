@@ -529,4 +529,5 @@ din copia bazei de date nu mai pot fi citite.
   actualizare, la pacienții cu fișa QDental respectivă. 7 rânduri fără pacient real („Liber”,
   „Pacient X”) nu se iau. Trei nume cu două fișe diferite în QDental (Moldovan Vasile, Ghiurca
   Stefan, Stoica Ramona) merg pe fișa mai nouă, cu nota „De verificat”.
-- Actualizarea aplică singură migrarea `013_procedures.sql`.
+- Actualizarea aplică singură migrările `013_procedures.sql` și `014_procedures_notes.sql` (scoate nota
+  „De verificat” de la pacienții cu două fișe QDental care aici sunt un singur pacient).

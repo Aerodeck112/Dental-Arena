@@ -39,11 +39,14 @@ if ($path === '/admin/iesire') {
 
 $user = require_login();
 // A patient list brought by an update (data/import) is added on the first page of the panel.
-if (glob(APP_DIR . '/data/import/*.json')) {
-    require_once APP_DIR . '/src/admin/import.php';
-    if (pending_imports() !== []) {
-        run_pending_imports();
+$pendingImports = array_filter(glob(APP_DIR . '/data/import/*.json') ?: [], static fn ($f) => !is_file(APP_DIR . '/storage/import-' . basename($f, '.json') . '.done'));
+if ($pendingImports !== []) {
+    // Right after an update the PHP cache can still hold the old importer for a few seconds.
+    if (function_exists('opcache_invalidate')) {
+        @opcache_invalidate(APP_DIR . '/src/admin/import.php', true);
     }
+    require_once APP_DIR . '/src/admin/import.php';
+    run_pending_imports();
 }
 maybe_send_reminders();
 send_queue_after_response();
