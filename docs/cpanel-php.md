@@ -614,3 +614,19 @@ din copia bazei de date nu mai pot fi citite.
   config.php). Date din cPanel → Email Accounts → Connect Devices.
 - Erorile e-mailurilor din coadă se văd acum cu motivul exact în Jurnalul mesajelor.
 - Dacă proba pleacă dar nu ajunge: cPanel → Email Deliverability → „Repair” la SPF și DKIM.
+
+## Procedurile pe medici, din 2015 (octombrie 2026)
+
+- Din rapoartele QDental „Statistică proceduri” pe medici (Marcoci, Mașca, Fertea, Podar,
+  Vaidacutan; 01.01.2015 – 19.10.2026), în `data/import/qdental-proceduri-medici-*.json`:
+  - `…-0-2026.json`: medicul procedurilor din 2026 aduse deja (fără medic) din raportul mare:
+    3.555 de proceduri, găsite după pacient, zi și preț;
+  - `…-2015.json` … `…-2025.json`: istoricul, 33.130 de proceduri cu plățile și medicul;
+    `…-2026.json`: cele 12 din 17–19.10.2026.
+- Totalurile pe medic sunt cele din PDF-uri. 110 rânduri fără pacient real („Radiografie”,
+  „Sedinta”, „pacientx”…, 4.274 lei) nu se iau. Când QDental listează o plată de două ori,
+  contează coloana „Achitat”.
+- Un medic din rapoarte care nu e în Echipa (Dr. Andrada Vaidacutan) se adaugă ascuns de pe site
+  și din calendar, ca să-i apară procedurile în rapoarte; se poate completa din Echipa.
+- Importul pe ani ține sub 20 de secunde pe pagină; ce nu încape se face la pagina următoare.
+  Setări → Actualizare → „Date aduse din QDental” arată fiecare an.
