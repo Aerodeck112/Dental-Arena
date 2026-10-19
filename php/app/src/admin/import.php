@@ -7,8 +7,12 @@
  *  - patients ({source, patients: [{last, first, phones, fisa, note}]}): a patient already in the
  *    panel (same phone and same name) is not added twice;
  *  - procedures ({kind: "procedures", source, location, procedures: [{fise, date, name, price,
- *    payments: [{date, amount}], note}]}): each goes to the patient with that QDental file number,
- *    with its payments.
+ *    payments: [{date, amount}], note, doctor?}], doctors?}): each goes to the patient with that
+ *    QDental file number, with its payments (and its doctor, from QDental's report per doctor);
+ *  - procedures-assign ({kind: "procedures-assign", doctors, from, to, assign: [{fise, date, name,
+ *    price, doctor}]}): the doctor of procedures already added from the report without doctors.
+ * A long list is split in files (one per year); one page adds what fits in about 20 seconds, the
+ * next page goes on.
  */
 declare(strict_types=1);
 
@@ -43,7 +47,12 @@ function run_pending_imports(bool $now = false): void
             @unlink(import_marker($running, 'lock'));
         }
     });
+    $started = microtime(true);
     foreach (pending_imports() as $file) {
+        // Hosting limits: what does not fit in this request is added on the next page.
+        if (microtime(true) - $started > 20) {
+            break;
+        }
         $failed = import_marker($file, 'failed');
         // A list added just now (the patients) can be what the next one was waiting for; a new
         // version (VERSION is newer than the failure) may add what the old one could not.
@@ -64,7 +73,11 @@ function run_pending_imports(bool $now = false): void
             @set_time_limit(600);
             @ignore_user_abort(true);
             $kind = json_decode((string) file_get_contents($file), true)['kind'] ?? 'patients';
-            $r = $kind === 'procedures' ? import_procedures($file) : import_patients($file);
+            $r = match ($kind) {
+                'procedures' => import_procedures($file),
+                'procedures-assign' => import_procedures_assign($file),
+                default => import_patients($file),
+            };
             file_put_contents(import_marker($file, 'done'), json_encode($r + ['at' => now_sql()], JSON_UNESCAPED_UNICODE));
             @unlink($failed);
             $now = true;
@@ -95,9 +108,11 @@ function import_status(): array
             $source = (string) json_decode('"' . $m[1] . '"');
         }
         [$state, $detail, $at] = match (true) {
-            is_array($done) => ['gata', isset($done['payments'])
-                ? "{$done['added']} proceduri, {$done['payments']} plăți" . (($done['skipped'] ?? 0) ? ", {$done['skipped']} fără pacient" : '')
-                : "{$done['added']} pacienți adăugați, {$done['existing']} existau deja", $done['at'] ?? null],
+            is_array($done) => ['gata', match (true) {
+                isset($done['assigned']) => "medicul trecut la {$done['assigned']} proceduri" . (($done['missing'] ?? 0) ? ", {$done['missing']} negăsite" : ''),
+                isset($done['payments']) => "{$done['added']} proceduri, {$done['payments']} plăți" . (($done['skipped'] ?? 0) ? ", {$done['skipped']} fără pacient" : ''),
+                default => "{$done['added']} pacienți adăugați, {$done['existing']} existau deja",
+            }, $done['at'] ?? null],
             is_file(import_marker($file, 'lock')) && filemtime(import_marker($file, 'lock')) > time() - 600 => ['acum', 'Se adaugă acum.', null],
             is_file($failed) => ['eroare', trim((string) file_get_contents($failed)) ?: 'Nu s-a putut adăuga.', date('Y-m-d H:i:s', (int) filemtime($failed))],
             default => ['asteapta', 'Se adaugă la prima pagină de panou.', null],
@@ -231,22 +246,11 @@ function import_procedures(string $file): array
     }
     $source = (string) ($data['source'] ?? basename($file));
     $loc = db_value('SELECT id FROM locations WHERE slug = ?', [(string) ($data['location'] ?? 'cristesti')]);
-    $byFile = [];
-    foreach (db_all("SELECT id, notes FROM patients WHERE notes LIKE '%QDental%'") as $p) {
-        if (preg_match('/fișa nr\. ([\d, ]+)/u', (string) $p['notes'], $m)) {
-            foreach (preg_split('/\D+/', $m[1]) ?: [] as $n) {
-                if ($n !== '') {
-                    $byFile[$n] = (int) $p['id'];
-                }
-            }
-        }
-    }
-    if ($byFile === []) {
-        throw new RuntimeException('Pacienții din QDental nu sunt încă în panou.');
-    }
+    $byFile = import_qdental_files();
+    $doctors = import_doctor_ids((array) ($data['doctors'] ?? []));
     $added = $payments = $skipped = 0;
     $missing = [];
-    db_tx(static function () use ($data, $loc, $byFile, &$added, &$payments, &$skipped, &$missing): void {
+    db_tx(static function () use ($data, $loc, $byFile, $doctors, &$added, &$payments, &$skipped, &$missing): void {
         $now = now_sql();
         // The procedures go in first; their ids (in the same order) then link the payments.
         $before = (int) db_value('SELECT COALESCE(MAX(id), 0) FROM procedures');
@@ -273,7 +277,7 @@ function import_procedures(string $file): array
                 continue;
             }
             $procs[] = [
-                'patient_id' => $pid, 'location_id' => $loc !== null ? (int) $loc : null, 'doctor_id' => null,
+                'patient_id' => $pid, 'location_id' => $loc !== null ? (int) $loc : null, 'doctor_id' => $doctors[(string) ($r['doctor'] ?? '')] ?? null,
                 'performed_on' => $r['date'], 'tooth' => null, 'name' => mb_substr(trim((string) $r['name']) ?: 'Procedură', 0, 255),
                 'price' => max(0, (int) ($r['price'] ?? 0)), 'discount' => 0, 'lab_cost' => 0, 'done' => 1,
                 'notes' => $note !== null ? mb_substr((string) $note, 0, 500) : null,
@@ -317,3 +321,128 @@ function import_procedures(string $file): array
     return ['source' => $source, 'added' => $added, 'payments' => $payments, 'skipped' => $skipped];
 }
 
+/** QDental file number → the patient here (kept in the patient's note at the patient import). */
+function import_qdental_files(): array
+{
+    $byFile = [];
+    foreach (db_all("SELECT id, notes FROM patients WHERE notes LIKE '%QDental%'") as $p) {
+        if (preg_match('/fișa nr\. ([\d, ]+)/u', (string) $p['notes'], $m)) {
+            foreach (preg_split('/\D+/', $m[1]) ?: [] as $n) {
+                if ($n !== '') {
+                    $byFile[$n] = (int) $p['id'];
+                }
+            }
+        }
+    }
+    if ($byFile === []) {
+        throw new RuntimeException('Pacienții din QDental nu sunt încă în panou.');
+    }
+    return $byFile;
+}
+
+/** The patient of a procedure: the newest of its QDental files that is here. */
+function import_patient_for(array $fise, array $byFile): ?int
+{
+    usort($fise, static fn ($a, $b) => (int) $b <=> (int) $a);
+    foreach ($fise as $f) {
+        if (isset($byFile[(string) $f])) {
+            return $byFile[(string) $f];
+        }
+    }
+    return null;
+}
+
+/**
+ * The doctors of QDental's reports ({key: {last, first}}) → their ids here, by the family name
+ * (and the first name when two share it). A doctor not in the team yet is added hidden from the
+ * site and the calendar (no clinic), so the reports can still show their procedures.
+ *
+ * @return array<string,int>
+ */
+function import_doctor_ids(array $wanted): array
+{
+    $out = [];
+    $all = db_all('SELECT id, first_name, last_name FROM doctors');
+    foreach ($wanted as $key => $w) {
+        $last = fold_text((string) ($w['last'] ?? ''));
+        $first = fold_text((string) ($w['first'] ?? ''));
+        $same = array_values(array_filter($all, static fn ($d) => fold_text($d['last_name']) === $last));
+        if (count($same) > 1) {
+            $same = array_values(array_filter($same, static fn ($d) => str_contains(fold_text($d['first_name']), explode(' ', $first)[0]))) ?: $same;
+        }
+        if ($same !== []) {
+            $out[(string) $key] = (int) $same[0]['id'];
+            continue;
+        }
+        if ($last === '') {
+            continue;
+        }
+        $base = slugify(trim(($w['first'] ?? '') . ' ' . ($w['last'] ?? ''))) ?: 'medic';
+        $slug = $base;
+        for ($i = 2; db_value('SELECT 1 FROM doctors WHERE slug = ?', [$slug]); $i++) {
+            $slug = "{$base}-{$i}";
+        }
+        $id = db_insert('doctors', [
+            'slug' => $slug, 'first_name' => (string) $w['first'], 'last_name' => (string) $w['last'],
+            'public_name' => 'Dr. ' . trim($w['first'] . ' ' . $w['last']), 'role_line' => 'Medic stomatolog',
+            'sort_order' => 90, 'public_visible' => 0, 'accepts_online' => 0,
+        ]);
+        audit('medic-adaugat', 'Dr. ' . trim($w['first'] . ' ' . $w['last']) . ' (din QDental, ascuns pe site)');
+        $all[] = ['id' => $id, 'first_name' => $w['first'], 'last_name' => $w['last']];
+        $out[(string) $key] = $id;
+    }
+    return $out;
+}
+
+/**
+ * The doctor of the procedures already added from QDental's report without doctors: each row of
+ * the reports per doctor finds its procedure by patient, day and price (the name decides between
+ * two of the same price), once.
+ *
+ * @return array{source:string,assigned:int,missing:int}
+ */
+function import_procedures_assign(string $file): array
+{
+    $data = json_decode((string) file_get_contents($file), true);
+    if (!is_array($data) || !is_array($data['assign'] ?? null)) {
+        throw new RuntimeException('Lista medicilor procedurilor nu poate fi citită.');
+    }
+    $source = (string) ($data['source'] ?? basename($file));
+    $byFile = import_qdental_files();
+    $doctors = import_doctor_ids((array) ($data['doctors'] ?? []));
+    $free = [];
+    foreach (db_all("SELECT id, patient_id, performed_on, price, name FROM procedures WHERE source = 'qdental' AND doctor_id IS NULL AND performed_on BETWEEN ? AND ? ORDER BY id", [(string) ($data['from'] ?? '2000-01-01'), (string) ($data['to'] ?? '2099-12-31')]) as $p) {
+        $free["{$p['patient_id']}|{$p['performed_on']}|{$p['price']}"][] = ['id' => (int) $p['id'], 'name' => fold_text((string) $p['name'])];
+    }
+    $byDoctor = [];
+    $missing = 0;
+    foreach ($data['assign'] as $r) {
+        $pid = import_patient_for(array_map('strval', (array) ($r['fise'] ?? [])), $byFile);
+        $doc = $doctors[(string) ($r['doctor'] ?? '')] ?? null;
+        $k = "{$pid}|{$r['date']}|" . (int) ($r['price'] ?? 0);
+        if ($pid === null || $doc === null || empty($free[$k])) {
+            $missing++;
+            continue;
+        }
+        $name = fold_text((string) ($r['name'] ?? ''));
+        $i = 0;
+        foreach ($free[$k] as $j => $c) {
+            if ($c['name'] === $name) {
+                $i = $j;
+                break;
+            }
+        }
+        $byDoctor[$doc][] = $free[$k][$i]['id'];
+        array_splice($free[$k], $i, 1);
+    }
+    $assigned = 0;
+    db_tx(static function () use ($byDoctor, &$assigned): void {
+        foreach ($byDoctor as $doc => $ids) {
+            foreach (array_chunk($ids, 500) as $chunk) {
+                $assigned += db_run('UPDATE procedures SET doctor_id = ? WHERE id IN (' . implode(',', array_map('intval', $chunk)) . ')', [(int) $doc]);
+            }
+        }
+    });
+    audit('import-proceduri', "{$source}: medicul trecut la {$assigned} proceduri" . ($missing ? ", {$missing} negăsite" : ''));
+    return ['source' => $source, 'assigned' => $assigned, 'missing' => $missing];
+}
