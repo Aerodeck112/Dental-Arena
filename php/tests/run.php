@@ -84,5 +84,13 @@ if (is_file(APP_DIR . '/vendor/autoload.php')) {
     echo "skip SDK (fără dentalarena/vendor: rulați composer install în php/app)\n";
 }
 
+// The doctor's morning programme: from their hour, for 3 hours; not at 17:34 (October 2026).
+require_once APP_DIR . '/src/notify.php';
+$doc = ['agenda_time' => '07:00'];
+$check('programul zilei: la 09:30 încă pleacă', !agenda_window_passed($doc, new DateTimeImmutable('2026-10-20 09:30')));
+$check('programul zilei: la 10:00 fix încă pleacă', !agenda_window_passed($doc, new DateTimeImmutable('2026-10-20 10:00')));
+$check('programul zilei: la 17:34 nu mai pleacă', agenda_window_passed($doc, new DateTimeImmutable('2026-10-20 17:34')));
+$check('programul zilei: ora goală = 07:00', agenda_window_passed(['agenda_time' => ''], new DateTimeImmutable('2026-10-20 10:01')));
+
 echo $failed === 0 ? "\nToate verificările au trecut.\n" : "\n{$failed} verificări au eșuat.\n";
 exit($failed === 0 ? 0 : 1);

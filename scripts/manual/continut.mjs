@@ -523,7 +523,7 @@ ${sfat("Înainte să plece textul, panoul scoate din el numele pacientului, CNP-
 export const programulZilei = (rol) => ({
   titlu: "Programul zilei pe WhatsApp",
   html: `
-<p>În fiecare zi în care ${rol === "medic" ? "aveți" : "medicul are"} programări, ${rol === "medic" ? "primiți" : "primește"} dimineața, la ora aleasă, lista lor pe WhatsApp (sau SMS ori e-mail): ora, pacientul, motivul, clinica și, dacă se dorește, alertele medicale. Dacă în aceeași zi se adaugă, se mută sau se anulează o programare, ${rol === "medic" ? "primiți" : "primește"} și asta.</p>
+<p>În fiecare zi în care ${rol === "medic" ? "aveți" : "medicul are"} programări, ${rol === "medic" ? "primiți" : "primește"} dimineața, la ora aleasă, lista lor pe WhatsApp (sau SMS ori e-mail): ora, pacientul, motivul, clinica și, dacă se dorește, alertele medicale. Dacă în aceeași zi se adaugă, se mută sau se anulează o programare, ${rol === "medic" ? "primiți" : "primește"} și asta. Programul pleacă de la ora aleasă, cel târziu în 3 ore; dacă nu a putut pleca până atunci (de exemplu programările s-au pus după-amiaza), nu mai pleacă în acea zi, iar programările noi de azi ajung una câte una.</p>
 ${img("medic-agenda", "Setarea din pagina medicului, cu exemplul de mesaj.")}
 ${rol === "medic" ? `<p>Setarea o face administratorul, în Echipa → profilul dumneavoastră. Dacă aveți cont în panou, o puteți cere și singur, din ${b("Contul meu")} → ${b("Notificările mele")} → „Programul zilei”.</p>` : `${pasi([
   `${b("Echipa")} → medicul → chenarul ${b("Programul zilei, pe telefon")}.`,

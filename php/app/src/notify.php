@@ -585,7 +585,22 @@ function send_doctor_agenda(array $doctor, string $date, bool $test = false): in
     return $n;
 }
 
-/** Each doctor with appointments today gets the programme once, from their hour until the last appointment. */
+/** How long after the doctor's hour the programme of the day may still go (no cron: the next panel visit). */
+const AGENDA_WINDOW_HOURS = 3;
+
+/** Whether the time for the doctor's programme of the day has passed (later changes go one by one). */
+function agenda_window_passed(array $doctor, DateTimeImmutable $now): bool
+{
+    $from = new DateTimeImmutable($now->format('Y-m-d') . ' ' . ($doctor['agenda_time'] ?: '07:00'));
+    return $now > $from->modify('+' . AGENDA_WINDOW_HOURS . ' hours');
+}
+
+/**
+ * Each doctor with appointments today gets the programme once, in the morning: from their hour
+ * for AGENDA_WINDOW_HOURS (and before the last appointment). Missed (SMS switched on later,
+ * appointments added in the afternoon), it does not go that day: a „Bună dimineața” at 17:30
+ * helps nobody; the appointments added later reach the doctor one by one (notify_doctor_today).
+ */
 function send_agendas(DateTimeImmutable $now): void
 {
     $today = $now->format('Y-m-d');
@@ -593,7 +608,7 @@ function send_agendas(DateTimeImmutable $now): void
     $days = db_all("SELECT doctor_id, MAX(starts_at) AS last_start FROM appointments WHERE starts_at >= ? AND starts_at <= ? AND status IN ({$in}) GROUP BY doctor_id", ["{$today} 00:00:00", "{$today} 23:59:59"]);
     foreach ($days as $d) {
         $doctor = db_one('SELECT * FROM doctors WHERE id = ?', [(int) $d['doctor_id']]);
-        if ($doctor === null || $now->format('H:i') < ($doctor['agenda_time'] ?: '07:00') || $now->format('Y-m-d H:i:s') > $d['last_start']) {
+        if ($doctor === null || $now->format('H:i') < ($doctor['agenda_time'] ?: '07:00') || agenda_window_passed($doctor, $now) || $now->format('Y-m-d H:i:s') > $d['last_start']) {
             continue;
         }
         try {
@@ -605,14 +620,14 @@ function send_agendas(DateTimeImmutable $now): void
 }
 
 /**
- * After the programme went out, a change to today's appointments reaches the doctor the same way
- * (accounts that chose these notices in „Contul meu” already get them).
+ * After the programme went out (or its morning time passed), a change to today's appointments
+ * reaches the doctor the same way (accounts that chose these notices in „Contul meu” already get them).
  */
 function notify_doctor_today(string $staffEvent, array $a, array $vars): void
 {
     $doctor = db_one('SELECT * FROM doctors WHERE id = ?', [(int) $a['doctor_id']]);
     if ($doctor === null || empty($doctor['agenda_channel']) || substr($a['starts_at'], 0, 10) !== date('Y-m-d')
-        || !db_value("SELECT 1 FROM messages WHERE event = 'staff-agenda' AND doctor_id = ? AND created_at >= ?", [$doctor['id'], date('Y-m-d') . ' 00:00:00'])) {
+        || (!agenda_window_passed($doctor, new DateTimeImmutable()) && !db_value("SELECT 1 FROM messages WHERE event = 'staff-agenda' AND doctor_id = ? AND created_at >= ?", [$doctor['id'], date('Y-m-d') . ' 00:00:00']))) {
         return;
     }
     foreach (users_of_doctor((int) $doctor['id']) as $u) {

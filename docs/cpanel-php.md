@@ -671,3 +671,11 @@ din copia bazei de date nu mai pot fi citite.
   **Reîncercați acum** la unul eșuat.
 - În modul de probă (Setări → Mesaje), mesajul doar se trece în jurnal, iar panoul spune asta.
 
+## Programul zilei al medicului doar dimineața (octombrie 2026)
+
+- Programul zilei („Bună dimineața, Dr. …”) pleacă de la ora setată la medic (Echipa → medic), cel
+  târziu în 3 ore. Înainte pleca oricând în ziua respectivă, până la ultima programare: cu SMS-ul
+  pornit după-amiaza sau cu programări puse după-amiaza, Dr. Marcoci l-a primit la 17:34.
+- După această fereastră, programările de azi adăugate, mutate sau anulate îi ajung medicului una
+  câte una („Programare nouă” …), pe canalul ales la el.
+
