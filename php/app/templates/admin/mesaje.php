@@ -11,7 +11,12 @@ if (is_post()) {
     $msg = db_one("SELECT m.* FROM messages m LEFT JOIN patients p ON p.id = m.patient_id WHERE m.id = ? AND (m.patient_id IS NULL OR {$scope})", array_merge([(int) post('id')], $sp));
     if ($msg !== null && post('op') === 'reincearca' && $msg['status'] === 'esuat') {
         db_update('messages', ['status' => 'in-asteptare', 'attempts' => 0, 'error' => null, 'send_after' => now_sql(), 'updated_at' => now_sql()], 'id = :id', ['id' => $msg['id']]);
-        flash('Mesajul a fost pus din nou la trimis.');
+        [$sent, $note] = send_message_now((int) $msg['id']);
+        flash($note, $sent ? 'succes' : 'eroare');
+    } elseif ($msg !== null && post('op') === 'trimite-acum' && $msg['status'] === 'in-asteptare') {
+        // A message waiting for the morning (or for a retry) leaves now.
+        [$sent, $note] = send_message_now((int) $msg['id']);
+        flash($note, $sent ? 'succes' : 'eroare');
     } elseif ($msg !== null && post('op') === 'anuleaza' && $msg['status'] === 'in-asteptare') {
         db_update('messages', ['status' => 'anulat', 'updated_at' => now_sql()], 'id = :id', ['id' => $msg['id']]);
         flash('Mesajul nu mai pleacă.');
@@ -56,9 +61,12 @@ $rows = '';
 foreach ($log as $m) {
     $who = $m['patient_id'] ? '<a class="text-link underline-offset-4 hover:underline" href="/admin/pacienti/' . (int) $m['patient_id'] . '/mesaje">' . e(trim($m['last_name'] . ' ' . $m['first_name'])) . '</a>' : ($m['staff'] ? e($m['staff']) . ' <span class="text-discret">(echipă)</span>' : e($m['to_address']));
     $act = '';
-    if (in_array($m['status'], ['esuat', 'in-asteptare'], true)) {
-        $op = $m['status'] === 'esuat' ? 'reincearca' : 'anuleaza';
-        $act = '<form method="post">' . csrf_field() . '<input type="hidden" name="op" value="' . $op . '"><input type="hidden" name="id" value="' . (int) $m['id'] . '"><input type="hidden" name="inapoi" value="' . e($_SERVER['REQUEST_URI'] ?? '/admin/mesaje') . '"><button type="submit" class="' . e(btn('text', 's')) . '">' . ($op === 'reincearca' ? 'Reîncercați' : 'Nu mai trimiteți') . '</button></form>';
+    if (in_array($m['status'], ['esuat', 'in-asteptare'], true) && $m['direction'] === 'out') {
+        $hidden = csrf_field() . '<input type="hidden" name="id" value="' . (int) $m['id'] . '"><input type="hidden" name="inapoi" value="' . e($_SERVER['REQUEST_URI'] ?? '/admin/mesaje') . '">';
+        $act = $m['status'] === 'esuat'
+            ? '<form method="post">' . $hidden . '<button type="submit" name="op" value="reincearca" class="' . e(btn('secondary', 's')) . '">Reîncercați acum</button></form>'
+            : '<form method="post" class="flex flex-col items-start gap-1">' . $hidden . '<button type="submit" name="op" value="trimite-acum" class="' . e(btn('secondary', 's')) . '">' . admin_icon('send', 16) . 'Trimiteți acum</button>'
+                . '<button type="submit" name="op" value="anuleaza" class="' . e(btn('text', 's')) . '">Nu mai trimiteți</button></form>';
     }
     $rows .= '<tr class="border-t border-linie align-top"><td class="cifre whitespace-nowrap px-3 py-2">' . e(date('d.m.Y H:i', strtotime($m['sent_at'] ?? $m['send_after']))) . '</td>'
         . '<td class="px-3 py-2">' . $who . '</td>'

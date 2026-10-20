@@ -45,9 +45,11 @@ if (is_post() && $p['anonymized_at'] === null) {
         $errors['channel'] = 'Alegeți canalul.';
     }
     if ($errors === []) {
-        queue_message($row);
+        $id = queue_message($row);
         audit('mesaj-trimis', MSG_CHANNELS[$channel], null, $pid);
-        flash(messaging_live() ? 'Mesajul pleacă acum.' : 'Mesajul a fost pus în jurnal (mod de probă: nu pleacă).');
+        // It leaves now, while the page waits, so the answer says whether it went.
+        [$sent, $note] = send_message_now($id);
+        flash($note, $sent ? 'succes' : 'eroare');
         redirect("/admin/pacienti/{$pid}/mesaje");
     }
 }
@@ -74,7 +76,7 @@ $form = $p['anonymized_at'] !== null || $channels === [] ? '<p class="mt-3 text-
     . radio_group('channel', 'Pe', $channels, ['inline' => true, 'value' => post('channel') ?: (string) array_key_first($channels), 'error' => $errors['channel'] ?? null])
     . (isset($channels['email']) ? text_field('subject', 'Subiect (pentru e-mail)', ['optional' => true, 'value' => post('subject')]) : '')
     . text_area('text', 'Mesajul', ['rows' => 4, 'value' => post('text'), 'error' => $errors['text'] ?? null, 'maxlength' => 2000, 'hint' => 'Un SMS are 160 de caractere fără diacritice.'])
-    . '<div><button type="submit" class="' . e(btn('primary')) . '">' . icon('message-square', 18) . 'Trimiteți</button></div>'
+    . '<div><button type="submit" class="' . e(btn('primary')) . '">' . admin_icon('send', 18) . 'Trimiteți acum</button></div>'
     . (!$windowOpen && $wa !== null ? '<p class="text-mic text-discret">WhatsApp apare aici după ce pacientul vă scrie (24 de ore pentru răspuns).</p>' : '')
     . '</form>';
 

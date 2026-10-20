@@ -576,6 +576,25 @@
         f.appendChild(b);
         apptMenu.appendChild(f);
       });
+      if (d.sms) {
+        var sf = document.createElement("form");
+        sf.method = "post";
+        sf.action = "/admin/programari/" + d.id;
+        sf.setAttribute("data-confirma", "Trimiteți acum pacientului SMS-ul programării (la " + d.sms + ")?");
+        [["_csrf", csrfCal.value], ["op", "sms"], ["inapoi", d.inapoi]].forEach(function (x) {
+          var i = document.createElement("input");
+          i.type = "hidden";
+          i.name = x[0];
+          i.value = x[1];
+          sf.appendChild(i);
+        });
+        var sb = document.createElement("button");
+        sb.type = "submit";
+        sb.className = "mt-1.5 flex min-h-control w-full items-center justify-center rounded-control border border-linie-control bg-suprafata px-3 font-semibold text-cerneala hover:bg-adancit";
+        sb.textContent = "Trimiteți SMS acum";
+        sf.appendChild(sb);
+        apptMenu.appendChild(sf);
+      }
       if (d.proceduri) {
         var pr = document.createElement("a");
         pr.href = d.proceduri;

@@ -104,6 +104,7 @@ ${img("calendar-zi", "Calendarul pe o zi: orele în care medicul nu lucrează su
 <li>Un <strong>clic pe o programare</strong> deschide un meniu mic: ${b("Confirmat")}, ${b("A sosit")}, ${b("Nu a venit")} (și pașii următori: începe tratamentul, finalizat) sau ${b("Deschideți programarea")}. Starea se schimbă pe loc, fără să plecați din calendar.</li>
 <li>${b("+ Încă un pacient la aceeași oră")}: tot din meniul de la clic pe o programare. Deschide o programare nouă la același medic, aceeași oră și durată; alegeți pacientul și salvați. Cei doi pacienți apar unul lângă altul în calendar (medicul îi vede pe amândoi în aceeași jumătate de oră).</li>
 <li>${b("Sunat, nu răspunde")}: bifați-o în același meniu când ați sunat pacientul și nu a răspuns. Programarea <strong>clipește în roșu</strong> în calendar și pe pagina ${b("Azi")}, cu ora la care ați sunat, până când pacientul confirmă (sau ajunge) ori până scoateți bifa. Aceeași bifă e și pe pagina programării și în lista de pe ${b("Azi")}.</li>
+<li>${b("Trimiteți SMS acum")} (în același meniu și pe pagina programării): SMS-ul cu ziua, ora, clinica și linkul de confirmare pleacă pe loc, la orice oră; înainte îl vedeți și confirmați. Pentru o programare de mâine pleacă reamintirea, iar reamintirea automată nu mai pleacă a doua oară. Pe pagina programării apare când a plecat ultimul SMS.</li>
 <li><strong>Culorile căsuțelor</strong>: albă cu chenar punctat = programat (neconfirmat), <strong>portocalie</strong> = a confirmat, <strong>verde</strong> = a sosit (verde mai închis: în tratament), <strong>roșie</strong> = nu a venit, gri = finalizat sau anulat. Legenda culorilor e lângă titlu sau sub calendar.</li>
 <li><strong>Gri</strong>: orele în care medicul nu lucrează la clinica asta, pauza lui sau orele în care clinica e închisă. <strong>Roșu</strong>: concediu, curs sau interval blocat (vezi capitolul despre absențe). Sus, banda galbenă arată absențele și sărbătorile legale din ziua sau săptămâna aleasă.</li>
 <li>Azi, o <strong>linie roșie</strong> arată ora de acum.</li>
@@ -381,11 +382,11 @@ ${tabel(["Când", "Ce primește pacientul"], [
   ["De ziua lui", "Urarea (doar cu acordul pentru oferte)."],
 ])}
 <h3>Mesajele unui pacient</h3>
-<p>Fila ${b("Mesaje")} din fișă arată tot ce i s-a trimis și tot ce a răspuns. Jos îi puteți scrie un mesaj acum, pe canalul ales.</p>
+<p>Fila ${b("Mesaje")} din fișă arată tot ce i s-a trimis și tot ce a răspuns. Jos îi puteți scrie un mesaj: ${b("Trimiteți acum")} îl trimite pe loc și vă spune dacă a plecat sau de ce nu.</p>
 ${img("pacient-mesaje", "Mesajele unui pacient.")}
 ${sfat("Pe WhatsApp, un text liber pleacă doar în 24 de ore după ce pacientul v-a scris. În rest, WhatsApp permite doar mesajele cu șablon aprobat, pe care panoul le trimite singur. SMS-ul are 160 de caractere fără diacritice; un mesaj mai lung costă mai multe SMS-uri.")}
 <h3>Pagina Mesaje</h3>
-<p>Sus: <strong>mesajele primite pe WhatsApp</strong> de la pacienți (răspundeți din fișa lor, fila Mesaje). Dedesubt: jurnalul tuturor mesajelor plecate, cu starea lor (în așteptare, trimis, livrat, citit, eșuat). Un mesaj eșuat se poate trimite din nou cu ${b("Reîncercați")}; unul în așteptare se oprește cu ${b("Nu mai trimiteți")}.</p>
+<p>Sus: <strong>mesajele primite pe WhatsApp</strong> de la pacienți (răspundeți din fișa lor, fila Mesaje). Dedesubt: jurnalul tuturor mesajelor plecate, cu starea lor (în așteptare, trimis, livrat, citit, eșuat). Un mesaj eșuat se trimite din nou cu ${b("Reîncercați acum")}; unul în așteptare (de exemplu unul scris seara, care ar pleca dimineața) pleacă imediat cu ${b("Trimiteți acum")} sau se oprește cu ${b("Nu mai trimiteți")}.</p>
 ${img("mesaje", "Mesajele primite și jurnalul mesajelor.")}
 ${rol === "admin" ? "" : sfat("Dacă un pacient nu primește mesajele, verificați în fișă telefonul și canalul ales (SMS, WhatsApp sau fără mesaje).")}`,
 });

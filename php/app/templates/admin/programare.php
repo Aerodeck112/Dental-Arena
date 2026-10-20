@@ -57,6 +57,18 @@ if (!$isNew && is_post() && post('op') === 'nu-raspunde') {
     redirect($back ?? "/admin/programari/{$appt['id']}");
 }
 
+// ── „Trimiteți SMS acum” (calendar menu, this page) ─────────────────────────────
+if (!$isNew && is_post() && post('op') === 'sms') {
+    csrf_check();
+    $pat = db_one('SELECT * FROM patients WHERE id = ?', [(int) $appt['patient_id']]);
+    if ($pat !== null && in_array($appt['status'], ['programat', 'confirmat'], true) && strtotime($appt['ends_at']) > time()) {
+        [$sent, $note] = send_appointment_sms($appt, $pat);
+        audit('sms-programare', $note, null, (int) $pat['id']);
+        flash($note, $sent ? 'succes' : 'eroare');
+    }
+    redirect($back ?? "/admin/programari/{$appt['id']}");
+}
+
 // ── Where a new appointment starts from ──────────────────────────────────────
 $lead = null;
 $recall = null;
@@ -361,7 +373,7 @@ if (!$isNew) {
         . ($appt['status'] === 'anulat' && $appt['cancel_reason'] ? '<span class="text-mic text-discret">(' . e($appt['cancel_reason']) . ')</span>' : '')
         . '<span class="flex flex-wrap gap-2 sm:ml-auto">' . $btns . '</span></form>';
     if (in_array($appt['status'], ['programat', 'confirmat'], true)) {
-        $statusBar .= '<div class="-mt-3 mb-6 flex flex-wrap items-center gap-3">' . appt_no_answer_form($appt, $back) . (appt_no_answer($appt) ? appt_no_answer_chip($appt) : '') . '</div>';
+        $statusBar .= '<div class="-mt-3 mb-6 flex flex-wrap items-center gap-3">' . appt_no_answer_form($appt, $back) . (appt_no_answer($appt) ? appt_no_answer_chip($appt) : '') . appt_sms_form($appt, $back) . '</div>';
     }
 }
 $actions = '';

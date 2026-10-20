@@ -484,6 +484,25 @@ function appt_no_answer_form(array $a, ?string $back): string
         . '<noscript><button type="submit" class="' . e(btn('text', 's')) . '">Salvați</button></noscript></form>';
 }
 
+/**
+ * „Trimiteți SMS acum”: the appointment's SMS (tomorrow: the reminder) leaves at once; the text
+ * is shown before sending, and when one went last. Empty when the patient has no mobile number.
+ */
+function appt_sms_form(array $a, ?string $back): string
+{
+    $p = db_one('SELECT * FROM patients WHERE id = ?', [(int) $a['patient_id']]);
+    if ($p === null || phone_ro_mobile((string) $p['phone']) === null || strtotime($a['ends_at']) <= time()) {
+        return '';
+    }
+    [, $text] = appointment_sms($a, $p);
+    $last = appointment_last_sms((int) $a['id']);
+    return '<form method="post" action="/admin/programari/' . (int) $a['id'] . '" class="inline-flex flex-wrap items-center gap-2" data-confirma="' . e('Trimiteți acum SMS-ul la ' . format_phone($p['phone']) . "?\n\n" . $text) . '">' . csrf_field() . '<input type="hidden" name="op" value="sms">'
+        . ($back !== null ? '<input type="hidden" name="inapoi" value="' . e($back) . '">' : '')
+        . '<button type="submit" class="' . e(btn('secondary')) . '">' . icon('message-square', 18) . 'Trimiteți SMS acum</button>'
+        . ($last !== null ? '<span class="text-mic text-discret">Ultimul SMS: ' . e(date('d.m H:i', strtotime($last['sent_at'] ?? $last['created_at']))) . ' ' . msg_status_chip($last['status']) . '</span>' : '')
+        . '</form>';
+}
+
 function appt_status_chip(string $status): string
 {
     $cls = match ($status) {

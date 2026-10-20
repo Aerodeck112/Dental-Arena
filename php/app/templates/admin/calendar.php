@@ -98,6 +98,8 @@ $block = static function (array $a, bool $compact = false) use ($movable, $url, 
     $noAnswer = appt_no_answer($a);
     $menu = ['id' => (int) $a['id'], 'stare' => APPT_STATUS[$a['status']] ?? $a['status'], 'nume' => patient_name($a), 'ora' => hm($a['starts_at']) . '–' . hm($a['ends_at']), 'actiuni' => appt_quick_actions($a['status']), 'inapoi' => $url([])]
         + (in_array($a['status'], ['programat', 'confirmat'], true) ? ['nuRaspunde' => $noAnswer ? hm($a['no_answer_at']) : ''] : [])
+        // „Trimiteți SMS acum”: the appointment's SMS (tomorrow: the reminder), at once.
+        + (in_array($a['status'], ['programat', 'confirmat'], true) && strtotime($a['ends_at']) > time() && phone_ro_mobile((string) $a['phone']) !== null ? ['sms' => format_phone((string) $a['phone'])] : [])
         // The doctors see two patients in the same half hour: a second appointment at the same time.
         + (in_array($a['status'], ['programat', 'confirmat', 'sosit', 'in-tratament'], true) ? ['alDoilea' => admin_url('/admin/programari/noua', ['clinica' => $a['location_id'], 'medic' => $a['doctor_id'], 'data' => substr($a['starts_at'], 0, 10), 'ora' => hm($a['starts_at']), 'durata' => (int) ((strtotime($a['ends_at']) - strtotime($a['starts_at'])) / 60), 'dublu' => 1, 'inapoi' => $url([])])] : [])
         + ($canProcedures && in_array($a['status'], ['sosit', 'in-tratament', 'finalizat'], true) ? ['proceduri' => admin_url('/admin/pacienti/' . (int) $a['patient_id'] . '/proceduri', ['programare' => $a['id'], 'medic' => $a['doctor_id'], 'data' => substr($a['starts_at'], 0, 10), 'clinica' => $a['location_id']]) . '#adauga'] : []);

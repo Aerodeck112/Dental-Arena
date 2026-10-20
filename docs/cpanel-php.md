@@ -657,3 +657,17 @@ din copia bazei de date nu mai pot fi citite.
   clinica aleasă și se schimbă când schimbați clinica (dacă nu l-ați scris de mână).
 - Facturile (partea financiară a etapei 2) rămân un comutator separat, în Setări.
 - Actualizarea aplică singură migrările `019_user_history_from.sql` și `020_clinic_prices.sql`.
+
+## SMS trimis acum, din panou (octombrie 2026)
+
+- Pe programare (pagina ei și meniul din calendar): **Trimiteți SMS acum**. Pleacă pe loc, la orice
+  oră, SMS-ul programării (textul „Programare făcută”; pentru o programare de mâine, „Reamintire”,
+  iar reamintirea automată nu mai pleacă a doua oară). Textul se vede înainte, la confirmare; pe
+  pagina programării apare „Ultimul SMS” cu starea lui. Doar pentru programările viitoare, programate
+  sau confirmate, la pacienții cu mobil românesc.
+- Fișa pacientului → Mesaje: **Trimiteți acum** trimite mesajul pe loc și spune dacă a plecat sau
+  eroarea exactă (SMSLink, WhatsApp, e-mail).
+- Mesaje → jurnal: **Trimiteți acum** la un mesaj în așteptare (de exemplu amânat până dimineață) și
+  **Reîncercați acum** la unul eșuat.
+- În modul de probă (Setări → Mesaje), mesajul doar se trece în jurnal, iar panoul spune asta.
+

@@ -777,27 +777,89 @@ function process_message_queue(int $limit = 40): int
     $rows = db_all("SELECT * FROM messages WHERE status = 'in-asteptare' AND send_after <= ? ORDER BY send_after, id LIMIT " . max(1, $limit), [now_sql()]);
     $n = 0;
     foreach ($rows as $msg) {
-        // Claim it: only one process sends a message.
-        if (db_run("UPDATE messages SET status = 'se-trimite', updated_at = ? WHERE id = ? AND status = 'in-asteptare'", [now_sql(), $msg['id']]) !== 1) {
-            continue;
+        if (send_queued_message($msg) !== null) {
+            $n++;
         }
-        try {
-            $r = deliver_message($msg);
-        } catch (Throwable $e) {
-            $r = ['ok' => false, 'id' => null, 'error' => mb_substr($e->getMessage(), 0, 200)];
-        }
-        $attempts = (int) $msg['attempts'] + 1;
-        if ($r['ok']) {
-            db_update('messages', ['status' => $r['status'] ?? 'trimis', 'provider_id' => $r['id'], 'error' => null, 'attempts' => $attempts, 'sent_at' => now_sql(), 'updated_at' => now_sql()], 'id = :id', ['id' => $msg['id']]);
-        } else {
-            // Up to 3 tries, 10 and 30 minutes apart.
-            $retry = $attempts < 3;
-            db_update('messages', ['status' => $retry ? 'in-asteptare' : 'esuat', 'error' => $r['error'], 'attempts' => $attempts, 'send_after' => $retry ? date('Y-m-d H:i:s', time() + ($attempts === 1 ? 600 : 1800)) : $msg['send_after'], 'updated_at' => now_sql()], 'id = :id', ['id' => $msg['id']]);
-            app_log('warning', "mesaj #{$msg['id']} [{$msg['channel']}]: {$r['error']}");
-        }
-        $n++;
     }
     return $n;
+}
+
+/**
+ * Sends one waiting message now, whatever its hour. Returns the result of the sending, or null
+ * when another process had it already.
+ */
+function send_queued_message(array $msg): ?array
+{
+    // Claim it: only one process sends a message.
+    if (db_run("UPDATE messages SET status = 'se-trimite', updated_at = ? WHERE id = ? AND status = 'in-asteptare'", [now_sql(), $msg['id']]) !== 1) {
+        return null;
+    }
+    try {
+        $r = deliver_message($msg);
+    } catch (Throwable $e) {
+        $r = ['ok' => false, 'id' => null, 'error' => mb_substr($e->getMessage(), 0, 200)];
+    }
+    $attempts = (int) $msg['attempts'] + 1;
+    if ($r['ok']) {
+        db_update('messages', ['status' => $r['status'] ?? 'trimis', 'provider_id' => $r['id'], 'error' => null, 'attempts' => $attempts, 'sent_at' => now_sql(), 'updated_at' => now_sql()], 'id = :id', ['id' => $msg['id']]);
+    } else {
+        // Up to 3 tries, 10 and 30 minutes apart.
+        $retry = $attempts < 3;
+        db_update('messages', ['status' => $retry ? 'in-asteptare' : 'esuat', 'error' => $r['error'], 'attempts' => $attempts, 'send_after' => $retry ? date('Y-m-d H:i:s', time() + ($attempts === 1 ? 600 : 1800)) : $msg['send_after'], 'updated_at' => now_sql()], 'id = :id', ['id' => $msg['id']]);
+        app_log('warning', "mesaj #{$msg['id']} [{$msg['channel']}]: {$r['error']}");
+    }
+    return $r;
+}
+
+/** Sends the message with this id now („Trimiteți acum”) and says how it went, for a flash. @return array{0:bool,1:string} */
+function send_message_now(int $id): array
+{
+    $msg = db_one('SELECT * FROM messages WHERE id = ?', [$id]);
+    $r = $msg !== null ? send_queued_message($msg) : null;
+    if ($r === null) {
+        return [false, 'Mesajul nu mai era în așteptare (s-a trimis deja sau a fost anulat).'];
+    }
+    if (!$r['ok']) {
+        $retry = db_value('SELECT status FROM messages WHERE id = ?', [$msg['id']]) === 'in-asteptare';
+        return [false, 'Mesajul nu a plecat: ' . rtrim((string) $r['error'], '. ') . '.' . ($retry ? ' Se mai încearcă singur peste 10 minute; îl vedeți în Mesaje.' : ' Îl puteți reîncerca din Mesaje.')];
+    }
+    return ($r['status'] ?? '') === 'proba' ? [true, 'Mod de probă: mesajul a fost doar trecut în jurnal, nu a plecat. Trimiterea reală se pornește din Setări → Mesaje.'] : [true, MSG_CHANNELS[$msg['channel']] . ' trimis către ' . $msg['to_address'] . '.'];
+}
+
+/**
+ * The SMS of an appointment, written now from the panel: the reminder when it is tomorrow,
+ * otherwise the text of a new appointment (the day, the hour, the clinic, the link).
+ * @return array{0:string,1:string} event, text
+ */
+function appointment_sms(array $a, array $p): array
+{
+    $event = substr($a['starts_at'], 0, 10) === date('Y-m-d', strtotime('+1 day')) ? 'reamintire' : 'programare-noua';
+    return [$event, fill_template((string) patient_event($event)['sms'], appointment_vars($a) + patient_vars($p) + ['link_recenzie' => messaging()['review_link']])];
+}
+
+/**
+ * „Trimiteți SMS acum” on an appointment: the SMS leaves at once, at any hour. Sent for tomorrow,
+ * it takes the place of the automatic reminder. @return array{0:bool,1:string}
+ */
+function send_appointment_sms(array $a, array $p): array
+{
+    $to = phone_ro_mobile((string) $p['phone']);
+    if ($to === null || $p['anonymized_at'] !== null) {
+        return [false, 'Pacientul nu are un număr de mobil românesc.'];
+    }
+    [$event, $text] = appointment_sms($a, $p);
+    $id = queue_message(['channel' => 'sms', 'event' => $event, 'patient_id' => (int) $p['id'], 'appointment_id' => (int) $a['id'], 'to_address' => $to, 'body' => $text]);
+    if ($event === 'reamintire') {
+        db_run("DELETE FROM messages WHERE appointment_id = ? AND event = 'reamintire' AND status = 'in-asteptare' AND id <> ?", [(int) $a['id'], $id]);
+        db_update('appointments', ['reminder_sent_at' => now_sql()], 'id = :id', ['id' => $a['id']]);
+    }
+    return send_message_now($id);
+}
+
+/** When an SMS last went to the patient about this appointment (sent or tried), or null. */
+function appointment_last_sms(int $appointmentId): ?array
+{
+    return db_one("SELECT * FROM messages WHERE appointment_id = ? AND channel = 'sms' AND direction = 'out' AND status <> 'anulat' ORDER BY id DESC LIMIT 1", [$appointmentId]);
 }
 
 /**
