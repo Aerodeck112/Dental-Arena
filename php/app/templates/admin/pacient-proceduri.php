@@ -23,8 +23,10 @@ $v = [
     'service_id' => '', 'name' => '', 'tooth' => '', 'price' => '', 'discount' => '', 'lab' => '', 'done' => '1', 'notes' => '',
     'appointment_id' => (string) (admin_int(query('programare')) ?? ''),
 ];
+// An account that starts from zero („Luduș 2”) sees and changes only what is since its day.
+$hist = history_from($user);
 // Who may change or delete a procedure: an administrator, or whoever added it, the same week.
-$mayEdit = static fn (array $r) => $writable && (is_admin($user) || ((int) $r['created_by'] === (int) $user['id'] && strtotime($r['created_at']) > time() - 7 * 86400));
+$mayEdit = static fn (array $r) => $writable && ($hist === null || $r['performed_on'] >= $hist) && (is_admin($user) || ((int) $r['created_by'] === (int) $user['id'] && strtotime($r['created_at']) > time() - 7 * 86400));
 
 if (is_post() && $writable) {
     csrf_check();
@@ -43,7 +45,7 @@ if (is_post() && $writable) {
             }
         }
         $date = DateTimeImmutable::createFromFormat('!Y-m-d', $v['performed_on']);
-        if ($date === false || $v['performed_on'] > $today) {
+        if ($date === false || $v['performed_on'] > $today || ($hist !== null && $v['performed_on'] < $hist)) {
             $errors['performed_on'] = 'Alegeți ziua în care s-a făcut procedura (nu în viitor).';
         }
         $service = $v['service_id'] !== '' ? db_one('SELECT * FROM services WHERE id = ?', [(int) $v['service_id']]) : null;
@@ -100,7 +102,7 @@ if (is_post() && $writable) {
                         ]);
                     }
                 }
-                procedures_allocate($pid);
+                procedures_allocate($pid, $hist);
             });
             $n = max(1, count($teeth));
             audit($op === 'modifica' ? 'procedura-modificata' : 'procedura', $name . ($teeth !== [] ? ' · ' . implode(', ', $teeth) : '') . ' · ' . lei((int) $price - $row['discount']) . ($n > 1 ? " × {$n}" : ''), null, $pid);
@@ -112,7 +114,7 @@ if (is_post() && $writable) {
         if ($r !== null && $mayEdit($r)) {
             db_tx(static function () use ($r, $pid): void {
                 db_run('DELETE FROM procedures WHERE id = ?', [(int) $r['id']]);
-                procedures_allocate($pid);
+                procedures_allocate($pid, $hist);
             });
             audit('procedura-stearsa', $r['name'] . ' · ' . format_date($r['performed_on']), null, $pid);
             flash('Procedura a fost ștearsă. Ce se plătise pentru ea a rămas ca avans.');
@@ -133,7 +135,7 @@ if (is_post() && $writable) {
         if ($method === '') {
             $errors['pay_method'] = 'Alegeți cum a plătit.';
         }
-        if ($paidOn === false || post('paid_on') > $today) {
+        if ($paidOn === false || post('paid_on') > $today || ($hist !== null && post('paid_on') < $hist)) {
             $errors['paid_on'] = 'Alegeți ziua plății (nu în viitor).';
         }
         if ($loc === null || !in_array($loc, $allowed, true)) {
@@ -146,7 +148,7 @@ if (is_post() && $writable) {
                     'reference' => mb_substr(trim(post('reference')), 0, 60) ?: null, 'notes' => mb_substr(trim(post('pay_notes')), 0, 255) ?: null,
                     'received_by' => (int) $user['id'], 'created_at' => now_sql(),
                 ]);
-                procedures_allocate($pid);
+                procedures_allocate($pid, $hist);
             });
             audit('plata-proceduri', lei($amount) . ', ' . PROC_PAY_METHODS[$method], null, $pid);
             flash('Plata de ' . lei($amount) . ' a fost înregistrată.');
@@ -158,7 +160,7 @@ if (is_post() && $writable) {
             db_tx(static function () use ($pay, $pid, $user): void {
                 db_update('procedure_payments', ['cancelled_at' => now_sql(), 'cancelled_by' => (int) $user['id']], 'id = :id', ['id' => (int) $pay['id']]);
                 db_run('DELETE FROM procedure_payment_items WHERE payment_id = ?', [(int) $pay['id']]);
-                procedures_allocate($pid);
+                procedures_allocate($pid, $hist);
             });
             audit('plata-proceduri-anulata', lei((int) $pay['amount']) . ' din ' . format_date($pay['paid_on']), null, $pid);
             flash('Plata a fost anulată.');
@@ -167,9 +169,9 @@ if (is_post() && $writable) {
     }
 }
 
-$rows = patient_procedures($pid);
-$sum = procedures_summary($pid);
-$payments = db_all('SELECT pp.*, u.name AS who FROM procedure_payments pp LEFT JOIN users u ON u.id = pp.received_by WHERE pp.patient_id = ? ORDER BY pp.paid_on DESC, pp.id DESC', [$pid]);
+$rows = patient_procedures($pid, $hist);
+$sum = procedures_summary($pid, $hist);
+$payments = db_all('SELECT pp.*, u.name AS who FROM procedure_payments pp LEFT JOIN users u ON u.id = pp.received_by WHERE pp.patient_id = ?' . ($hist !== null ? ' AND pp.paid_on >= ?' : '') . ' ORDER BY pp.paid_on DESC, pp.id DESC', $hist !== null ? [$pid, $hist] : [$pid]);
 $err = static fn (string $k): ?string => $errors[$k] ?? null;
 
 // ── The totals ──
@@ -183,12 +185,18 @@ $tiles = '<div class="mb-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">'
 
 // ── „Adaugă procedură” ──
 $priceList = procedure_price_options();
-$opts = static function (string $selected) use ($priceList): string {
+// Each option has the site price and the price approved at each clinic; the form takes the price
+// of the clinic chosen below (admin.js), and the list shows the one of the usual clinic.
+$priceClinic = (int) $v['location_id'];
+$opts = static function (string $selected) use ($priceList, $priceClinic): string {
     $out = '<option value="">Alegeți din lista de prețuri…</option>';
     foreach ($priceList as $cat => $items) {
         $out .= '<optgroup label="' . e($cat) . '">';
         foreach ($items as $sid => $s) {
-            $out .= '<option value="' . $sid . '" data-pret="' . e($s['price'] !== null ? lei_input($s['price']) : '') . '"' . ((string) $sid === $selected ? ' selected' : '') . '>' . e($s['name'] . ($s['price'] !== null ? ' · ' . lei($s['price']) : '')) . '</option>';
+            $shown = $s['clinics'][$priceClinic] ?? $s['price'];
+            $out .= '<option value="' . $sid . '" data-pret="' . e($s['price'] !== null ? lei_input($s['price']) : '') . '"'
+                . implode('', array_map(static fn ($lid, $pr) => ' data-pret-' . (int) $lid . '="' . e(lei_input((int) $pr)) . '"', array_keys($s['clinics']), $s['clinics']))
+                . ((string) $sid === $selected ? ' selected' : '') . '>' . e($s['name'] . ($shown !== null ? ' · ' . lei((int) $shown) : '')) . '</option>';
         }
         $out .= '</optgroup>';
     }
@@ -219,7 +227,7 @@ $procForm = static function (array $v, string $op, ?int $id) use ($opts, $docOpt
         . '<input type="hidden" name="op" value="' . $op . '">' . ($id !== null ? '<input type="hidden" name="id" value="' . $id . '">' : '')
         . '<input type="hidden" name="appointment_id" value="' . e($v['appointment_id']) . '">'
         . '<div class="flex flex-col gap-1.5"><label for="field-service_id' . $sid . '" class="text-control font-medium">Procedura</label>'
-        . '<select id="field-service_id' . $sid . '" name="service_id" data-pret-sursa="#field-price' . $sid . '" class="' . e(input_classes('h-control')) . '">' . $opts($v['service_id']) . '</select>'
+        . '<select id="field-service_id' . $sid . '" name="service_id" data-pret-sursa="#field-price' . $sid . '" data-pret-clinica="#field-location_id' . $sid . '" class="' . e(input_classes('h-control')) . '">' . $opts($v['service_id']) . '</select>'
         . field_error("field-service_id{$sid}-error", $id === null ? $err('service_id') : null) . '</div>'
         . text_field('name', 'Sau scrieți procedura', ['id' => "field-name{$sid}", 'value' => $v['name'], 'optional' => true, 'maxlength' => 255, 'hint' => 'Doar dacă nu e în listă (sau ca s-o numiți altfel).'])
         . ($id === null ? $toothChart : '')

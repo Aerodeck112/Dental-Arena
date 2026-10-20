@@ -28,7 +28,7 @@ ${tabel(["Rolul", "Ce vede și ce face"], [
   ["Administrator medic", "Administratorul care este și medic: tot ce are administratorul, plus partea de medic (consultații, intervenții, fișa completă), legat de profilul lui de medic."],
   ["Suport tehnic (VITIM)", "Configurarea: setările (firma, clinicile, mesajele, AI, chatul, programările online, tabletele, actualizările) și conturile. Administratorul primește un rezumat cu tot ce schimbă VITIM."],
 ])}
-${sfat("Recepția și medicii văd doar clinicile bifate în contul lor (Cristești, Luduș sau amândouă). Administratorii și VITIM le văd pe amândouă.")}
+${sfat("Recepția, medicii și administratorii medici văd doar clinicile bifate în contul lor (Cristești, Luduș sau amândouă). Administratorii și VITIM le văd pe amândouă.")}
 ${sfat("Fiecare clinică este o firmă separată: Cristești este S.C. Dental Arena S.R.L. (CUI RO30570968), Luduș este S.C. Dental Arena Ludus S.R.L. (CUI RO30611278). Acordurile, documentele tipărite și facturile poartă firma clinicii unde se fac.")}
 ${sfat("Partea financiară (facturi, încasări, soldul pacientului) e oprită în această perioadă de probă și se pornește în etapa a doua. Manualul ei vine atunci.")}`,
 });
@@ -486,7 +486,7 @@ export const proceduri = (rol) => ({
 ${rol !== "receptie" ? `<h3>Adaugă procedură (medicul, după fiecare intervenție)</h3>
 ${pasi([
   `În fișa pacientului, fila ${b("Proceduri și plăți")} → ${b("Adaugă procedură")}. Mai repede: din programarea pacientului care a sosit (sau din meniul ei din calendar), ${b("Proceduri efectuate")}: ziua, medicul și clinica sunt deja completate.`,
-  `Alegeți procedura din lista de prețuri: prețul se completează singur (îl puteți schimba). Dacă nu e în listă, scrieți-o la „Sau scrieți procedura”.`,
+  `Alegeți procedura din lista de prețuri: prețul se completează singur, cu prețul aprobat la clinica aleasă (îl puteți schimba). Dacă nu e în listă, scrieți-o la „Sau scrieți procedura”.`,
   `Dinții: dați clic pe ei în ${b("odontograma")} din formular (încă un clic îl scoate) sau scrieți-i (16, sau 13, 14, 15). Se face câte un rând pentru fiecare dinte, fiecare cu prețul de sus. Pe odontogramă se văd și cariile, obturațiile etc. notate la pacient.`,
   `Opțional: reducerea (%), costul de laborator, observații. Debifați „Procedura e efectuată” pentru una începută, care încă nu se plătește.`,
   `${b("Adăugați procedura")}.`,
@@ -497,7 +497,9 @@ ${pasi([
   `Jos, la ${b("Încasare")}: suma (e completat ce mai are de plată), data, numărul chitanței, clinica și cum a plătit (numerar, card, transfer, altă plată).`,
   `${b("Înregistrați plata")}: plata se trece pe procedurile neachitate, de la cea mai veche. Ce rămâne în plus e avans și se folosește singur la următoarea procedură.`,
 ])}
-${sfat("O plată greșită o anulează administratorul (rămâne în listă, tăiată).")}` : ""}
+${sfat("O plată greșită o anulează administratorul (rămâne în listă, tăiată).")}
+<h3>Casa: raportul zilei</h3>
+<p>${b("Casa")} din meniu arată ce s-a încasat într-o zi la o clinică: ${b("Numerar: bani în casă")} (cât trebuie să fie în casă), card, transfer, altă plată și totalul, apoi fiecare plată (ora, pacientul, cum a plătit, cine a încasat, suma). Plățile anulate apar separat și nu intră în total. Alegeți ziua, clinica și „Încasate de” (toată echipa sau doar dumneavoastră); ${b("Tipăriți")} îl scoate pe hârtie la închiderea zilei.</p>` : ""}
 <h3>Pagina Proceduri (meniu)</h3>
 <p>${b("Proceduri")} din meniu arată procedurile dintr-o perioadă (ca „Statistică proceduri” din QDental), pe medic și pe clinică, cu totalurile: de plată, achitat, rămas și încasat în perioadă. Bifați ${b("Doar neachitate")} ca să vedeți cine mai are de plată. Un medic își vede implicit procedurile lui. Un clic pe pacient deschide fișa lui.</p>`,
 });
@@ -564,10 +566,12 @@ ${img("utilizatori", "Conturile panoului.")}
 ${pasi([
   `${b("Cont nou")}: numele, e-mailul (cu el intră în panou) și rolul: ${b("Recepție")}, ${b("Medic")}, ${b("Administrator")}, ${b("Administrator medic")} sau ${b("Suport tehnic (VITIM)")}.`,
   "Bifați clinicile în care lucrează persoana (administratorii și VITIM le văd pe amândouă).",
+  `Pentru un administrator medic bifați doar clinicile lui (de exemplu Cristești și Luduș, sau doar Luduș): vede pacienții, calendarul și rapoartele doar de acolo.`,
   `Pentru un medic sau un administrator medic, alegeți ${b("Profilul de medic")}: programările lui apar la el și primește notificările lor. La administratorul medic profilul e obligatoriu.`,
   `Scrieți o ${b("Parola de început")} și spuneți-o persoanei. La prima intrare își alege una nouă.`,
 ])}
 ${img("utilizator", "Un cont: rolul, clinicile, profilul de medic.")}
+${sfat("Un cont care începe de la zero (de exemplu „Luduș 2”, pentru încasări): rolul Recepție, clinica Luduș și „Procedurile și plățile vizibile de la” = ziua de azi. Vede pacienții (nume, telefon) și programările, dar procedurile, plățile și Casa doar de la acea zi; nu poate trece proceduri sau plăți mai vechi.")}
 ${tabel(["Rolul", "Pe scurt"], [
   ["Recepție", "Lucrul zilnic, fără anamneza completă și fără administrare."],
   ["Medic", "Fișa completă, odontograma, planurile, implanturile, consultația cu AI."],
@@ -610,6 +614,7 @@ ${img("servicii-pagina", "Prețurile unei pagini de servicii.")}
 <h3>Prețurile (sub-serviciile)</h3>
 <ul>
 <li>Fiecare rând: numele, prețul, bifa „de la”, un al doilea preț (pentru „200 / 400 lei”), unitatea (de exemplu „/dinte”), bifa „pe site” și prețul reprezentativ (cel afișat pe cardul serviciului). Prețul gol înseamnă „Prețul îl aflați la telefon”.</li>
+<li>${b("Preț aprobat în clinică")}: sub fiecare rând, câte un preț pentru Cristești și pentru Luduș. Nu apare pe site; se completează singur la ${b("Adaugă procedură")}, după clinica aleasă. Gol = prețul de pe site.</li>
 <li><strong>Durează</strong>: cât ține serviciul. Pe site, programarea pentru el ocupă atât.</li>
 <li><strong>Programare online</strong>: bifat, serviciul apare ca motiv pe pagina Programare de pe site, cu textul pentru pacient (de exemplu „Consultație sau control”) și o explicație scurtă. „Urgență” îl pune al doilea, evidențiat, cu telefoanele clinicilor.</li>
 <li>${b("Adăugați un preț (sub-serviciu)")} pune un rând nou; săgețile îl mută; coșul îl șterge.</li>

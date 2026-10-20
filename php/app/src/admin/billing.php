@@ -151,13 +151,13 @@ function patient_balance(int $patientId): array
 
 function can_see_invoice(array $inv, array $user): bool
 {
-    return can('billing', $user) && (is_admin($user) || in_array((int) $inv['location_id'], allowed_location_ids($user), true));
+    return can('billing', $user) && (all_clinics($user) || in_array((int) $inv['location_id'], allowed_location_ids($user), true));
 }
 
 /** The location condition for invoices and payments of the user's clinics. */
 function billing_scope_sql(array $user, string $col): array
 {
-    if (is_admin($user)) {
+    if (all_clinics($user)) {
         return ['1 = 1', []];
     }
     $ids = allowed_location_ids($user);

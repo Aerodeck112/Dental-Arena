@@ -72,7 +72,7 @@ function admin_clinic_names(): array
  */
 function lead_scope_sql(array $user, string $col = 'location_id'): array
 {
-    if (is_admin($user)) {
+    if (all_clinics($user)) {
         return ['1 = 1', []];
     }
     $ids = allowed_location_ids($user);
@@ -84,7 +84,7 @@ function lead_scope_sql(array $user, string $col = 'location_id'): array
 
 function can_see_lead(array $lead, array $user): bool
 {
-    if (is_admin($user)) {
+    if (all_clinics($user)) {
         return true;
     }
     $ids = allowed_location_ids($user);

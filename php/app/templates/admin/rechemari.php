@@ -14,7 +14,7 @@ if (is_post()) {
     csrf_check();
     $r = db_one('SELECT r.*, p.preferred_location_id FROM recalls r JOIN patients p ON p.id = r.patient_id WHERE r.id = ?', [(int) post('id')]);
     $loc = $r ? ($r['location_id'] ?? $r['preferred_location_id']) : null;
-    if ($r === null || (!is_admin($user) && $loc !== null && !in_array((int) $loc, allowed_location_ids($user), true))) {
+    if ($r === null || (!all_clinics($user) && $loc !== null && !in_array((int) $loc, allowed_location_ids($user), true))) {
         admin_not_found($user);
     }
     $note = mb_substr(post('nota'), 0, 1000);

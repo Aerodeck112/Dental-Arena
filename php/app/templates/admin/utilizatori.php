@@ -15,7 +15,7 @@ foreach ($rows as $u) {
     $tr .= '<tr class="border-t border-linie' . ((int) $u['active'] === 0 ? ' text-discret' : '') . '">'
         . '<td class="px-3 py-2"><a href="/admin/utilizatori/' . $id . '" class="font-semibold text-link underline-offset-4 hover:underline">' . e($u['name']) . '</a><span class="block text-mic text-discret">' . e($u['email']) . '</span></td>'
         . '<td class="px-3 py-2">' . e(ROLES[$u['role']] ?? $u['role']) . '</td>'
-        . '<td class="px-3 py-2">' . e(in_array($u['role'], ADMIN_ROLES, true) ? 'Toate' : implode(', ', $locs[$id] ?? ['—'])) . '</td>'
+        . '<td class="px-3 py-2">' . e(in_array($u['role'], ADMIN_ROLES, true) && $u['role'] !== 'admin-medic' ? 'Toate' : implode(', ', $locs[$id] ?? ['—'])) . '</td>'
         . '<td class="cifre px-3 py-2 text-mic">' . ($u['last_login_at'] ? e(format_datetime($u['last_login_at'])) : '<span class="text-discret">niciodată</span>') . '</td>'
         . '<td class="px-3 py-2 text-mic">' . ((int) $u['active'] === 1 ? 'Activ' : 'Dezactivat') . '</td></tr>';
 }

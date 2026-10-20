@@ -39,7 +39,7 @@ $leadRows = db_all("SELECT category_slug, COUNT(*) AS total, SUM(status = 'progr
 $leadTable = array_map(static fn ($r) => [$r['category_slug'] ? service_title($r['category_slug']) : 'Nespecificat', (int) $r['total'], (int) $r['programate'], $pct((int) $r['programate'], (int) $r['total'])], $leadRows);
 $leadHead = ['Serviciul dorit', 'Cereri', 'Programate', 'Conversie'];
 
-$newPatients = (int) db_value('SELECT COUNT(*) FROM patients WHERE created_at >= ? AND created_at < ?' . (is_admin($user) && $clinic === null ? '' : " AND (preferred_location_id IN ({$in}) OR preferred_location_id IS NULL)"), $period);
+$newPatients = (int) db_value('SELECT COUNT(*) FROM patients WHERE created_at >= ? AND created_at < ?' . (all_clinics($user) && $clinic === null ? '' : " AND (preferred_location_id IN ({$in}) OR preferred_location_id IS NULL)"), $period);
 
 // ── Revenue (administrators; a doctor sees their own production) ──
 $docTable = [];

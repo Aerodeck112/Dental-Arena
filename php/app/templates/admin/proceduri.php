@@ -15,6 +15,11 @@ $to = $isDate(query('pana_la')) ? query('pana_la') : date('Y-m-d');
 if ($to < $from) {
     [$from, $to] = [$to, $from];
 }
+// An account that starts from zero („Luduș 2”) sees only what is since its day.
+if (($hist = history_from($user)) !== null) {
+    $from = max($from, $hist);
+    $to = max($to, $from);
+}
 $doc = query('medic') !== '' ? (query('medic') === 'toti' ? null : admin_int(query('medic'))) : ($user['role'] === 'medic' && $user['doctor_id'] ? (int) $user['doctor_id'] : null);
 $loc = admin_int(query('clinica'));
 $loc = $loc !== null && in_array($loc, $allowed, true) ? $loc : null;

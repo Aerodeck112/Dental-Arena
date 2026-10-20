@@ -182,7 +182,7 @@ function next_file_number(): int
  */
 function patient_scope_sql(array $user, string $alias = 'p'): array
 {
-    if (is_admin($user)) {
+    if (all_clinics($user)) {
         return ['1 = 1', []];
     }
     $ids = allowed_location_ids($user);
@@ -363,7 +363,7 @@ function patient_conflicts(int $patientId, string $start, string $end, ?int $exc
 
 function can_see_appointment(array $a, array $user): bool
 {
-    return is_admin($user) || in_array((int) $a['location_id'], allowed_location_ids($user), true);
+    return all_clinics($user) || in_array((int) $a['location_id'], allowed_location_ids($user), true);
 }
 
 /** Moves an appointment to a status, stamping when it happened. */

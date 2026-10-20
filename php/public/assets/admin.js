@@ -612,15 +612,27 @@
 
   // Procedures: choosing one from the price list fills in its price (until the price is typed by
   // hand); a button with data-deschide opens the <details> it names („Adaugă procedură”).
-  document.addEventListener("change", function (e) {
-    var sel = e.target.closest && e.target.closest("select[data-pret-sursa]");
-    if (!sel) return;
+  // The price of the chosen clinic (data-pret-<clinic id>), else the site price; a change of clinic
+  // changes it too, until the price is typed by hand.
+  var fillPrice = function (sel) {
     var input = document.querySelector(sel.getAttribute("data-pret-sursa"));
     var opt = sel.options[sel.selectedIndex];
     if (!input || !opt) return;
+    var clinic = sel.getAttribute("data-pret-clinica") ? document.querySelector(sel.getAttribute("data-pret-clinica")) : null;
+    var price = (clinic && clinic.value && opt.getAttribute("data-pret-" + clinic.value)) || opt.getAttribute("data-pret") || "";
     if (input.value === "" || input.getAttribute("data-auto") === input.value) {
-      input.value = opt.getAttribute("data-pret") || "";
+      input.value = price;
       input.setAttribute("data-auto", input.value);
+    }
+  };
+  document.addEventListener("change", function (e) {
+    var sel = e.target.closest && e.target.closest("select[data-pret-sursa]");
+    if (sel) {
+      fillPrice(sel);
+      return;
+    }
+    if (e.target.id) {
+      Array.prototype.forEach.call(document.querySelectorAll("select[data-pret-clinica='#" + e.target.id + "']"), fillPrice);
     }
   });
   document.addEventListener("click", function (e) {

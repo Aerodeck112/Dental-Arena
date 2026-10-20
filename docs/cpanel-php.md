@@ -639,3 +639,21 @@ din copia bazei de date nu mai pot fi citite.
 - **Cereri**: administratorii bifează cererile în listă (sau „toate de pe pagină”) și apasă
   **Ștergeți cererile bifate**; în Tablou, fiecare card are **Ștergeți**. Ștergerea e definitivă și
   se trece în Jurnal. Recepția nu vede ștergerea.
+
+## Clinicile administratorului medic, contul „Luduș 2”, Casa, prețuri pe clinică (octombrie 2026)
+
+- **Administratorul medic** vede doar clinicile bifate în contul lui (pacienți, calendar, cereri,
+  rechemări, rapoarte). Utilizatori → cont: Dr. Mașca are bifate Cristești și Luduș, administratorul
+  medic de la Luduș doar Luduș. Conturile existente au ambele clinici bifate până le schimbați.
+- **Un cont care începe de la zero** („Luduș 2”): Utilizatori → Cont nou → rolul Recepție, clinica
+  Luduș, **Procedurile și plățile vizibile de la** = ziua de azi. Vede pacienții (nume, telefon),
+  dar procedurile, plățile, totalurile și Casa doar de la acea zi; nu trece proceduri sau plăți mai
+  vechi, iar plățile lui se trec doar pe procedurile de după acea zi. Nu se aplică administratorilor.
+- Meniul **Casa** (recepție și administratori): raportul unei zile la o clinică: numerarul (bani în
+  casă), card, transfer, altă plată, total, fiecare plată cu cine a încasat; plățile anulate separat;
+  „Doar de mine”; Tipăriți.
+- **Servicii și prețuri → serviciu**: sub fiecare preț, **Preț aprobat în clinică** pentru Cristești
+  și Luduș (gol = prețul de pe site). Pe site nu apare; la Adaugă procedură prețul se completează după
+  clinica aleasă și se schimbă când schimbați clinica (dacă nu l-ați scris de mână).
+- Facturile (partea financiară a etapei 2) rămân un comutator separat, în Setări.
+- Actualizarea aplică singură migrările `019_user_history_from.sql` și `020_clinic_prices.sql`.

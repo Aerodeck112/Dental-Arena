@@ -44,6 +44,7 @@ if (is_post()) {
     csrf_check();
     $op = post('op');
     $updates = [];
+    $clinicPrices = [];
     $sent = $_POST['r'] ?? [];
     $sent = is_array($sent) ? $sent : [];
     $repId = (int) post('representative');
@@ -70,6 +71,15 @@ if (is_post()) {
         if ($max !== null && $max <= $min) {
             $errors["r{$id}"] = "„{$name}”: al doilea preț trebuie să fie mai mare decât primul.";
             continue;
+        }
+        // The prices approved at each clinic (in the panel only; the site keeps the price above).
+        foreach (admin_clinic_names() as $lid => $lname) {
+            try {
+                $clinicPrices[$id][$lid] = parse_lei((string) ($r['clinic'][$lid] ?? ''));
+            } catch (InvalidArgumentException $e) {
+                $errors["r{$id}"] = "„{$name}”, prețul {$lname}: " . $e->getMessage();
+                continue 2;
+            }
         }
         $unit = (string) ($r['unit'] ?? '');
         $minutes = (int) ($r['minutes'] ?? 0);
@@ -111,9 +121,16 @@ if (is_post()) {
         $errors['cat_name'] = 'Există deja un serviciu cu acest nume.';
     }
     if ($errors === []) {
-        db_tx(static function () use ($updates, $catId, $newName, $newMin, $summary, $op, $cat, $page): void {
+        db_tx(static function () use ($updates, $clinicPrices, $catId, $newName, $newMin, $summary, $op, $cat, $page): void {
             foreach ($updates as $id => $u) {
                 db_update('services', $u, 'id = :id AND category_id = :c', ['id' => $id, 'c' => $catId]);
+                foreach ($clinicPrices[$id] ?? [] as $lid => $price) {
+                    if ($price === null) {
+                        db_run('DELETE FROM service_clinic_prices WHERE service_id = ? AND location_id = ?', [$id, $lid]);
+                    } else {
+                        db_run('INSERT INTO service_clinic_prices (service_id, location_id, price, updated_at) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE price = VALUES(price), updated_at = VALUES(updated_at)', [$id, $lid, $price, now_sql()]);
+                    }
+                }
             }
             db_update('categories', ['summary' => mb_substr($summary, 0, 1000), 'name' => mb_substr($page['name'], 0, 120), 'lead' => $page['lead'] !== '' ? mb_substr($page['lead'], 0, 600) : null, 'body' => $page['body'] !== '' ? mb_substr($page['body'], 0, 8000) : null, 'public_visible' => $page['public_visible']], 'id = :id', ['id' => $catId]);
             if ($newName !== '') {
@@ -171,6 +188,7 @@ $minuteOptions = static function (string $current): string {
 $cell = 'block w-full rounded-control border border-linie-control bg-suprafata px-2.5 text-control hover:border-cerneala aria-[invalid=true]:border-2 aria-[invalid=true]:border-carmin';
 $rowsHtml = '';
 $count = count($rows);
+$clinicNow = service_clinic_prices(array_map(static fn ($s) => (int) $s['id'], $rows));
 foreach ($rows as $i => $s) {
     $id = (int) $s['id'];
     $in = $input[$id] ?? null;
@@ -207,6 +225,9 @@ foreach ($rows as $i => $s) {
         . '<label class="flex flex-col gap-1"><span class="text-mic text-discret">Explicație scurtă (opțional)</span><input name="r[' . $id . '][online_hint]" value="' . e($val('online_hint', $s['online_hint'] ?? '')) . '" maxlength="190" class="' . $cell . ' h-control"></label>'
         . '<label class="flex items-center gap-2 sm:col-span-2"><input type="checkbox" name="r[' . $id . '][urgent]" value="1"' . ($chk('urgent', (bool) ($s['urgent'] ?? 0)) ? ' checked' : '') . ' class="size-5 accent-actiune">Urgență (apare al doilea, evidențiat)</label>'
         . '</div></details></div>'
+        . '<div class="flex flex-wrap items-end gap-3 rounded-control bg-fundal p-3 lg:col-span-2"><span class="w-full text-mic font-medium text-discret">Preț aprobat în clinică (în panou, la proceduri; nu apare pe site)</span>'
+        . implode('', array_map(static fn ($lid, $lname) => '<label class="flex w-36 flex-col gap-1"><span class="text-mic text-discret">' . e($lname) . ' (lei)</span><input name="r[' . $id . '][clinic][' . $lid . ']" value="' . e($in !== null ? (string) ($in['clinic'][$lid] ?? '') : lei_input(isset($clinicNow[$id][$lid]) ? (int) $clinicNow[$id][$lid] : null)) . '" inputmode="decimal" placeholder="' . e($s['price_min'] !== null ? lei_input((int) $s['price_min']) . ' (site)' : 'ca pe site') . '" class="' . $cell . ' h-control cifre"></label>', array_keys(admin_clinic_names()), admin_clinic_names()))
+        . '</div>'
         . '<p class="text-mic text-discret lg:col-span-2">Pe site: <span class="font-semibold text-cerneala cifre">' . e($preview) . '</span>' . ((int) $s['public_visible'] === 0 ? ' · ascuns' : '') . '</p>'
         . '</li>';
 }

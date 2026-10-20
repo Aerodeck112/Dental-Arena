@@ -19,6 +19,7 @@ const ADMIN_NAV = [
     ['/admin/absente', 'Absențe și zile libere', 'user-x', null],
     ['/admin/implanturi', 'Implanturi', 'implant', 'medical'],
     ['/admin/proceduri', 'Proceduri', 'clipboard-list', 'procedures'],
+    ['/admin/casa', 'Casa', 'wallet', 'procedures.pay'],
     ['/admin/facturi', 'Facturi', 'receipt', 'billing'],
     ['/admin/incasari', 'Încasări', 'wallet', 'billing'],
     ['/admin/mesaje', 'Mesaje', 'message-square', null],

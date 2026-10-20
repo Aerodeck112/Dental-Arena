@@ -102,6 +102,30 @@ function can_configure(?array $u = null): bool
     return is_tech($u) || (is_admin($u) && !tech_account_exists());
 }
 
+/**
+ * Whether a user sees every clinic: an administrator and the technical account do; an
+ * „Administrator medic” only the clinics ticked on his account (one is the doctor-administrator
+ * of Cristești and sees both, another of Luduș and sees Luduș), all when none is ticked.
+ */
+function all_clinics(?array $u = null): bool
+{
+    $u ??= current_user();
+    if ($u === null || !is_admin($u)) {
+        return false;
+    }
+    if ($u['role'] !== 'admin-medic' || ($u['locationIds'] ?? []) === []) {
+        return true;
+    }
+    return array_diff(array_map('intval', array_column(db_all('SELECT id FROM locations'), 'id')), $u['locationIds']) === [];
+}
+
+/** The day an account's procedures and payments begin („Luduș 2” starts from zero), or null. */
+function history_from(?array $u = null): ?string
+{
+    $u ??= current_user();
+    return $u !== null && !is_admin($u) && !empty($u['history_from']) ? (string) $u['history_from'] : null;
+}
+
 /** The clinic ids a user may see: all for an administrator, else the ticked ones. */
 function allowed_location_ids(?array $u = null): array
 {
@@ -109,7 +133,7 @@ function allowed_location_ids(?array $u = null): array
     if ($u === null) {
         return [];
     }
-    if (is_admin($u)) {
+    if (all_clinics($u)) {
         return array_map('intval', array_column(db_all('SELECT id FROM locations'), 'id'));
     }
     return $u['locationIds'];
