@@ -166,6 +166,6 @@ $body = '<p class="mb-4"><a href="/admin/cereri" class="inline-flex min-h-contro
     . '<div class="flex min-w-0 flex-col gap-8 lg:col-span-5">'
     . admin_section_open('Cine se ocupă', 'atribuire') . $assign . '</section>'
     . admin_section_open('Starea', 'urmarire') . $statusForm . '</section>'
-    . (is_admin($user) ? '<form method="post" data-confirma="Ștergeți definitiv această cerere?">' . csrf_field() . '<input type="hidden" name="op" value="sterge"><button type="submit" class="' . e(btn('danger', 's')) . '">' . icon('trash-2', 16) . 'Ștergeți cererea</button><p class="mt-2 text-mic text-discret">Pentru o cerere de ștergere a datelor (GDPR). Nu se poate anula.</p></form>' : '')
+    . (is_admin($user) ? '<form method="post" data-confirma="Ștergeți definitiv această cerere?">' . csrf_field() . '<input type="hidden" name="op" value="sterge"><button type="submit" class="' . e(btn('danger', 's')) . '">' . icon('trash-2', 16) . 'Ștergeți cererea</button><p class="mt-2 text-mic text-discret">De exemplu o cerere dublă, de probă sau spam. Nu se poate anula.</p></form>' : '')
     . '</div></div>';
 admin_page('Cerere', $body, $user);

@@ -6,6 +6,22 @@
 declare(strict_types=1);
 
 $board = query('vizualizare') === 'tablou';
+// Administrators delete requests: one (from the board) or the ones ticked in the list.
+if (is_post() && in_array(post('op'), ['sterge', 'sterge-multe'], true) && is_admin($user)) {
+    csrf_check();
+    $ids = post('op') === 'sterge' ? [(int) post('id')] : array_map('intval', array_filter((array) ($_POST['ids'] ?? []), 'is_numeric'));
+    $n = 0;
+    foreach (array_unique($ids) as $lid) {
+        $l = db_one('SELECT * FROM leads WHERE id = ?', [$lid]);
+        if ($l !== null && can_see_lead($l, $user)) {
+            db_run('DELETE FROM leads WHERE id = ?', [$lid]);
+            audit('stergere-cerere', "#{$lid} {$l['name']}");
+            $n++;
+        }
+    }
+    flash($n === 0 ? 'Nu ați bifat nicio cerere.' : ($n === 1 ? 'Cererea a fost ștearsă.' : "Au fost șterse {$n} cereri."), $n === 0 ? 'info' : 'ok');
+    redirect(admin_safe_return(post('inapoi')) ?? '/admin/cereri');
+}
 if (is_post() && post('op') === 'muta') {
     csrf_check();
     $l = db_one('SELECT * FROM leads WHERE id = ?', [(int) post('id')]);
@@ -117,6 +133,7 @@ if ($board) {
                 . ($st === 'inchis' && $l['lost_reason'] ? ' · ' . e(LEAD_LOST_REASONS[$l['lost_reason']] ?? '') : '') . '</p>'
                 . ($st !== 'inchis' ? '<form method="post" class="mt-2 flex flex-wrap gap-1">' . csrf_field() . '<input type="hidden" name="op" value="muta"><input type="hidden" name="id" value="' . (int) $l['id'] . '"><input type="hidden" name="inapoi" value="' . e($here) . '">' . $move
                     . '<a href="/admin/cereri/' . (int) $l['id'] . '#urmarire" class="rounded-chip border border-linie-control px-2 py-0.5 text-mic hover:bg-adancit">Închideți…</a></form>' : '')
+                . (is_admin($user) ? '<form method="post" class="mt-1" data-confirma="' . e('Ștergeți definitiv cererea lui ' . $l['name'] . '?') . '">' . csrf_field() . '<input type="hidden" name="op" value="sterge"><input type="hidden" name="id" value="' . (int) $l['id'] . '"><input type="hidden" name="inapoi" value="' . e($here) . '"><button type="submit" class="inline-flex items-center gap-1 text-mic text-carmin underline-offset-4 hover:underline">' . icon('trash-2', 14) . 'Ștergeți</button></form>' : '')
                 . '</li>';
         }
         $boardHtml .= '<section aria-label="' . e($label) . '" class="flex min-w-0 flex-col rounded-panou bg-adancit/60 p-3"><h2 class="mb-3 flex items-center justify-between gap-2 px-1 text-control font-semibold">' . e($label) . '<span class="rounded-full bg-suprafata px-2 text-mic cifre">' . $n . '</span></h2>'
@@ -131,5 +148,7 @@ $viewSwitch = '<nav aria-label="Vizualizare" class="inline-flex rounded-control 
 
 $body = admin_header('Cereri', 'Cererile de programare și mesajele trimise de pe site. Sunați pacientul, notați apelul, apoi faceți programarea sau închideți cererea cu motivul.', $viewSwitch)
     . $filters
-    . ($board ? $boardHtml : '<p class="mb-3 text-mic text-discret cifre">' . $total . ($total === 1 ? ' cerere' : ' cereri') . '</p>' . leads_table($leads) . $nav);
+    . ($board ? $boardHtml : '<div class="mb-3 flex flex-wrap items-center justify-between gap-3"><p class="text-mic text-discret cifre">' . $total . ($total === 1 ? ' cerere' : ' cereri') . '</p>'
+        . (is_admin($user) && $leads !== [] ? '<form id="sterge-cereri" method="post" data-confirma="Ștergeți definitiv cererile bifate? Nu se poate anula.">' . csrf_field() . '<input type="hidden" name="op" value="sterge-multe"><input type="hidden" name="inapoi" value="' . e($_SERVER['REQUEST_URI'] ?? '/admin/cereri') . '"><button type="submit" class="' . e(btn('secondary', 's', 'text-carmin')) . '">' . icon('trash-2', 16) . 'Ștergeți cererile bifate</button></form>' : '') . '</div>'
+        . leads_table($leads, is_admin($user)) . $nav);
 admin_page('Cereri', $body, $user);

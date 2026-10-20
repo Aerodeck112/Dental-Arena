@@ -125,7 +125,8 @@ function lead_kind_label(string $kind): string
 }
 
 /** The requests as a table on wide screens and as a list on phones. */
-function leads_table(array $leads): string
+/** The requests as a table (a list on a phone); $select: a box on each, for „Ștergeți cererile bifate”. */
+function leads_table(array $leads, bool $select = false): string
 {
     if ($leads === []) {
         return '<p class="rounded-panou border border-dashed border-linie p-6 text-corp text-discret">Nu există cereri care să se potrivească.</p>';
@@ -140,21 +141,23 @@ function leads_table(array $leads): string
         $clinic = $l['location_id'] !== null ? ($clinics[(int) $l['location_id']] ?? '') : '—';
         $service = $l['category_slug'] ? ($titles[$l['category_slug']] ?? $l['category_slug']) : '';
         $what = lead_kind_label($l['kind']) . ($service !== '' ? ' · ' . $service : '');
+        $box = $select ? '<input type="checkbox" name="ids[]" value="' . (int) $l['id'] . '" form="sterge-cereri" aria-label="' . e('Alegeți cererea: ' . $l['name']) . '" class="size-5 accent-carmin">' : '';
         $rows .= '<tr class="border-t border-linie hover:bg-fundal">'
+            . ($select ? '<td class="w-10 px-3 py-2">' . $box . '</td>' : '')
             . '<td class="cifre px-3 py-2 whitespace-nowrap text-discret">' . e(format_datetime($l['created_at'])) . '</td>'
             . '<td class="px-3 py-2"><a href="' . e($href) . '" class="font-semibold text-link underline-offset-4 hover:underline">' . e($l['name']) . '</a></td>'
             . '<td class="telefon px-3 py-2">' . ($l['phone'] !== '' ? e(format_phone($l['phone'])) : '<span class="text-discret">—</span>') . '</td>'
             . '<td class="px-3 py-2">' . e($what) . '</td>'
             . '<td class="px-3 py-2">' . e($clinic) . '</td>'
             . '<td class="px-3 py-2">' . lead_status_chip($l['status']) . '</td></tr>';
-        $cards .= '<li class="border-t border-linie first:border-t-0"><a href="' . e($href) . '" class="flex flex-col gap-1 px-1 py-3 hover:bg-fundal">'
+        $cards .= '<li class="flex items-start gap-3 border-t border-linie first:border-t-0">' . ($select ? '<span class="pt-4">' . str_replace('form="sterge-cereri"', 'form="sterge-cereri" data-mobil', $box) . '</span>' : '') . '<a href="' . e($href) . '" class="flex min-w-0 flex-1 flex-col gap-1 px-1 py-3 hover:bg-fundal">'
             . '<span class="flex items-center justify-between gap-3"><span class="font-semibold text-link">' . e($l['name']) . '</span>' . lead_status_chip($l['status']) . '</span>'
             . '<span class="text-mic text-cerneala">' . e($what) . ($clinic !== '—' ? ' · ' . e($clinic) : '') . '</span>'
             . '<span class="cifre text-mic text-discret">' . e(format_datetime($l['created_at'])) . ($l['phone'] !== '' ? ' · <span class="telefon">' . e(format_phone($l['phone'])) . '</span>' : '') . '</span>'
             . '</a></li>';
     }
     return '<div class="hidden overflow-hidden rounded-panou border border-linie md:block"><table class="w-full border-collapse text-corp">'
-        . '<thead class="bg-fundal"><tr><th scope="col" class="' . $th . '">Primită</th><th scope="col" class="' . $th . '">Nume</th><th scope="col" class="' . $th . '">Telefon</th>'
+        . '<thead class="bg-fundal"><tr>' . ($select ? '<th scope="col" class="w-10 px-3 py-2"><input type="checkbox" data-bifeaza-tot="ids[]" aria-label="Alegeți toate cererile de pe pagină" class="size-5 accent-carmin"></th>' : '') . '<th scope="col" class="' . $th . '">Primită</th><th scope="col" class="' . $th . '">Nume</th><th scope="col" class="' . $th . '">Telefon</th>'
         . '<th scope="col" class="' . $th . '">Ce dorește</th><th scope="col" class="' . $th . '">Clinica</th><th scope="col" class="' . $th . '">Stare</th></tr></thead>'
         . '<tbody>' . $rows . '</tbody></table></div>'
         . '<ul class="flex flex-col md:hidden">' . $cards . '</ul>';

@@ -480,6 +480,15 @@
     paint();
   });
 
+  // A box that ticks all the boxes of a list („Ștergeți cererile bifate”).
+  Array.prototype.forEach.call(document.querySelectorAll("[data-bifeaza-tot]"), function (all) {
+    all.addEventListener("change", function () {
+      Array.prototype.forEach.call(document.querySelectorAll("input[type=checkbox][name='" + all.getAttribute("data-bifeaza-tot") + "']:not([data-mobil])"), function (b) {
+        b.checked = all.checked;
+      });
+    });
+  });
+
   // „Sterilizare”, while the QR code is shown: the page reloads when a photo arrives from the phone.
   var poze = document.querySelector("[data-poze-noi]");
   if (poze && window.fetch) {
@@ -573,6 +582,13 @@
         pr.className = "mt-1.5 flex min-h-control w-full items-center justify-center rounded-control border border-actiune px-3 font-semibold text-actiune hover:bg-menta-pal";
         pr.textContent = "Proceduri efectuate";
         apptMenu.appendChild(pr);
+      }
+      if (d.alDoilea) {
+        var two = document.createElement("a");
+        two.href = d.alDoilea;
+        two.className = "mt-1.5 flex min-h-control w-full items-center justify-center gap-1 rounded-control border border-linie-control px-3 font-semibold text-cerneala hover:bg-adancit";
+        two.textContent = "+ Încă un pacient la aceeași oră";
+        apptMenu.appendChild(two);
       }
       var open = document.createElement("a");
       open.href = a.getAttribute("href");

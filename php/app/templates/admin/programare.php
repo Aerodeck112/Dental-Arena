@@ -15,6 +15,10 @@ if (!$isNew && ($appt === null || !can_see_appointment($appt, $user))) {
 $names = admin_clinic_names();
 $allowed = array_values(array_filter(allowed_location_ids($user), static fn ($id) => isset($names[$id])));
 $back = admin_safe_return(post('inapoi') ?: query('inapoi')) ?? null;
+// „Încă un pacient la aceeași oră” (calendar menu): the doctor may have two patients in the same
+// interval; that is then no problem to confirm.
+$double = $appt === null && (query('dublu') === '1' || post('dublu') === '1');
+$askDuration = admin_int(query('durata'));
 
 // ── Quick status change („Azi”, calendar) ────────────────────────────────────
 if (!$isNew && is_post() && post('op') === 'stare') {
@@ -83,7 +87,7 @@ $v = [
     'doctor' => (string) ($appt['doctor_id'] ?? (admin_int(query('medic')) ?? ($recall['doctor_id'] ?? ($patient['primary_doctor_id'] ?? ($user['doctor_id'] ?? ''))))),
     'date' => $start ? $start->format('Y-m-d') : (preg_match('/^\d{4}-\d{2}-\d{2}$/', query('data')) ? query('data') : ($lead['preferred_date'] ?? date('Y-m-d'))),
     'time' => $start ? $start->format('H:i') : (preg_match('/^\d{2}:\d{2}$/', query('ora')) ? query('ora') : ''),
-    'duration' => (string) ($appt ? (int) ((strtotime($appt['ends_at']) - strtotime($appt['starts_at'])) / 60) : 30),
+    'duration' => (string) ($appt ? (int) ((strtotime($appt['ends_at']) - strtotime($appt['starts_at'])) / 60) : ($askDuration !== null && isset(DURATIONS[$askDuration]) ? $askDuration : 30)),
     'category' => (string) ($appt['category_slug'] ?? ($lead['category_slug'] ?? '')),
     'reason' => (string) ($appt['reason'] ?? ($recall['reason'] ?? '')),
     'comfort' => (string) ($appt['comfort'] ?? ($lead['comfort'] ?? ($patient['comfort'] ?? ''))),
@@ -188,7 +192,7 @@ if (is_post()) {
             $check = appointment_checks($doc, $loc, $startsAt, $endsAt, $patient !== null ? (int) $patient['id'] : ($appt !== null ? (int) $appt['patient_id'] : null), $appt ? (int) $appt['id'] : null, $cabinet);
             if ($check['block'] !== null) {
                 $errors['time'] = $check['block'];
-            } elseif ($check['warn'] !== [] && post('suprapune') !== '1') {
+            } elseif (($double ? array_filter($check['warn'], static fn ($w) => !str_starts_with($w, 'Medicul are deja')) : $check['warn']) !== [] && post('suprapune') !== '1') {
                 $conflicts = $check['warn'];
                 $errors['time'] = 'Ora aleasă are o problemă (vedeți lista de mai jos). Alegeți alta sau bifați „Programez oricum”.';
             }
@@ -318,7 +322,7 @@ if ($patient !== null) {
         $found = db_all("SELECT p.* FROM patients p WHERE p.active = 1 AND (p.search_text LIKE ? OR p.file_number = ?) AND {$scope} ORDER BY p.last_name, p.first_name LIMIT 10", array_merge([$q, (int) query('q')], $params));
         $patientBlock .= '<ul class="mt-3 flex flex-col gap-1">';
         foreach ($found as $f) {
-            $patientBlock .= '<li><a href="' . e(admin_url('/admin/programari/noua', ['pacient' => $f['id'], 'clinica' => $v['location'], 'data' => $v['date'], 'ora' => $v['time'], 'medic' => $v['doctor'], 'cerere' => $lead['id'] ?? null])) . '" class="flex min-h-control items-center justify-between gap-3 rounded-control border border-linie px-3 hover:border-cerneala hover:bg-menta-pal">'
+            $patientBlock .= '<li><a href="' . e(admin_url('/admin/programari/noua', ['pacient' => $f['id'], 'clinica' => $v['location'], 'data' => $v['date'], 'ora' => $v['time'], 'medic' => $v['doctor'], 'cerere' => $lead['id'] ?? null, 'dublu' => $double ? '1' : null, 'durata' => $double ? $v['duration'] : null, 'inapoi' => $back])) . '" class="flex min-h-control items-center justify-between gap-3 rounded-control border border-linie px-3 hover:border-cerneala hover:bg-menta-pal">'
                 . '<span class="font-semibold">' . e(patient_name($f)) . '</span><span class="text-mic text-discret">nr. ' . (int) $f['file_number'] . ($f['phone'] !== '' ? ' · ' . e(format_phone($f['phone'])) : '') . '</span></a></li>';
         }
         $patientBlock .= $found === [] ? '<li class="text-mic text-discret">Niciun pacient găsit. Completați datele pacientului nou.</li>' : '';
@@ -372,13 +376,17 @@ $body = admin_header($isNew ? 'Programare nouă' : 'Programarea din ' . short_da
     . $leadNote . $recallNote . $statusBar
     . '<form id="cauta-pacient" method="get" action="/admin/programari/noua">'
     . '<input type="hidden" name="clinica" value="' . e($v['location']) . '"><input type="hidden" name="data" value="' . e($v['date']) . '"><input type="hidden" name="ora" value="' . e($v['time']) . '"><input type="hidden" name="medic" value="' . e($v['doctor']) . '">'
+    . ($double ? '<input type="hidden" name="dublu" value="1"><input type="hidden" name="durata" value="' . e($v['duration']) . '">' : '')
+    . ($back ? '<input type="hidden" name="inapoi" value="' . e($back) . '">' : '')
     . ($lead ? '<input type="hidden" name="cerere" value="' . (int) $lead['id'] . '">' : '') . '</form>'
+    . ($double ? '<p class="mb-6 flex max-w-4xl items-start gap-2 rounded-panou border border-actiune bg-menta-pal p-4 text-corp">' . icon('users', 20, 'mt-0.5 shrink-0') . '<span><strong>Încă un pacient la aceeași oră.</strong> Medicul poate avea doi pacienți în același interval; în calendar apar unul lângă altul. Alegeți pacientul și salvați.</span></p>' : '')
     . '<form method="post" novalidate class="flex max-w-4xl flex-col gap-8">' . csrf_field()
+    . ($double ? '<input type="hidden" name="dublu" value="1">' : '')
     . ($back ? '<input type="hidden" name="inapoi" value="' . e($back) . '">' : '')
     . ($lead ? '<input type="hidden" name="cerere" value="' . (int) $lead['id'] . '">' : '')
     . ($recall ? '<input type="hidden" name="rechemare" value="' . (int) $recall['id'] . '">' : '')
     . error_summary($errors)
-    . ($conflictList !== '' ? '<div class="rounded-panou border border-mustar bg-mustar-pal p-4"><p class="font-semibold">Atenție la ora aleasă:</p><ul class="mt-1 list-disc pl-5 text-corp">' . $conflictList . '</ul>' . checkbox_field('suprapune', 'Programez oricum (de exemplu, o urgență)', ['class' => 'mt-2']) . '</div>' : '')
+    . ($conflictList !== '' ? '<div class="rounded-panou border border-mustar bg-mustar-pal p-4"><p class="font-semibold">Atenție la ora aleasă:</p><ul class="mt-1 list-disc pl-5 text-corp">' . $conflictList . '</ul>' . checkbox_field('suprapune', 'Programez oricum (doi pacienți în același interval, o urgență)', ['class' => 'mt-2']) . '</div>' : '')
     . admin_section_open('Pacientul', 'pacient') . '<div class="mt-4">' . $patientBlock . '</div></section>'
     . admin_section_open('Când și la cine', 'cand')
     . '<div class="mt-4 grid gap-5 md:grid-cols-2">'

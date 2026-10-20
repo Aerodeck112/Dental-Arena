@@ -630,3 +630,12 @@ din copia bazei de date nu mai pot fi citite.
   și din calendar, ca să-i apară procedurile în rapoarte; se poate completa din Echipa.
 - Importul pe ani ține sub 20 de secunde pe pagină; ce nu încape se face la pagina următoare.
   Setări → Actualizare → „Date aduse din QDental” arată fiecare an.
+
+## Doi pacienți la aceeași oră; ștergerea cererilor (octombrie 2026)
+
+- Calendar → clic pe o programare → **+ Încă un pacient la aceeași oră**: programare nouă la același
+  medic, aceeași oră și durată, fără să mai ceară „Programez oricum” pentru suprapunerea cu medicul
+  (absențele și celelalte probleme se verifică în continuare). În calendar apar una lângă alta.
+- **Cereri**: administratorii bifează cererile în listă (sau „toate de pe pagină”) și apasă
+  **Ștergeți cererile bifate**; în Tablou, fiecare card are **Ștergeți**. Ștergerea e definitivă și
+  se trece în Jurnal. Recepția nu vede ștergerea.
