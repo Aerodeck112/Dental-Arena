@@ -733,7 +733,7 @@ export const intretinere = () => ({
   titlu: "Întreținere: Cron, actualizări, copii de siguranță",
   html: `
 <ul>
-<li><strong>Cron Job (obligatoriu)</strong>: în cPanel → Cron Jobs, la fiecare 5 minute: <span class="adresa-inline">php /home/CONT/dentalarena/cron.php</span>. El trimite mesajele, reamintirile, programul zilei al medicilor, urările, rechemările și rezumatul pentru administrator la timp. Fără el, acestea pleacă doar când cineva deschide panoul.</li>
+<li><strong>Cron Job (obligatoriu)</strong>: în cPanel → Cron Jobs, la fiecare 5 minute: <span class="adresa-inline">php /home/CONT/dentalarena/cron.php</span>. El trimite mesajele, reamintirile, programul zilei al medicilor, urările, rechemările și rezumatul pentru administrator la timp. Fără el, acestea pleacă doar când cineva deschide panoul. Comanda exactă pentru server, cu butonul ${b("Copiați")}, pașii din cPanel și dacă rulează (ultima rulare) sunt în ${b("Setări")}, sus, la „Cron Job”.</li>
 <li><strong>Actualizări</strong>: din ${b("Setări")} → ${b("Actualizare")} (vezi mai jos).</li>
 <li><strong>Copii de siguranță</strong>: în cPanel → Backup, săptămânal: baza de date și folderul dentalarena/storage (documentele pacienților). Păstrați o copie și în afara găzduirii.</li>
 <li><strong>Parolele</strong>: fiecare om are contul lui; nu folosiți conturi comune. Dezactivați imediat contul cuiva care pleacă.</li>

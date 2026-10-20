@@ -186,6 +186,55 @@ function admin_section_open(string $title, string $id = '', string $lead = ''): 
         . ($lead !== '' ? '<p class="mt-1 text-mic text-discret">' . e($lead) . '</p>' : '');
 }
 
+/**
+ * The command for cPanel → Cron Jobs: the PHP of this site's version (cPanel's own, when it is
+ * there), this install's cron.php, and no e-mail for every run.
+ */
+function cron_command(): string
+{
+    $php = 'php';
+    foreach (['/opt/cpanel/ea-php' . PHP_MAJOR_VERSION . PHP_MINOR_VERSION . '/root/usr/bin/php', '/usr/local/bin/php', '/usr/bin/php'] as $bin) {
+        if (@is_file($bin)) {
+            $php = $bin;
+            break;
+        }
+    }
+    return $php . ' ' . (realpath(APP_DIR . '/cron.php') ?: APP_DIR . '/cron.php') . ' >/dev/null 2>&1';
+}
+
+/** When cron.php last ran (a Unix time), or null when it never did. */
+function cron_last_run(): ?int
+{
+    $t = (int) @file_get_contents(APP_DIR . '/storage/cron.txt');
+    return $t > 0 ? $t : null;
+}
+
+/**
+ * Setări → „Cron Job”: whether it runs, the command to copy and where to put it in cPanel.
+ * The messages (reminders, the doctors' programme) leave on time only with it.
+ */
+function cron_box(): string
+{
+    $last = cron_last_run();
+    $ok = $last !== null && time() - $last < 20 * 60;
+    $state = $ok
+        ? '<p class="mt-4 flex items-center gap-2 rounded-panou bg-menta-pal p-3 text-corp">' . icon('check', 18) . '<span><strong>Rulează.</strong> Ultima dată: ' . e(date('d.m.Y H:i', $last)) . '.</span></p>'
+        : '<p class="mt-4 flex items-start gap-2 rounded-panou border border-mustar bg-mustar-pal p-3 text-corp">' . icon('alert-triangle', 18, 'mt-0.5 shrink-0') . '<span><strong>' . ($last === null ? 'Nu rulează încă.' : 'Nu a mai rulat din ' . e(date('d.m.Y H:i', $last)) . '.') . '</strong> Fără el, mesajele (reamintirile, programul zilei al medicilor) pleacă doar când cineva deschide panoul, deci uneori cu întârziere. Puneți-l o singură dată, ca mai jos.</span></p>';
+    $cmd = cron_command();
+    return admin_section_open('Cron Job (mesajele la oră)', 'cron', 'Un program al serverului care pornește panoul la fiecare 5 minute: trimite mesajele, reamintirile de mâine, programul zilei al medicilor, urările și rechemările la ora lor.')
+        . $state
+        . '<ol class="mt-4 flex list-decimal flex-col gap-2 pl-5 text-corp">'
+        . '<li>Intrați în <strong>cPanel</strong> → secțiunea <strong>Advanced</strong> (Avansat) → <strong>Cron Jobs</strong>.</li>'
+        . '<li>La <strong>Add New Cron Job</strong> → <strong>Common Settings</strong>, alegeți <strong>Once Per Five Minutes (*/5 * * * *)</strong>. Câmpurile se completează singure: Minute <span class="cifre">*/5</span>, restul <span class="cifre">*</span>.</li>'
+        . '<li>La <strong>Command</strong>, lipiți comanda de mai jos (butonul <strong>Copiați</strong>), apoi <strong>Add New Cron Job</strong>.</li>'
+        . '<li>Peste 5 minute, reîncărcați această pagină: aici trebuie să scrie „Rulează”.</li></ol>'
+        . '<div class="mt-4 flex flex-col gap-2 sm:flex-row sm:items-stretch">'
+        . '<code id="comanda-cron" class="block min-w-0 flex-1 select-all break-all rounded-control border border-linie-control bg-fundal px-3 py-2.5 font-mono text-mic">' . e($cmd) . '</code>'
+        . '<button type="button" data-copiaza="#comanda-cron" class="' . e(btn('primary')) . '">' . icon('copy', 18) . 'Copiați</button></div>'
+        . '<p class="mt-3 text-mic text-discret">„&gt;/dev/null 2&gt;&amp;1” de la sfârșit oprește e-mailul pe care cPanel l-ar trimite la fiecare rulare. Dacă la „Rulează” nu apare nimic după 10 minute, verificați în cPanel → MultiPHP Manager versiunea PHP a site-ului (' . e(PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION) . ') și scrieți-ne.</p>'
+        . '</section>';
+}
+
 /** A „mailto:” href only for a plausible address (no header injection through the link). */
 function admin_mailto(string $email): ?string
 {

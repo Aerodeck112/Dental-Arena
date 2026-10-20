@@ -253,6 +253,7 @@ foreach ($locations as $l) {
 }
 
 $body = admin_header('Setări', 'Unde ajung cererile, datele clinicilor și firma fiecărei clinici. Se văd pe site imediat după salvare.', '<a href="/admin/setari/mesaje" class="' . e(btn('secondary')) . '">' . icon('message-square', 18) . 'Mesaje: SMS, WhatsApp, e-mail</a><a href="/admin/setari/ai" class="' . e(btn('secondary')) . '">' . admin_icon('sparkles', 18) . 'Asistentul AI</a><a href="/admin/tablete" class="' . e(btn('secondary')) . '">' . admin_icon('tablet', 18) . 'Tablete de semnare</a><a href="/admin/setari/programari" class="' . e(btn('secondary')) . '">' . icon('calendar', 18) . 'Programări online</a><a href="/admin/setari/chat" class="' . e(btn('secondary')) . '">' . admin_icon('bot', 18) . 'Chatul de pe site</a><a href="/admin/actualizare" class="' . e(btn('secondary')) . '">' . icon('refresh-cw', 18) . 'Actualizare</a>')
+    . '<div class="mb-8 max-w-4xl">' . cron_box() . '</div>'
     . '<form method="post" novalidate class="flex max-w-4xl flex-col gap-8">' . csrf_field() . error_summary($errors)
     . admin_section_open('Pagina de Facebook', 'facebook', 'Postările ei apar pe prima pagină a site-ului, în „Ce mai facem”, după ce vizitatorul acceptă cookie-urile Facebook. Linkul din subsolul site-ului duce tot aici.')
     . '<div class="mt-4 flex flex-col gap-5">'

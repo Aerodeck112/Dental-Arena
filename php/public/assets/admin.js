@@ -24,6 +24,29 @@
       }, 8000);
     }
   });
+  // „Copiați” (data-copiaza="#id"): the text of the element goes to the clipboard.
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest && e.target.closest("[data-copiaza]");
+    if (!btn) return;
+    var src = document.querySelector(btn.getAttribute("data-copiaza"));
+    if (!src) return;
+    var text = src.textContent.trim();
+    var done = function () {
+      var old = btn.lastChild.textContent;
+      btn.lastChild.textContent = "Copiat";
+      setTimeout(function () { btn.lastChild.textContent = old; }, 2000);
+    };
+    var fallback = function () {
+      var r = document.createRange();
+      r.selectNodeContents(src);
+      var sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(r);
+      try { if (document.execCommand("copy")) done(); } catch (err) { /* the text stays selected: Ctrl+C */ }
+    };
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done, fallback);
+    else fallback();
+  });
   var menu = document.querySelector("[data-meniu-panou]");
   if (menu) {
     document.addEventListener("pointerdown", function (e) {

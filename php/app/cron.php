@@ -30,6 +30,8 @@ $queued = send_due_reminders();
 run_daily_jobs();
 purge_old_leads();
 @file_put_contents(__DIR__ . '/storage/reminders.txt', (string) time());
+// Setări → „Cron Job” shows when it last ran.
+@file_put_contents(__DIR__ . '/storage/cron.txt', (string) time());
 $sent = 0;
 do {
     $batch = process_message_queue(50);

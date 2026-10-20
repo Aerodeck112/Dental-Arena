@@ -679,3 +679,12 @@ din copia bazei de date nu mai pot fi citite.
 - După această fereastră, programările de azi adăugate, mutate sau anulate îi ajung medicului una
   câte una („Programare nouă” …), pe canalul ales la el.
 
+## Cron Job din Setări (octombrie 2026)
+
+- **Setări**, sus: chenarul **Cron Job (mesajele la oră)** arată dacă rulează („Rulează. Ultima
+  dată: …” sau „Nu rulează încă”), pașii din cPanel (Advanced → Cron Jobs → Common Settings: Once
+  Per Five Minutes) și comanda exactă pentru acest server, cu butonul **Copiați**: PHP-ul versiunii
+  site-ului (`/opt/cpanel/ea-phpXY/root/usr/bin/php` când există), calea reală a `cron.php` și
+  `>/dev/null 2>&1`, ca cPanel să nu trimită un e-mail la fiecare rulare.
+- `cron.php` scrie ora rulării în `storage/cron.txt`.
+
