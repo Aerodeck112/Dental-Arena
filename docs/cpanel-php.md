@@ -688,3 +688,19 @@ din copia bazei de date nu mai pot fi citite.
   `>/dev/null 2>&1`, ca cPanel să nu trimită un e-mail la fiecare rulare.
 - `cron.php` scrie ora rulării în `storage/cron.txt`.
 
+
+## Luduș din QDental: pacienții și procedurile pe medici (octombrie 2026)
+
+- Luduș avea în QDental baza lui (fișe numerotate separat). Din „Lista Pacienti” și „Statistică
+  proceduri” pe medici (Mașca, Bologa; 01.01.2015 – 20.10.2026), în `data/import/`:
+  - `qdental-x-ludus-1-pacienti.json`: 2.217 pacienți; notați „Din programul vechi (QDental
+    Luduș), fișa nr. …” și cu clinica Luduș: îi văd doar conturile cu Luduș bifat (și
+    administratorii). Un pacient care există deja (același nume și telefon, de exemplu tratat și la
+    Cristești) nu se dublează: primește în notă „Și în QDental Luduș, fișa nr. …”.
+  - `qdental-x-ludus-proceduri-2019.json` … `…-2026.json`: 10.638 de proceduri cu medicul, clinica
+    Luduș și 11.476 de plăți (Mașca 1.432 / 1.384.166,18 lei; Bologa 9.206 / 2.673.220 lei; achitat
+    3.865.796 lei). Totalurile sunt cele din PDF-uri; un singur rând nu e pacient („Consultatie”, 100 lei).
+  - 56 de nume apar în QDental Luduș cu două fișe diferite: procedurile lor au nota „De verificat”.
+- Procedurile caută fișa doar în QDental-ul lor („QDental” = Cristești, „QDental Luduș”), deci
+  aceleași numere de fișă din cele două baze nu se încurcă.
+- Pagina Proceduri: „Încasat în perioadă” pe ambele clinici numără doar clinicile contului.

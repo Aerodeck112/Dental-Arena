@@ -51,7 +51,7 @@ foreach ($rows as $r) {
     $paid += min((int) $r['paid'], procedure_due($r));
     $lab += (int) $r['lab_cost'];
 }
-$paymentsIn = (int) db_value('SELECT COALESCE(SUM(amount), 0) FROM procedure_payments WHERE cancelled_at IS NULL AND paid_on BETWEEN ? AND ?' . ($loc !== null ? ' AND location_id = ' . $loc : ''), [$from, $to]);
+$paymentsIn = (int) db_value('SELECT COALESCE(SUM(amount), 0) FROM procedure_payments WHERE cancelled_at IS NULL AND paid_on BETWEEN ? AND ?' . ($loc !== null ? ' AND location_id = ' . $loc : ' AND (location_id IS NULL OR location_id IN (' . implode(',', array_map('intval', $allowed ?: [0])) . '))'), [$from, $to]);
 
 $shown = array_slice($rows, 0, 1500);
 $th = 'px-3 py-2 text-left text-mic font-semibold text-discret';

@@ -4,11 +4,13 @@
  * data/import/*.json, added once, in the order of their names, on the first page of the panel
  * after the update; storage/import-<name>.done keeps the result, .failed why it could not be added
  * (Setări → Actualizare shows both and can try again):
- *  - patients ({source, patients: [{last, first, phones, fisa, note}]}): a patient already in the
- *    panel (same phone and same name) is not added twice;
- *  - procedures ({kind: "procedures", source, location, procedures: [{fise, date, name, price,
- *    payments: [{date, amount}], note, doctor?}], doctors?}): each goes to the patient with that
- *    QDental file number, with its payments (and its doctor, from QDental's report per doctor);
+ *  - patients ({source, location?, qdental?, patients: [{last, first, phones, fisa, note}]}): a
+ *    patient already in the panel (same phone and same name) is not added twice, only given the
+ *    file number; qdental „ludus” is the Luduș clinic's own QDental (its file numbers are its own),
+ *    and those patients belong to that clinic;
+ *  - procedures ({kind: "procedures", source, location, qdental?, procedures: [{fise, date, name,
+ *    price, payments: [{date, amount}], note, doctor?}], doctors?}): each goes to the patient with
+ *    that file number of that QDental, with its payments (and its doctor, from the report per doctor);
  *  - procedures-assign ({kind: "procedures-assign", doctors, from, to, assign: [{fise, date, name,
  *    price, doctor}]}): the doctor of procedures already added from the report without doctors.
  * A long list is split in files (one per year); one page adds what fits in about 20 seconds, the
@@ -162,20 +164,22 @@ function import_patients(string $file): array
         throw new RuntimeException('Lista nu poate fi citită.');
     }
     $source = (string) ($data['source'] ?? basename($file));
-    // What is already in the panel: national phone digits → folded names.
+    $tag = qdental_tag($data['qdental'] ?? null);
+    $loc = isset($data['location']) ? db_value('SELECT id FROM locations WHERE slug = ?', [(string) $data['location']]) : null;
+    // What is already in the panel: national phone digits → folded names → the patient.
     $byPhone = [];
     $byName = [];
-    foreach (db_all('SELECT last_name, first_name, phone FROM patients') as $p) {
+    foreach (db_all('SELECT id, last_name, first_name, phone FROM patients') as $p) {
         $name = fold_text(trim($p['last_name'] . ' ' . $p['first_name']));
         $digits = preg_replace('/\D+/', '', (string) $p['phone']) ?? '';
         if ($digits !== '') {
-            $byPhone[substr($digits, -9)][$name] = true;
+            $byPhone[substr($digits, -9)][$name] = (int) $p['id'];
         } else {
-            $byName[$name] = true;
+            $byName[$name] = (int) $p['id'];
         }
     }
     $added = $existing = $withoutPhone = 0;
-    db_tx(static function () use ($data, $source, &$byPhone, &$byName, &$added, &$existing, &$withoutPhone): void {
+    db_tx(static function () use ($data, $source, $tag, $loc, &$byPhone, &$byName, &$added, &$existing, &$withoutPhone): void {
         $next = next_file_number();
         $now = now_sql();
         $rows = [];
@@ -189,13 +193,21 @@ function import_patients(string $file): array
             $phone = $phones !== [] ? import_phone($phones[0]) : null;
             $name = fold_text(trim("{$last} {$first}"));
             $key = $phone !== null ? substr(preg_replace('/\D+/', '', $phone) ?? '', -9) : null;
-            if ($key !== null ? isset($byPhone[$key][$name]) : isset($byName[$name])) {
+            $fise = array_values(array_filter(array_map('strval', (array) ($row['fisa'] ?? []))));
+            $same = $key !== null ? ($byPhone[$key][$name] ?? null) : ($byName[$name] ?? null);
+            if ($same !== null) {
                 $existing++;
+                // The same person at the other clinic (or already here): their file number there,
+                // so that QDental's procedures still find them.
+                if (is_int($same) && $fise !== []) {
+                    $line = "Și în {$tag}, fișa nr. " . implode(', ', $fise) . '.';
+                    db_run("UPDATE patients SET notes = IF(COALESCE(notes, '') = '', ?, CONCAT(notes, '\n', ?)), search_text = LEFT(CONCAT(search_text, ?), 400) WHERE id = ? AND COALESCE(notes, '') NOT LIKE ?",
+                        [$line, $line, ' ' . implode(' ', $fise), $same, "%{$tag}, fișa nr. %"]);
+                }
                 continue;
             }
             $notes = [];
-            $fise = array_values(array_filter(array_map('strval', (array) ($row['fisa'] ?? []))));
-            $notes[] = 'Din programul vechi (QDental)' . ($fise !== [] ? ', fișa nr. ' . implode(', ', $fise) : '') . '.';
+            $notes[] = "Din programul vechi ({$tag})" . ($fise !== [] ? ', fișa nr. ' . implode(', ', $fise) : '') . '.';
             if ($phones !== [] && $phone === null) {
                 $notes[] = 'Telefon de verificat: ' . $phones[0] . '.';
             }
@@ -207,6 +219,7 @@ function import_patients(string $file): array
             }
             $p = ['last_name' => $last, 'first_name' => $first, 'phone' => $phone ?? '', 'email' => null];
             $rows[] = $p + [
+                'preferred_location_id' => $loc !== null ? (int) $loc : null,
                 'file_number' => $next++,
                 // The old file number is searchable too („4416” finds the patient).
                 'search_text' => mb_substr(patient_search_text($p) . ($fise !== [] ? ' ' . implode(' ', $fise) : ''), 0, 400),
@@ -217,9 +230,9 @@ function import_patients(string $file): array
             $added++;
             $withoutPhone += (int) ($phone === null);
             if ($key !== null) {
-                $byPhone[$key][$name] = true;
+                $byPhone[$key][$name] = false;
             } else {
-                $byName[$name] = true;
+                $byName[$name] = false;
             }
         }
         if ($rows !== []) {
@@ -246,7 +259,7 @@ function import_procedures(string $file): array
     }
     $source = (string) ($data['source'] ?? basename($file));
     $loc = db_value('SELECT id FROM locations WHERE slug = ?', [(string) ($data['location'] ?? 'cristesti')]);
-    $byFile = import_qdental_files();
+    $byFile = import_qdental_files($data['qdental'] ?? null);
     $doctors = import_doctor_ids((array) ($data['doctors'] ?? []));
     $added = $payments = $skipped = 0;
     $missing = [];
@@ -321,15 +334,27 @@ function import_procedures(string $file): array
     return ['source' => $source, 'added' => $added, 'payments' => $payments, 'skipped' => $skipped];
 }
 
-/** QDental file number → the patient here (kept in the patient's note at the patient import). */
-function import_qdental_files(): array
+/** How the notes name an old program: „QDental” (Cristești) or „QDental Luduș” (its own database). */
+function qdental_tag(?string $qdental): string
+{
+    return $qdental === 'ludus' ? 'QDental Luduș' : 'QDental';
+}
+
+/**
+ * File number of that QDental → the patient here (kept in the patient's note at the patient
+ * import: „(QDental), fișa nr. 4416”, „Și în QDental Luduș, fișa nr. 37”).
+ */
+function import_qdental_files(?string $qdental = null): array
 {
     $byFile = [];
+    $re = '/' . preg_quote(qdental_tag($qdental), '/') . '\)?, fișa nr\. ([\d, ]+)/u';
     foreach (db_all("SELECT id, notes FROM patients WHERE notes LIKE '%QDental%'") as $p) {
-        if (preg_match('/fișa nr\. ([\d, ]+)/u', (string) $p['notes'], $m)) {
-            foreach (preg_split('/\D+/', $m[1]) ?: [] as $n) {
-                if ($n !== '') {
-                    $byFile[$n] = (int) $p['id'];
+        if (preg_match_all($re, (string) $p['notes'], $mm)) {
+            foreach ($mm[1] as $list) {
+                foreach (preg_split('/\D+/', $list) ?: [] as $n) {
+                    if ($n !== '') {
+                        $byFile[$n] = (int) $p['id'];
+                    }
                 }
             }
         }
