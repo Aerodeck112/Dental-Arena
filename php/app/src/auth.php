@@ -34,6 +34,11 @@ function can(string $permission, ?array $user = null): bool
     if ($user === null || (in_array($permission, FINANCE_PERMISSIONS, true) && !finance_on())) {
         return false;
     }
+    // An account with its own ledger (Utilizatori → „Registru separat”) adds procedures and takes
+    // the payments itself, a doctor too.
+    if (in_array($permission, ['procedures', 'procedures.pay'], true) && (int) ($user['own_ledger'] ?? 0) === 1) {
+        return true;
+    }
     // The administrator medic has what the administrator has and what the doctor has.
     $roles = $user['role'] === 'admin-medic' ? ['admin', 'medic'] : [$user['role']];
     return $user['role'] === 'tehnic' || array_intersect($roles, PERMISSIONS[$permission] ?? ['admin']) !== [];

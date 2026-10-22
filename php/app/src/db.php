@@ -110,7 +110,8 @@ function migrate(?PDO $pdo = null): int
     $pdo ??= db();
     $pdo->exec('CREATE TABLE IF NOT EXISTS schema_migrations (name VARCHAR(190) PRIMARY KEY, applied_at DATETIME NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
     $done = array_flip($pdo->query('SELECT name FROM schema_migrations')->fetchAll(PDO::FETCH_COLUMN));
-    $files = glob(APP_DIR . '/migrations/*.sql') ?: [];
+    // A .php migration changes data that SQL alone cannot (a JSON setting); it gets $pdo.
+    $files = array_merge(glob(APP_DIR . '/migrations/*.sql') ?: [], glob(APP_DIR . '/migrations/*.php') ?: []);
     sort($files);
     $ran = 0;
     foreach ($files as $file) {
@@ -118,9 +119,15 @@ function migrate(?PDO $pdo = null): int
         if (isset($done[$name])) {
             continue;
         }
-        // MySQL commits DDL on its own, so each statement runs separately.
-        foreach (split_sql((string) file_get_contents($file)) as $statement) {
-            $pdo->exec($statement);
+        if (str_ends_with($file, '.php')) {
+            (static function (PDO $pdo, string $file): void {
+                require $file;
+            })($pdo, $file);
+        } else {
+            // MySQL commits DDL on its own, so each statement runs separately.
+            foreach (split_sql((string) file_get_contents($file)) as $statement) {
+                $pdo->exec($statement);
+            }
         }
         $pdo->prepare('INSERT INTO schema_migrations (name, applied_at) VALUES (?, ?)')->execute([$name, now_sql()]);
         $ran++;

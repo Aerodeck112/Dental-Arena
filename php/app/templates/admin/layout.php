@@ -117,7 +117,7 @@ function admin_page(string $title, string $body, ?array $user = null): void
     </div>
   </header>
 <?php } ?>
-  <main id="continut" tabindex="-1" class="min-w-0 px-4 py-6 outline-none md:px-8 lg:py-10">
+  <main id="continut" data-panou tabindex="-1" class="min-w-0 px-4 py-6 outline-none md:px-8 lg:py-10">
     <div class="mx-auto max-w-6xl">
       <?php foreach ($flashes as $f) {
           $cls = match ($f['kind']) {

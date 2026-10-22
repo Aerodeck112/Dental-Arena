@@ -42,9 +42,9 @@ foreach (db_all('SELECT k.*, u.name AS author, (SELECT COUNT(*) FROM consent_ses
     $off = $d['revoked_at'] !== null;
     $rows .= '<tr class="border-t border-linie' . ($off ? ' text-discret' : '') . '">'
         . '<td class="py-3 pr-4"><span class="font-semibold">' . e($d['name']) . '</span>' . ($here && (int) $here['id'] === (int) $d['id'] ? ' <span class="ml-1 rounded-full bg-menta-pal px-2 py-0.5 text-mic text-actiune">acest dispozitiv</span>' : '') . '</td>'
-        . '<td class="py-3 pr-4">' . e($names[(int) $d['location_id']] ?? '—') . '</td>'
-        . '<td class="py-3 pr-4 text-mic">' . e(format_datetime($d['created_at'])) . ($d['author'] ? '<br>' . e($d['author']) : '') . '</td>'
-        . '<td class="py-3 pr-4 text-mic">' . ($d['last_seen_at'] ? e(format_datetime($d['last_seen_at'])) : '—') . '</td>'
+        . '<td class="whitespace-nowrap py-3 pr-4">' . e($names[(int) $d['location_id']] ?? '—') . '</td>'
+        . '<td class="whitespace-nowrap py-3 pr-4 text-mic">' . e(format_datetime($d['created_at'])) . ($d['author'] ? '<br>' . e($d['author']) : '') . '</td>'
+        . '<td class="whitespace-nowrap py-3 pr-4 text-mic">' . ($d['last_seen_at'] ? e(format_datetime($d['last_seen_at'])) : '—') . '</td>'
         . '<td class="py-3 pr-4 text-right cifre">' . (int) $d['signed'] . '</td>'
         . '<td class="py-3 text-right">' . ($off ? '<span class="text-mic">Oprită ' . e(format_date($d['revoked_at'])) . '</span>'
             : '<form method="post" data-confirma="Tableta „' . e($d['name']) . '” nu va mai putea deschide pagina de semnare. Continuați?">' . csrf_field() . '<input type="hidden" name="op" value="opreste"><input type="hidden" name="id" value="' . (int) $d['id'] . '"><button type="submit" class="' . e(btn('text', 's')) . '">Opriți</button></form>')

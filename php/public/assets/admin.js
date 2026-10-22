@@ -667,6 +667,23 @@
       input.setAttribute("data-auto", input.value);
     }
   };
+  // A clinic with its own price list (data-liste-clinici): the list shows only its services; the
+  // other clinics, the site's. A choice that is not in the list shown is let go.
+  var showClinicList = function (sel) {
+    var clinic = sel.getAttribute("data-pret-clinica") ? document.querySelector(sel.getAttribute("data-pret-clinica")) : null;
+    var lists = (sel.getAttribute("data-liste-clinici") || "").split(",").filter(Boolean);
+    if (!clinic || !lists.length) return;
+    var own = lists.indexOf(clinic.value) !== -1;
+    Array.prototype.forEach.call(sel.querySelectorAll("optgroup"), function (g) {
+      var c = g.getAttribute("data-clinica");
+      var show = own ? c === clinic.value : !c;
+      g.hidden = !show;
+      Array.prototype.forEach.call(g.querySelectorAll("option"), function (o) { o.hidden = !show; o.disabled = !show; });
+    });
+    var opt = sel.options[sel.selectedIndex];
+    if (opt && opt.disabled) sel.value = "";
+  };
+  Array.prototype.forEach.call(document.querySelectorAll("select[data-liste-clinici]"), showClinicList);
   document.addEventListener("change", function (e) {
     var sel = e.target.closest && e.target.closest("select[data-pret-sursa]");
     if (sel) {
@@ -674,7 +691,10 @@
       return;
     }
     if (e.target.id) {
-      Array.prototype.forEach.call(document.querySelectorAll("select[data-pret-clinica='#" + e.target.id + "']"), fillPrice);
+      Array.prototype.forEach.call(document.querySelectorAll("select[data-pret-clinica='#" + e.target.id + "']"), function (s) {
+        showClinicList(s);
+        fillPrice(s);
+      });
     }
   });
   document.addEventListener("click", function (e) {

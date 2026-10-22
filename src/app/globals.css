@@ -259,6 +259,13 @@
 /* 5. Base rules. They read the --da-* variables directly: "inline" theme variables are not
       guaranteed to be emitted. */
 @layer base {
+  /* The PHP panel's tables: a column title and a link in a cell (a patient's name) stay on one
+     line; a wide table scrolls sideways in its frame instead of breaking a name into pieces. */
+  [data-panou] table th,
+  [data-panou] table td a {
+    white-space: nowrap;
+  }
+
   html {
     font-synthesis: none;
     -webkit-text-size-adjust: 100%;

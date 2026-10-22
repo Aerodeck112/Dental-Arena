@@ -3,7 +3,8 @@
  * /admin/casa: the day's cash report of a clinic: what was collected for procedures, by method,
  * with „Numerar” as the money in the cash box; every payment of the day, who took it, and the
  * cancelled ones apart. Reception closes the day with it (Tipăriți). An account that starts from
- * zero („Luduș 2”) sees only the days since its own.
+ * zero („Luduș 2”) sees only the days since its own; one with its own ledger only its payments;
+ * the others the common ledger; the administrators all, or one ledger.
  */
 declare(strict_types=1);
 
@@ -21,9 +22,11 @@ if ($loc !== null) {
     remember_clinic($loc);
 }
 $mine = query('cine') === 'eu';
+$scope = proc_scope($user, query('registru'));
+$ledgers = ledger_users();
 
-$params = [$day, (int) $loc];
-$extra = '';
+[$extra, $params] = proc_scope_sql(['ledger' => $scope['ledger']], 'pp', 'paid_on');
+$params = array_merge([$day, (int) $loc], $params);
 if ($mine) {
     $extra = ' AND pp.received_by = ?';
     $params[] = (int) $user['id'];
@@ -49,8 +52,8 @@ foreach ($rows as $r) {
     $line = '<tr class="' . e(cn('border-t border-linie', $isCancelled ? 'text-discret line-through' : '')) . '">'
         . '<td class="px-3 py-2 cifre whitespace-nowrap">' . e(substr($r['created_at'], 0, 10) === $day ? hm($r['created_at']) : '—') . '</td>'
         . '<td class="px-3 py-2"><a class="font-medium text-link underline-offset-4 hover:underline" href="/admin/pacienti/' . (int) $r['patient_id'] . '/proceduri#plati">' . e(patient_name($r)) . '</a><span class="block text-mic text-discret cifre">fișa ' . (int) $r['file_number'] . '</span></td>'
-        . '<td class="px-3 py-2">' . e(PROC_PAY_METHODS[$r['method']] ?? $r['method']) . ($r['reference'] ? '<span class="block text-mic text-discret">' . e($r['reference']) . '</span>' : '') . '</td>'
-        . '<td class="px-3 py-2">' . e($r['who'] ?? '—') . '</td>'
+        . '<td class="whitespace-nowrap px-3 py-2">' . e(PROC_PAY_METHODS[$r['method']] ?? $r['method']) . ($r['reference'] ? '<span class="block text-mic text-discret">' . e($r['reference']) . '</span>' : '') . '</td>'
+        . '<td class="whitespace-nowrap px-3 py-2">' . e($r['who'] ?? '—') . '</td>'
         . '<td class="px-3 py-2 text-right cifre whitespace-nowrap font-semibold">' . e(lei((int) $r['amount'])) . '</td></tr>';
     if ($isCancelled) {
         $cancelled .= $line;
@@ -66,6 +69,7 @@ foreach ($allowed as $l) {
 $filters = '<form method="get" class="mb-6 grid gap-4 rounded-panou border border-linie bg-suprafata p-4 sm:grid-cols-2 lg:grid-cols-[repeat(3,minmax(0,1fr))_auto] lg:items-end print:hidden">'
     . text_field('ziua', 'Ziua', ['type' => 'date', 'value' => $day, 'max' => $today, 'min' => $hist])
     . (count($allowed) > 1 ? select_field('clinica', 'Clinica', $clinicOptions, ['value' => (string) $loc]) : '<input type="hidden" name="clinica" value="' . (int) $loc . '">')
+    . (is_admin($user) && $ledgers !== [] ? select_field('registru', 'Registrul', ['' => 'Toate registrele', 'comun' => 'Registrul comun'] + array_combine(array_map('strval', array_keys($ledgers)), array_map(static fn ($id) => ledger_label((int) $id), array_keys($ledgers))), ['value' => query('registru')]) : '')
     . select_field('cine', 'Încasate de', ['' => 'Toată echipa', 'eu' => 'Doar de mine'], ['value' => $mine ? 'eu' : ''])
     . '<div class="flex gap-2"><button type="submit" class="' . e(btn('primary')) . '">Arătați</button>'
     . '<button type="button" data-tipareste class="' . e(btn('secondary')) . '">' . icon('printer', 18) . 'Tipăriți</button></div></form>';
@@ -74,7 +78,7 @@ $th = 'px-3 py-2 text-left text-mic font-semibold text-discret';
 $table = static fn (string $rowsHtml) => '<div class="relative overflow-x-auto rounded-panou border border-linie bg-suprafata"><table class="w-full min-w-[40rem] border-collapse text-corp"><thead class="bg-fundal"><tr>'
     . '<th scope="col" class="' . $th . ' w-20">Ora</th><th scope="col" class="' . $th . '">Pacientul</th><th scope="col" class="' . $th . ' w-44">Cum a plătit</th><th scope="col" class="' . $th . ' w-44">A încasat</th><th scope="col" class="' . $th . ' w-32 text-right">Suma</th></tr></thead><tbody>' . $rowsHtml . '</tbody></table></div>';
 
-$body = admin_header('Casa: ' . format_date($day, true) . ($loc !== null ? ', ' . ($names[$loc] ?? '') : ''), 'Ce s-a încasat în ziua aleasă pentru proceduri: numerarul este cât trebuie să fie în casă.' . ($hist !== null ? ' Contul vede zilele de la ' . format_date($hist) . '.' : ''))
+$body = admin_header('Casa: ' . format_date($day, true) . ($loc !== null ? ', ' . ($names[$loc] ?? '') : ''), 'Ce s-a încasat în ziua aleasă pentru proceduri: numerarul este cât trebuie să fie în casă.' . ($hist !== null ? ' Contul vede zilele de la ' . format_date($hist) . '.' : '') . ($scope['ledger'] !== null && $scope['ledger'] > 0 ? ' ' . ledger_label($scope['ledger']) . '.' : ''))
     . $filters
     . '<div class="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">'
     . $tile('Numerar: bani în casă', $by['numerar'], 'border-2 border-actiune bg-menta-pal sm:col-span-2 lg:col-span-1')

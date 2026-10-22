@@ -40,21 +40,21 @@ const PATIENT_EVENTS = [
         'params' => ['prenume', 'data', 'ora', 'clinica', 'medic', 'telefon_clinica'],
     ],
     'programare-mutata' => [
-        'label' => 'Programare mutată', 'when' => 'Când se schimbă ziua sau ora.', 'marketing' => false, 'phone' => true, 'email' => true,
+        'label' => 'Programare mutată', 'when' => 'Când se schimbă ziua sau ora.', 'marketing' => false, 'phone' => false, 'email' => false,
         'sms' => 'Dental Arena: programarea dvs. a fost mutata pe {data}, ora {ora}, la {clinica}. Detalii: {link}',
         'subject' => 'Programarea dumneavoastră a fost mutată',
         'body' => "Bună ziua, {prenume},\n\nprogramarea dumneavoastră a fost mutată pe {data}, la ora {ora}, la Dental Arena {clinica} ({adresa}).\n\nO confirmați sau o adăugați în calendar aici: {link}\n\nPentru întrebări: {telefon_clinica}.\n\nDental Arena",
         'params' => ['prenume', 'data', 'ora', 'clinica', 'telefon_clinica'],
     ],
     'programare-anulata' => [
-        'label' => 'Programare anulată', 'when' => 'Când programarea se anulează.', 'marketing' => false, 'phone' => true, 'email' => true,
+        'label' => 'Programare anulată', 'when' => 'Când programarea se anulează.', 'marketing' => false, 'phone' => false, 'email' => false,
         'sms' => 'Dental Arena: programarea dvs. din {data}, ora {ora} a fost anulata. Pentru o noua programare sunati la {telefon_clinica}.',
         'subject' => 'Programarea dumneavoastră a fost anulată',
         'body' => "Bună ziua, {prenume},\n\nprogramarea dumneavoastră din {data}, ora {ora}, a fost anulată.\n\nPentru o programare nouă ne găsiți la {telefon_clinica}.\n\nDental Arena",
         'params' => ['prenume', 'data', 'ora', 'telefon_clinica'],
     ],
     'reamintire' => [
-        'label' => 'Reamintire cu o zi înainte', 'when' => 'În ziua dinaintea programării, între 10 și 21 (doar pentru programările făcute cu cel puțin 18 ore înainte).', 'marketing' => false, 'phone' => true, 'email' => true,
+        'label' => 'Reamintire cu o zi înainte', 'when' => 'În ziua dinaintea programării, între 10 și 21 (doar pentru programările făcute cu cel puțin 18 ore înainte).', 'marketing' => false, 'phone' => false, 'email' => false,
         'sms' => 'Dental Arena: va asteptam maine, {data}, la ora {ora}, la {clinica}. Confirmati sau anulati: {link}',
         'subject' => 'Programarea de mâine la Dental Arena',
         'body' => "Bună ziua, {prenume},\n\nvă reamintim programarea de mâine la Dental Arena {clinica}:\n\n{data}, ora {ora}\n{medic}\n{adresa}\n\nO confirmați sau o anulați aici: {link}\n\nDacă nu puteți veni, vă rugăm să ne sunați: {telefon_clinica}.\n\nVă așteptăm,\nDental Arena",
@@ -599,7 +599,7 @@ function agenda_window_passed(array $doctor, DateTimeImmutable $now): bool
  * Each doctor with appointments today gets the programme once, in the morning: from their hour
  * for AGENDA_WINDOW_HOURS (and before the last appointment). Missed (SMS switched on later,
  * appointments added in the afternoon), it does not go that day: a „Bună dimineața” at 17:30
- * helps nobody; the appointments added later reach the doctor one by one (notify_doctor_today).
+ * helps nobody.
  */
 function send_agendas(DateTimeImmutable $now): void
 {
@@ -616,36 +616,6 @@ function send_agendas(DateTimeImmutable $now): void
         } catch (Throwable $e) {
             app_log('error', 'agenda #' . $doctor['id'] . ': ' . $e->getMessage());
         }
-    }
-}
-
-/**
- * After the programme went out (or its morning time passed), a change to today's appointments
- * reaches the doctor the same way (accounts that chose these notices in „Contul meu” already get them).
- */
-function notify_doctor_today(string $staffEvent, array $a, array $vars): void
-{
-    $doctor = db_one('SELECT * FROM doctors WHERE id = ?', [(int) $a['doctor_id']]);
-    if ($doctor === null || empty($doctor['agenda_channel']) || substr($a['starts_at'], 0, 10) !== date('Y-m-d')
-        || (!agenda_window_passed($doctor, new DateTimeImmutable()) && !db_value("SELECT 1 FROM messages WHERE event = 'staff-agenda' AND doctor_id = ? AND created_at >= ?", [$doctor['id'], date('Y-m-d') . ' 00:00:00']))) {
-        return;
-    }
-    foreach (users_of_doctor((int) $doctor['id']) as $u) {
-        if ((user_notify_prefs($u)[$staffEvent] ?? []) !== []) {
-            return;
-        }
-    }
-    $cfg = staff_event($staffEvent);
-    $text = fill_template((string) $cfg['sms'], $vars);
-    $row = ['event' => $staffEvent, 'doctor_id' => (int) $doctor['id'], 'appointment_id' => (int) $a['id'], 'created_by' => null];
-    $ch = (string) $doctor['agenda_channel'];
-    $wa = phone_e164((string) $doctor['phone']);
-    if ($ch === 'whatsapp' && $wa !== null && (trim((string) $cfg['wa']) !== '' || whatsapp_window_open($wa))) {
-        queue_message($row + ['channel' => 'whatsapp', 'to_address' => $wa, 'body' => $text] + (trim((string) $cfg['wa']) !== '' ? ['template' => trim((string) $cfg['wa']), 'template_params' => json_encode(array_map(static fn ($k) => (string) ($vars[$k] ?? ''), $cfg['params']), JSON_UNESCAPED_UNICODE)] : []));
-    } elseif (($ch === 'whatsapp' || $ch === 'sms') && ($to = phone_ro_mobile((string) $doctor['phone'])) !== null) {
-        queue_message($row + ['channel' => 'sms', 'to_address' => $to, 'body' => $text]);
-    } elseif ($ch === 'email' && filter_var((string) $doctor['email'], FILTER_VALIDATE_EMAIL)) {
-        queue_message($row + ['channel' => 'email', 'to_address' => (string) $doctor['email'], 'subject' => 'Dental Arena: ' . STAFF_EVENTS[$staffEvent]['label'], 'body' => $text . "\n\n" . absolute_url('/admin/calendar')]);
     }
 }
 
@@ -672,10 +642,9 @@ function notify_appointment(string $what, int $appointmentId): void
         $staff = ['programare-noua' => 'staff-programare-noua', 'programare-mutata' => 'staff-programare-mutata', 'programare-anulata' => 'staff-programare-anulata', 'sosit' => 'staff-pacient-sosit'][$what] ?? null;
         if ($staff !== null && ($future || $what === 'sosit')) {
             $others = array_filter(users_of_doctor((int) $a['doctor_id']), static fn ($u) => (int) $u['id'] !== (int) (current_user()['id'] ?? 0));
+            // Only to the accounts that chose these notices in „Contul meu”; the doctor's phone
+            // (Echipa → medic) gets only the programme of the morning (October 2026).
             notify_staff($staff, $others, $vars, ['appointment_id' => $appointmentId]);
-            if ($what !== 'sosit') {
-                notify_doctor_today($staff, $a, $vars);
-            }
         }
     } catch (Throwable $e) {
         app_log('error', "notify_appointment({$what}): " . $e->getMessage());

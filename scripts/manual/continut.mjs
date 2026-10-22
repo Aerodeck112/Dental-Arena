@@ -149,7 +149,7 @@ ${tabel(["Situația", "Ce face panoul"], [
 ])}
 <p>La un avertisment, verificați lista și fie alegeți altă oră, fie bifați ${b("Programez oricum (de exemplu, o urgență)")} și salvați din nou.</p>
 ${img("programare-avertisment", "Ora aleasă e în pauza medicului: „Programez oricum”.")}
-${sfat("Pacientul primește automat confirmarea pe SMS, WhatsApp sau e-mail (cum a ales), cu un link de unde poate confirma, anula sau pune programarea în calendarul telefonului, și o reamintire în ziua de dinainte.")}
+${sfat("Pacientul primește automat confirmarea pe SMS, WhatsApp sau e-mail (cum a ales), cu un link de unde poate confirma, anula sau pune programarea în calendarul telefonului. Reamintirea, mutarea și anularea nu pleacă singure: le trimiteți cu „Trimiteți SMS acum”.")}
 <h3>Starea, dintr-un clic</h3>
 <p>Sus pe pagina programării e starea, cu butoanele pentru pasul următor (${b("Confirmat")}, ${b("A sosit")}, ${b("Începe tratamentul")}, ${b("Finalizat")}, ${b("Nu a venit")}) și pentru întoarcere: o programare anulată se poate ${b("Readuce la Programat")}, iar o vizită încheiată se poate ${b("Redeschide")}. Panoul verifică dacă ora mai e liberă când readuceți o programare anulată.</p>
 ${img("programare", "O programare deschisă: starea cu butoanele ei, datele, rechemarea și anularea.")}
@@ -372,11 +372,11 @@ ${img("tablete", "Tabletele de semnare.")}` : ""}`,
 export const mesaje = (rol) => ({
   titlu: "Mesajele către pacienți",
   html: `
-<p>Panoul trimite singur pacienților mesajele obișnuite, pe SMS, WhatsApp sau e-mail, cum a ales fiecare în fișă:</p>
+<p>Singur, panoul trimite pacienților doar <strong>confirmarea programării</strong> (pe SMS, WhatsApp sau e-mail, cum a ales fiecare în fișă), iar medicilor <strong>programul zilei</strong>, dimineața. Celelalte mesaje se pornesc, dacă doriți, din Setări → Mesaje (bifele „Pe telefon” și „Pe e-mail”):</p>
 ${tabel(["Când", "Ce primește pacientul"], [
-  ["Imediat după programare", "Confirmarea: ziua, ora, clinica, medicul și un link de unde confirmă, anulează sau pune programarea în calendarul telefonului."],
-  ["La mutare sau anulare", "Noua dată (cu un link nou), sau anunțul anulării."],
-  ["Cu o zi înainte", "Reamintirea programării."],
+  ["Imediat după programare (pornit)", "Confirmarea: ziua, ora, clinica, medicul și un link de unde confirmă, anulează sau pune programarea în calendarul telefonului."],
+  ["La mutare sau anulare (oprit)", "Noua dată (cu un link nou), sau anunțul anulării. Oprit: când medicul mută de câteva ori, pacientul ar primi câte un mesaj de fiecare dată. Trimiteți-l cu „Trimiteți SMS acum”."],
+  ["Cu o zi înainte (oprit)", "Reamintirea programării; o trimiteți cu „Trimiteți SMS acum” din calendar."],
   ["După o vizită", "Mulțumiri și, eventual, linkul pentru o recenzie Google."],
   ["Cu o săptămână înainte de control", "Reamintirea controlului (rechemare)."],
   ["De ziua lui", "Urarea (doar cu acordul pentru oferte)."],
@@ -523,7 +523,7 @@ ${sfat("Înainte să plece textul, panoul scoate din el numele pacientului, CNP-
 export const programulZilei = (rol) => ({
   titlu: "Programul zilei pe WhatsApp",
   html: `
-<p>În fiecare zi în care ${rol === "medic" ? "aveți" : "medicul are"} programări, ${rol === "medic" ? "primiți" : "primește"} dimineața, la ora aleasă, lista lor pe WhatsApp (sau SMS ori e-mail): ora, pacientul, motivul, clinica și, dacă se dorește, alertele medicale. Dacă în aceeași zi se adaugă, se mută sau se anulează o programare, ${rol === "medic" ? "primiți" : "primește"} și asta. Programul pleacă de la ora aleasă, cel târziu în 3 ore; dacă nu a putut pleca până atunci (de exemplu programările s-au pus după-amiaza), nu mai pleacă în acea zi, iar programările noi de azi ajung una câte una.</p>
+<p>În fiecare zi în care ${rol === "medic" ? "aveți" : "medicul are"} programări, ${rol === "medic" ? "primiți" : "primește"} dimineața, la ora aleasă, lista lor pe WhatsApp (sau SMS ori e-mail): ora, pacientul, motivul, clinica și, dacă se dorește, alertele medicale. Programul pleacă de la ora aleasă, cel târziu în 3 ore; dacă nu a putut pleca până atunci (de exemplu programările s-au pus după-amiaza), nu mai pleacă în acea zi. Schimbările din timpul zilei nu mai pleacă automat pe telefon (doar cui le-a ales în „Contul meu”).</p>
 ${img("medic-agenda", "Setarea din pagina medicului, cu exemplul de mesaj.")}
 ${rol === "medic" ? `<p>Setarea o face administratorul, în Echipa → profilul dumneavoastră. Dacă aveți cont în panou, o puteți cere și singur, din ${b("Contul meu")} → ${b("Notificările mele")} → „Programul zilei”.</p>` : `${pasi([
   `${b("Echipa")} → medicul → chenarul ${b("Programul zilei, pe telefon")}.`,
@@ -573,6 +573,7 @@ ${pasi([
 ])}
 ${img("utilizator", "Un cont: rolul, clinicile, profilul de medic.")}
 ${sfat("Un cont care începe de la zero (de exemplu „Luduș 2”, pentru încasări): rolul Recepție, clinica Luduș și „Procedurile și plățile vizibile de la” = ziua de azi. Vede pacienții (nume, telefon) și programările, dar procedurile, plățile și Casa doar de la acea zi; nu poate trece proceduri sau plăți mai vechi.")}
+${sfat("„Registru separat”: ce adaugă și ce încasează contul (de exemplu „Luduș 2”, sau un medic care facturează și încasează singur, ca Dr. Bologa) rămâne doar în contul lui, iar el nu vede registrul comun sau al altora. Poate adăuga proceduri, încasa și are Casa lui. La un medic, „Trec în registrul lui și procedurile de până acum ale medicului” îi mută și istoricul (de exemplu cel din QDental). Administratorii văd toate registrele, cu filtrul „Registrul”.")}
 ${tabel(["Rolul", "Pe scurt"], [
   ["Recepție", "Lucrul zilnic, fără anamneza completă și fără administrare."],
   ["Medic", "Fișa completă, odontograma, planurile, implanturile, consultația cu AI."],
@@ -615,6 +616,7 @@ ${img("servicii-pagina", "Prețurile unei pagini de servicii.")}
 <h3>Prețurile (sub-serviciile)</h3>
 <ul>
 <li>Fiecare rând: numele, prețul, bifa „de la”, un al doilea preț (pentru „200 / 400 lei”), unitatea (de exemplu „/dinte”), bifa „pe site” și prețul reprezentativ (cel afișat pe cardul serviciului). Prețul gol înseamnă „Prețul îl aflați la telefon”.</li>
+<li>${b("Listele de prețuri ale clinicilor")} (în dreapta): o clinică cu alte denumiri și prețuri (Luduș) are lista ei, care nu apare pe site. Cât timp lista are servicii, la ${b("Adaugă procedură")} pentru acea clinică se alege din ea. Lista Luduș a pornit din QDental Luduș (denumirile și ultimele prețuri) și se poate schimba oricând.</li>
 <li>${b("Preț aprobat în clinică")}: sub fiecare rând, câte un preț pentru Cristești și pentru Luduș. Nu apare pe site; se completează singur la ${b("Adaugă procedură")}, după clinica aleasă. Gol = prețul de pe site.</li>
 <li><strong>Durează</strong>: cât ține serviciul. Pe site, programarea pentru el ocupă atât.</li>
 <li><strong>Programare online</strong>: bifat, serviciul apare ca motiv pe pagina Programare de pe site, cu textul pentru pacient (de exemplu „Consultație sau control”) și o explicație scurtă. „Urgență” îl pune al doilea, evidențiat, cu telefoanele clinicilor.</li>

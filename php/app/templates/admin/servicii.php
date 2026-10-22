@@ -77,11 +77,19 @@ foreach ($rows as $i => $c) {
         . $arrow($id, 'sus', 'Mai sus: ' . $c['name'], 'chevron-up', $i === 0)
         . $arrow($id, 'jos', 'Mai jos: ' . $c['name'], 'chevron-down', $i === $last) . '</div></li>';
 }
+// The clinics' own price lists (Luduș): for „Adaugă procedură”, not on the site.
+$clinicLists = admin_section_open('Listele de prețuri ale clinicilor', 'liste-clinici', 'Pentru o clinică cu alte denumiri și alte prețuri decât site-ul (de exemplu Luduș). Nu apar pe site; la „Adaugă procedură” clinica își folosește lista.')
+    . '<ul class="mt-4 flex flex-col gap-2">';
+foreach (db_all('SELECT l.slug, l.short_name, (SELECT COUNT(*) FROM clinic_services cs WHERE cs.location_id = l.id) AS n FROM locations l ORDER BY l.id') as $l) {
+    $clinicLists .= '<li><a class="flex min-h-control items-center justify-between gap-3 rounded-control border border-linie px-3 py-2 hover:bg-fundal" href="/admin/servicii/clinica/' . e($l['slug']) . '"><span><span class="font-semibold">' . e($l['short_name']) . '</span>'
+        . '<span class="block text-mic text-discret">' . ((int) $l['n'] > 0 ? count_ro((int) $l['n'], 'un serviciu', 'servicii') . ' în lista ei' : 'Folosește lista site-ului') . '</span></span>' . icon('chevron-right', 18, 'shrink-0 text-discret') . '</a></li>';
+}
+$clinicLists .= '</ul></section>';
 $form = '<form method="post" novalidate class="flex flex-col gap-4">' . csrf_field() . '<input type="hidden" name="op" value="nou">' . error_summary($errors)
     . text_field('name', 'Numele serviciului', ['value' => post('op') === 'nou' ? post('name') : '', 'maxlength' => 120, 'error' => $errors['name'] ?? null, 'hint' => 'Devine titlul paginii și adresa ei, de exemplu Albire dentară → /albire-dentara.'])
     . text_area('summary', 'Descrierea scurtă', ['value' => post('op') === 'nou' ? post('summary') : '', 'rows' => 3, 'maxlength' => 1000, 'error' => $errors['summary'] ?? null])
     . '<div><button type="submit" class="' . e(btn('primary')) . '">' . icon('plus', 18) . 'Adăugați serviciul</button></div></form>';
 $body = admin_header('Servicii și prețuri', 'Fiecare serviciu are pagina lui pe site, cu prețurile lui (sub-serviciile). Ordinea de aici este ordinea din meniul site-ului, de pe pagina Servicii și de pe pagina Prețuri. Se schimbă pe site imediat după salvare.')
     . '<div class="grid max-w-6xl gap-8 lg:grid-cols-12"><ol class="grid gap-3 lg:col-span-7">' . $items . '</ol>'
-    . '<div class="lg:col-span-5">' . admin_section_open('Serviciu nou', 'serviciu-nou', 'O pagină nouă pe site. După ce o adăugați, îi puneți prețurile și textul.') . '<div class="mt-4">' . $form . '</div></section></div></div>';
+    . '<div class="flex flex-col gap-8 lg:col-span-5">' . $clinicLists . admin_section_open('Serviciu nou', 'serviciu-nou', 'O pagină nouă pe site. După ce o adăugați, îi puneți prețurile și textul.') . '<div class="mt-4">' . $form . '</div></section></div></div>';
 admin_page('Servicii și prețuri', $body, $user);

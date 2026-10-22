@@ -20,11 +20,11 @@ foreach ($cases as $c) {
     $overdue = $c['next_due'] && $c['next_due'] < date('Y-m-d');
     $rows .= '<tr class="border-t border-linie">'
         . '<td class="px-3 py-2"><a class="font-semibold text-link underline-offset-4 hover:underline" href="/admin/pacienti/' . (int) $c['patient_id'] . '#implanturi">' . e(patient_name($c)) . '</a><span class="block text-mic text-discret">fișa ' . (int) $c['file_number'] . ($c['phone'] !== '' ? ' · ' . e(format_phone($c['phone'])) : '') . '</span></td>'
-        . '<td class="px-3 py-2 cifre">' . e($c['teeth']) . ($c['system_name'] ? '<span class="block text-mic text-discret">' . e($c['system_name']) . '</span>' : '') . '</td>'
-        . '<td class="px-3 py-2">' . e(IMPLANT_STAGES[$c['stage']][0] ?? $c['stage']) . '</td>'
+        . '<td class="whitespace-nowrap px-3 py-2 cifre">' . e($c['teeth']) . ($c['system_name'] ? '<span class="block text-mic text-discret">' . e($c['system_name']) . '</span>' : '') . '</td>'
+        . '<td class="whitespace-nowrap px-3 py-2">' . e(IMPLANT_STAGES[$c['stage']][0] ?? $c['stage']) . '</td>'
         . '<td class="px-3 py-2">' . e($next) . '</td>'
-        . '<td class="' . e(cn('px-3 py-2 cifre', $overdue ? 'font-semibold text-carmin' : '')) . '">' . ($c['next_due'] ? e(format_date($c['next_due'])) . ($overdue ? ' · a trecut' : '') : '—') . '</td>'
-        . '<td class="px-3 py-2">' . e($docs[(int) $c['doctor_id']] ?? '—') . '</td></tr>';
+        . '<td class="' . e(cn('whitespace-nowrap px-3 py-2 cifre', $overdue ? 'font-semibold text-carmin' : '')) . '">' . ($c['next_due'] ? e(format_date($c['next_due'])) . ($overdue ? ' · a trecut' : '') : '—') . '</td>'
+        . '<td class="whitespace-nowrap px-3 py-2">' . e($docs[(int) $c['doctor_id']] ?? '—') . '</td></tr>';
 }
 $options = ['' => 'Toți medicii'] + array_map('strval', $docs);
 $body = admin_header('Implanturi', count_ro(count($cases), 'un caz în curs', 'cazuri în curs') . '. Etapele se notează în fișa pacientului, la „Implanturi”.')

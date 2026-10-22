@@ -60,7 +60,7 @@ $th = 'px-3 py-2 text-left text-mic font-semibold text-discret';
 $tr = '';
 foreach ($rows as $r) {
     $tr .= '<tr class="border-t border-linie align-top"><td class="cifre whitespace-nowrap px-3 py-2">' . e(date('d.m.Y H:i', strtotime($r['created_at']))) . '</td>'
-        . '<td class="px-3 py-2">' . e($r['user_name'] ?? '—') . '</td><td class="px-3 py-2">' . e(audit_label($r['action'])) . '</td>'
+        . '<td class="whitespace-nowrap px-3 py-2">' . e($r['user_name'] ?? '—') . '</td><td class="whitespace-nowrap px-3 py-2">' . e(audit_label($r['action'])) . '</td>'
         . '<td class="px-3 py-2">' . ($r['patient_id'] !== null && $r['file_number'] !== null ? '<a class="text-link underline-offset-4 hover:underline" href="/admin/pacienti/' . (int) $r['patient_id'] . '">' . e(patient_name($r)) . '</a>' : '') . '</td>'
         . '<td class="px-3 py-2 text-discret">' . e((string) $r['detail']) . '</td></tr>';
 }

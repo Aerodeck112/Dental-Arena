@@ -40,7 +40,7 @@ set_exception_handler(static function (Throwable $e): void {
 // After an update (new files in migrations/), the tables are brought up to date on the first request.
 if (INSTALLED) {
     $marker = APP_DIR . '/storage/migrations.txt';
-    $files = glob(APP_DIR . '/migrations/*.sql') ?: [];
+    $files = array_merge(glob(APP_DIR . '/migrations/*.sql') ?: [], glob(APP_DIR . '/migrations/*.php') ?: []);
     if ((string) count($files) !== (string) @file_get_contents($marker)) {
         migrate();
         @mkdir(APP_DIR . '/storage', 0750, true);

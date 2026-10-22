@@ -101,6 +101,7 @@ $routes = [
     '#^/admin/gdpr$#' => ['gdpr', 'gdpr'],
     '#^/admin/jurnal$#' => ['jurnal', 'audit'],
     '#^/admin/servicii$#' => ['servicii', 'admin'],
+    '#^/admin/servicii/clinica/([a-z0-9-]+)$#' => ['servicii-clinica', 'admin'],
     '#^/admin/servicii/([a-z0-9-]+)$#' => ['servicii-pagina', 'admin'],
     '#^/admin/fotografii$#' => ['fotografii', 'admin'],
     '#^/admin/echipa$#' => ['echipa', 'admin'],

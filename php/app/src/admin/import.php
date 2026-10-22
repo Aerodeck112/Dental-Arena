@@ -12,7 +12,9 @@
  *    price, payments: [{date, amount}], note, doctor?}], doctors?}): each goes to the patient with
  *    that file number of that QDental, with its payments (and its doctor, from the report per doctor);
  *  - procedures-assign ({kind: "procedures-assign", doctors, from, to, assign: [{fise, date, name,
- *    price, doctor}]}): the doctor of procedures already added from the report without doctors.
+ *    price, doctor}]}): the doctor of procedures already added from the report without doctors;
+ *  - clinic-services ({kind: "clinic-services", source, location, services: [{name, price}]}): a
+ *    clinic's own price list (Servicii și prețuri → lista clinicii), only while it has none.
  * A long list is split in files (one per year); one page adds what fits in about 20 seconds, the
  * next page goes on.
  */
@@ -78,6 +80,7 @@ function run_pending_imports(bool $now = false): void
             $r = match ($kind) {
                 'procedures' => import_procedures($file),
                 'procedures-assign' => import_procedures_assign($file),
+                'clinic-services' => import_clinic_services($file),
                 default => import_patients($file),
             };
             file_put_contents(import_marker($file, 'done'), json_encode($r + ['at' => now_sql()], JSON_UNESCAPED_UNICODE));
@@ -111,6 +114,7 @@ function import_status(): array
         }
         [$state, $detail, $at] = match (true) {
             is_array($done) => ['gata', match (true) {
+                isset($done['services']) => "{$done['services']} servicii în lista clinicii" . (($done['kept'] ?? false) ? ' (lista exista deja, a rămas cum era)' : ''),
                 isset($done['assigned']) => "medicul trecut la {$done['assigned']} proceduri" . (($done['missing'] ?? 0) ? ", {$done['missing']} negăsite" : ''),
                 isset($done['payments']) => "{$done['added']} proceduri, {$done['payments']} plăți" . (($done['skipped'] ?? 0) ? ", {$done['skipped']} fără pacient" : ''),
                 default => "{$done['added']} pacienți adăugați, {$done['existing']} existau deja",
@@ -332,6 +336,40 @@ function import_procedures(string $file): array
     });
     audit('import-proceduri', "{$source}: {$added} proceduri, {$payments} plăți" . ($skipped ? ", {$skipped} fără pacient (" . implode(', ', array_slice(array_keys($missing), 0, 20)) . ')' : ''));
     return ['source' => $source, 'added' => $added, 'payments' => $payments, 'skipped' => $skipped];
+}
+
+/**
+ * A clinic's own price list from its old program, once: a clinic that has a list already keeps it.
+ *
+ * @return array{source:string,services:int,kept:bool}
+ */
+function import_clinic_services(string $file): array
+{
+    $data = json_decode((string) file_get_contents($file), true);
+    if (!is_array($data) || !is_array($data['services'] ?? null)) {
+        throw new RuntimeException('Lista serviciilor nu poate fi citită.');
+    }
+    $source = (string) ($data['source'] ?? basename($file));
+    $loc = db_value('SELECT id FROM locations WHERE slug = ?', [(string) ($data['location'] ?? '')]);
+    if ($loc === null || $loc === false) {
+        throw new RuntimeException('Clinica listei nu există.');
+    }
+    if (db_value('SELECT 1 FROM clinic_services WHERE location_id = ?', [(int) $loc])) {
+        return ['source' => $source, 'services' => 0, 'kept' => true];
+    }
+    $now = now_sql();
+    $rows = [];
+    foreach ($data['services'] as $r) {
+        $name = mb_substr(trim((string) ($r['name'] ?? '')), 0, 190);
+        if ($name !== '') {
+            $rows[] = ['location_id' => (int) $loc, 'name' => $name, 'price' => isset($r['price']) ? max(0, (int) $r['price']) : null, 'active' => 1, 'updated_at' => $now];
+        }
+    }
+    if ($rows !== []) {
+        import_insert_many('clinic_services', $rows);
+    }
+    audit('import-servicii', "{$source}: " . count($rows) . ' servicii');
+    return ['source' => $source, 'services' => count($rows), 'kept' => false];
 }
 
 /** How the notes name an old program: „QDental” (Cristești) or „QDental Luduș” (its own database). */

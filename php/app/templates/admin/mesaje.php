@@ -69,10 +69,10 @@ foreach ($log as $m) {
                 . '<button type="submit" name="op" value="anuleaza" class="' . e(btn('text', 's')) . '">Nu mai trimiteți</button></form>';
     }
     $rows .= '<tr class="border-t border-linie align-top"><td class="cifre whitespace-nowrap px-3 py-2">' . e(date('d.m.Y H:i', strtotime($m['sent_at'] ?? $m['send_after']))) . '</td>'
-        . '<td class="px-3 py-2">' . $who . '</td>'
-        . '<td class="px-3 py-2">' . e(($m['direction'] === 'in' ? '← ' : '') . (MSG_CHANNELS[$m['channel']] ?? $m['channel'])) . '<span class="block text-mic text-discret">' . e(message_event_label($m['event'])) . '</span></td>'
+        . '<td class="whitespace-nowrap px-3 py-2">' . $who . '</td>'
+        . '<td class="whitespace-nowrap px-3 py-2">' . e(($m['direction'] === 'in' ? '← ' : '') . (MSG_CHANNELS[$m['channel']] ?? $m['channel'])) . '<span class="block text-mic text-discret">' . e(message_event_label($m['event'])) . '</span></td>'
         . '<td class="max-w-[24rem] px-3 py-2"><span class="line-clamp-2 text-mic">' . e($m['body']) . '</span>' . ($m['error'] ? '<span class="block text-mic text-carmin">' . e($m['error']) . '</span>' : '') . '</td>'
-        . '<td class="px-3 py-2">' . msg_status_chip($m['status']) . '</td><td class="px-3 py-2">' . $act . '</td></tr>';
+        . '<td class="whitespace-nowrap px-3 py-2">' . msg_status_chip($m['status']) . '</td><td class="px-3 py-2">' . $act . '</td></tr>';
 }
 $today = db_one("SELECT SUM(status IN ('trimis', 'livrat', 'citit')) AS sent, SUM(status = 'esuat') AS failed, SUM(status = 'in-asteptare') AS waiting, SUM(status = 'proba') AS test FROM messages WHERE direction = 'out' AND created_at >= ?", [date('Y-m-d 00:00:00')]);
 $filters = '<form method="get" class="mt-4 flex flex-wrap items-end gap-3">'

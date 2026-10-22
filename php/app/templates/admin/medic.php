@@ -213,7 +213,7 @@ $agenda = admin_section_open('Programul zilei, pe telefon', 'agenda', 'În fieca
     . '<div class="mt-4 grid gap-6 lg:grid-cols-2"><div class="flex min-w-0 flex-col gap-4">'
     . select_field('agenda_channel', 'Unde primește programul', AGENDA_CHANNELS, ['value' => $v['agenda_channel']])
     . '<div class="grid gap-4 sm:grid-cols-2">' . text_field('phone', 'Mobilul medicului', ['type' => 'tel', 'value' => $v['phone'], 'optional' => true, 'error' => $errors['phone'] ?? null])
-    . text_field('agenda_time', 'La ce oră', ['type' => 'time', 'value' => $v['agenda_time'], 'step' => 900, 'hint' => 'Pleacă de la această oră, cel târziu în 3 ore (la prima deschidere a panoului, dacă nu e cron). Dacă prima programare e mai devreme, alegeți o oră înaintea ei. Programările adăugate după aceea îi ajung una câte una.']) . '</div>'
+    . text_field('agenda_time', 'La ce oră', ['type' => 'time', 'value' => $v['agenda_time'], 'step' => 900, 'hint' => 'Pleacă de la această oră, cel târziu în 3 ore (la prima deschidere a panoului, dacă nu e cron). Dacă prima programare e mai devreme, alegeți o oră înaintea ei.']) . '</div>'
     . text_field('email', 'E-mailul medicului', ['type' => 'email', 'value' => $v['email'], 'optional' => true, 'error' => $errors['email'] ?? null])
     . checkbox_field('agenda_alerts', 'Cu alertele medicale ale pacienților', ['checked' => $v['agenda_alerts'] === '1', 'description' => 'Alergii, anticoagulante, sarcină etc. Sunt date de sănătate: bifați doar dacă telefonul medicului e protejat.'])
     . '<p class="text-mic text-discret">Pe WhatsApp e nevoie de un șablon aprobat de Meta (Setări → Mesaje → „Programul zilei”); până atunci pleacă prin SMS.</p></div>'

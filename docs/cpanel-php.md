@@ -704,3 +704,26 @@ din copia bazei de date nu mai pot fi citite.
 - Procedurile caută fișa doar în QDental-ul lor („QDental” = Cristești, „QDental Luduș”), deci
   aceleași numere de fișă din cele două baze nu se încurcă.
 - Pagina Proceduri: „Încasat în perioadă” pe ambele clinici numără doar clinicile contului.
+
+## Registre separate, SMS automate doar două, tabelele, lista Luduș (octombrie 2026)
+
+- **Registru separat** (Utilizatori → cont): ce adaugă și ce încasează contul rămâne doar în contul
+  lui (de exemplu „Luduș 2” și Dr. Paul Bologa, fiecare cu registrul lui); el nu vede registrul
+  comun sau al altora. Poate adăuga proceduri, încasa și are Casa lui (și un medic). Celelalte
+  conturi văd registrul comun. Administratorii văd tot, cu filtrul „Registrul” (fișa pacientului,
+  Proceduri, Casa) și eticheta registrului pe rânduri; la o procedură sau plată nouă aleg registrul.
+  O plată se trece doar pe procedurile registrului ei. La contul unui medic: „Trec în registrul lui
+  și procedurile de până acum ale medicului” mută și istoricul lui (QDental), cu plățile.
+- **SMS automate**: pleacă singure doar programul zilei al medicilor (dimineața) și confirmarea
+  programării către pacient. Mutarea, anularea și reamintirea sunt oprite (migrarea
+  `021_auto_messages.php`; se pot porni din Setări → Mesaje); se trimit la nevoie cu
+  „Trimiteți SMS acum”. Medicii nu mai primesc pe telefonul din Echipa fiecare schimbare din zi.
+- **Tabelele panoului**: titlurile coloanelor, numele (linkurile), medicul, cine, data și starea nu
+  se mai rup pe rânduri; un tabel lat se derulează lateral.
+- **Lista de prețuri a clinicii** (Servicii și prețuri → „Listele de prețuri ale clinicilor”): Luduș
+  are denumirile și prețurile lui, care nu apar pe site; la Adaugă procedură, pentru Luduș se alege
+  din ea. Pornește din QDental Luduș (`data/import/qdental-x-ludus-0-servicii.json`: 58 de
+  denumiri folosite în 2025–2026, cu ultimul preț), o singură dată, doar dacă lista e goală.
+- Migrările: `021_auto_messages.php` (primele migrări în PHP: schimbă o setare JSON), `022_ledgers.sql`,
+  `023_clinic_services.sql`.
+

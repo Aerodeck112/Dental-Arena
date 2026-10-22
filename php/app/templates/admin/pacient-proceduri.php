@@ -23,10 +23,15 @@ $v = [
     'service_id' => '', 'name' => '', 'tooth' => '', 'price' => '', 'discount' => '', 'lab' => '', 'done' => '1', 'notes' => '',
     'appointment_id' => (string) (admin_int(query('programare')) ?? ''),
 ];
-// An account that starts from zero („Luduș 2”) sees and changes only what is since its day.
+// An account that starts from zero („Luduș 2”) sees and changes only what is since its day; an
+// account with its own ledger only what it entered; the others the common ledger; the
+// administrators all (or one ledger, ?registru=).
 $hist = history_from($user);
+$scope = proc_scope($user, query('registru'));
+$ledgers = ledger_users();
+$inScope = static fn (array $r) => ($scope['ledger'] === null || (int) ($r['ledger_user_id'] ?? 0) === $scope['ledger']) && ($hist === null || $r['performed_on'] >= $hist);
 // Who may change or delete a procedure: an administrator, or whoever added it, the same week.
-$mayEdit = static fn (array $r) => $writable && ($hist === null || $r['performed_on'] >= $hist) && (is_admin($user) || ((int) $r['created_by'] === (int) $user['id'] && strtotime($r['created_at']) > time() - 7 * 86400));
+$mayEdit = static fn (array $r) => $writable && $inScope($r) && (is_admin($user) || ((int) $r['created_by'] === (int) $user['id'] && strtotime($r['created_at']) > time() - 7 * 86400));
 
 if (is_post() && $writable) {
     csrf_check();
@@ -48,7 +53,14 @@ if (is_post() && $writable) {
         if ($date === false || $v['performed_on'] > $today || ($hist !== null && $v['performed_on'] < $hist)) {
             $errors['performed_on'] = 'Alegeți ziua în care s-a făcut procedura (nu în viitor).';
         }
-        $service = $v['service_id'] !== '' ? db_one('SELECT * FROM services WHERE id = ?', [(int) $v['service_id']]) : null;
+        // „c12”: a service of the clinic's own list (Luduș), with its name and price.
+        $service = null;
+        if (preg_match('/^c(\d+)$/', $v['service_id'], $cm)) {
+            $cs = db_one('SELECT * FROM clinic_services WHERE id = ?', [(int) $cm[1]]);
+            $service = $cs !== null ? ['id' => null, 'name' => $cs['name'], 'price_min' => $cs['price']] : null;
+        } elseif ($v['service_id'] !== '') {
+            $service = db_one('SELECT * FROM services WHERE id = ?', [(int) $v['service_id']]);
+        }
         $name = trim($v['name']) !== '' ? trim($v['name']) : (string) ($service['name'] ?? '');
         if ($name === '') {
             $errors['service_id'] = 'Alegeți procedura din listă sau scrieți-o.';
@@ -82,13 +94,14 @@ if (is_post() && $writable) {
         }
         if ($errors === []) {
             $row = [
-                'location_id' => $loc, 'doctor_id' => $doc, 'service_id' => $service ? (int) $service['id'] : null,
+                'location_id' => $loc, 'doctor_id' => $doc, 'service_id' => $service && $service['id'] !== null ? (int) $service['id'] : null,
                 'performed_on' => $v['performed_on'], 'name' => mb_substr($name, 0, 255),
                 'price' => (int) $price, 'discount' => (int) round((int) $price * ((float) ($pct ?: 0)) / 100),
                 'lab_cost' => (int) $lab, 'done' => (int) $v['done'], 'notes' => mb_substr(trim($v['notes']), 0, 500) ?: null,
                 'updated_at' => now_sql(),
             ];
-            db_tx(static function () use ($op, $edit, $row, $teeth, $pid, $user, $v): void {
+            $ledger = proc_new_ledger($user, post('ledger') ?: 'medic', $doc);
+            db_tx(static function () use ($op, $edit, $row, $teeth, $pid, $user, $v, $scope, $ledger): void {
                 if ($op === 'modifica') {
                     db_update('procedures', $row + ['tooth' => $teeth !== [] ? mb_substr(implode(', ', $teeth), 0, 40) : null], 'id = :id', ['id' => (int) $edit['id']]);
                     // A lower price: what was paid over it goes back to the advance.
@@ -97,12 +110,12 @@ if (is_post() && $writable) {
                     foreach ($teeth !== [] ? $teeth : [null] as $t) {
                         db_insert('procedures', $row + [
                             'patient_id' => $pid, 'tooth' => $t !== null ? mb_substr($t, 0, 40) : null,
-                            'appointment_id' => admin_int($v['appointment_id']), 'source' => 'panou',
+                            'appointment_id' => admin_int($v['appointment_id']), 'source' => 'panou', 'ledger_user_id' => $ledger,
                             'created_by' => (int) $user['id'], 'created_at' => now_sql(),
                         ]);
                     }
                 }
-                procedures_allocate($pid, $hist);
+                procedures_allocate($pid, $scope);
             });
             $n = max(1, count($teeth));
             audit($op === 'modifica' ? 'procedura-modificata' : 'procedura', $name . ($teeth !== [] ? ' · ' . implode(', ', $teeth) : '') . ' · ' . lei((int) $price - $row['discount']) . ($n > 1 ? " × {$n}" : ''), null, $pid);
@@ -112,9 +125,9 @@ if (is_post() && $writable) {
     } elseif ($op === 'sterge') {
         $r = db_one('SELECT * FROM procedures WHERE id = ? AND patient_id = ?', [(int) post('id'), $pid]);
         if ($r !== null && $mayEdit($r)) {
-            db_tx(static function () use ($r, $pid): void {
+            db_tx(static function () use ($r, $pid, $scope): void {
                 db_run('DELETE FROM procedures WHERE id = ?', [(int) $r['id']]);
-                procedures_allocate($pid, $hist);
+                procedures_allocate($pid, $scope);
             });
             audit('procedura-stearsa', $r['name'] . ' · ' . format_date($r['performed_on']), null, $pid);
             flash('Procedura a fost ștearsă. Ce se plătise pentru ea a rămas ca avans.');
@@ -142,13 +155,14 @@ if (is_post() && $writable) {
             $errors['pay_location'] = 'Alegeți clinica.';
         }
         if ($errors === []) {
-            db_tx(static function () use ($pid, $loc, $amount, $method, $user): void {
+            $ledger = proc_new_ledger($user, post('pay_ledger') ?: 'comun');
+            db_tx(static function () use ($pid, $loc, $amount, $method, $user, $scope, $ledger): void {
                 db_insert('procedure_payments', [
                     'patient_id' => $pid, 'location_id' => $loc, 'amount' => $amount, 'paid_on' => post('paid_on'), 'method' => $method,
                     'reference' => mb_substr(trim(post('reference')), 0, 60) ?: null, 'notes' => mb_substr(trim(post('pay_notes')), 0, 255) ?: null,
-                    'received_by' => (int) $user['id'], 'created_at' => now_sql(),
+                    'received_by' => (int) $user['id'], 'ledger_user_id' => $ledger, 'created_at' => now_sql(),
                 ]);
-                procedures_allocate($pid, $hist);
+                procedures_allocate($pid, $scope);
             });
             audit('plata-proceduri', lei($amount) . ', ' . PROC_PAY_METHODS[$method], null, $pid);
             flash('Plata de ' . lei($amount) . ' a fost înregistrată.');
@@ -160,7 +174,7 @@ if (is_post() && $writable) {
             db_tx(static function () use ($pay, $pid, $user): void {
                 db_update('procedure_payments', ['cancelled_at' => now_sql(), 'cancelled_by' => (int) $user['id']], 'id = :id', ['id' => (int) $pay['id']]);
                 db_run('DELETE FROM procedure_payment_items WHERE payment_id = ?', [(int) $pay['id']]);
-                procedures_allocate($pid, $hist);
+                procedures_allocate($pid);
             });
             audit('plata-proceduri-anulata', lei((int) $pay['amount']) . ' din ' . format_date($pay['paid_on']), null, $pid);
             flash('Plata a fost anulată.');
@@ -169,9 +183,13 @@ if (is_post() && $writable) {
     }
 }
 
-$rows = patient_procedures($pid, $hist);
-$sum = procedures_summary($pid, $hist);
-$payments = db_all('SELECT pp.*, u.name AS who FROM procedure_payments pp LEFT JOIN users u ON u.id = pp.received_by WHERE pp.patient_id = ?' . ($hist !== null ? ' AND pp.paid_on >= ?' : '') . ' ORDER BY pp.paid_on DESC, pp.id DESC', $hist !== null ? [$pid, $hist] : [$pid]);
+$rows = patient_procedures($pid, $scope);
+$sum = procedures_summary($pid, $scope);
+[$payWhere, $payParams] = proc_scope_sql($scope, 'pp', 'paid_on');
+$payments = db_all('SELECT pp.*, u.name AS who FROM procedure_payments pp LEFT JOIN users u ON u.id = pp.received_by WHERE pp.patient_id = ?' . $payWhere . ' ORDER BY pp.paid_on DESC, pp.id DESC', array_merge([$pid], $payParams));
+// The ledger of a row, for the administrators (who see them all).
+$ledgerTag = static fn (array $r): string => is_admin($user) && (int) ($r['ledger_user_id'] ?? 0) > 0
+    ? '<span class="mt-1 flex w-fit whitespace-nowrap rounded-chip border border-linie-control px-2 text-mic text-discret">' . e(ledger_label((int) $r['ledger_user_id'])) . '</span>' : '';
 $err = static fn (string $k): ?string => $errors[$k] ?? null;
 
 // ── The totals ──
@@ -188,8 +206,19 @@ $priceList = procedure_price_options();
 // Each option has the site price and the price approved at each clinic; the form takes the price
 // of the clinic chosen below (admin.js), and the list shows the one of the usual clinic.
 $priceClinic = (int) $v['location_id'];
-$opts = static function (string $selected) use ($priceList, $priceClinic): string {
+// A clinic with its own price list (Luduș) gets it instead of the site's: its options carry
+// data-clinica, and admin.js shows those of the clinic chosen below.
+$clinicLists = array_intersect_key(clinic_service_lists(), array_flip($allowed));
+$opts = static function (string $selected) use ($priceList, $priceClinic, $clinicLists, $names): string {
     $out = '<option value="">Alegeți din lista de prețuri…</option>';
+    foreach ($clinicLists as $lid => $items) {
+        $out .= '<optgroup label="' . e('Lista ' . ($names[$lid] ?? '')) . '" data-clinica="' . (int) $lid . '">';
+        foreach ($items as $cid => $c) {
+            $out .= '<option value="c' . $cid . '" data-clinica="' . (int) $lid . '" data-pret="' . e($c['price'] !== null ? lei_input($c['price']) : '') . '"' . ("c{$cid}" === $selected ? ' selected' : '') . '>'
+                . e($c['name'] . ($c['price'] !== null ? ' · ' . lei($c['price']) : '')) . '</option>';
+        }
+        $out .= '</optgroup>';
+    }
     foreach ($priceList as $cat => $items) {
         $out .= '<optgroup label="' . e($cat) . '">';
         foreach ($items as $sid => $s) {
@@ -221,13 +250,17 @@ $toothChart = '<div class="flex flex-col gap-2"><div class="flex flex-wrap items
     . '<a class="text-mic text-link underline underline-offset-4" href="' . e(admin_url($back, ['adauga' => '1', 'temporari' => $milk ? '0' : '1'] + array_diff_key($_GET, ['adauga' => 1, 'temporari' => 1]))) . '#adauga">' . ($milk ? 'Ascundeți dinții temporari' : 'Arătați dinții temporari') . '</a></div>'
     . '<p class="-mt-1 text-mic text-discret">Clic pe dinte: intră la „Dintele (dinții)”; încă un clic îl scoate. Fiecare dinte devine un rând, cu prețul lui.</p>'
     . '<div class="overflow-x-auto rounded-control border border-linie bg-fundal p-2" data-alege-dinti="#field-tooth">' . odontogram_svg($findings, null, static fn (int $t) => '#dinte-' . $t, $milk) . '</div></div>';
-$procForm = static function (array $v, string $op, ?int $id) use ($opts, $docOptions, $locOptions, $err, $toothChart): string {
+$ledgerOptions = ['comun' => 'Registrul comun'] + array_combine(array_map('strval', array_keys($ledgers)), array_map(static fn ($id) => ledger_label((int) $id), array_keys($ledgers)));
+$ledgerPick = is_admin($user) && $ledgers !== []
+    ? select_field('ledger', 'Registrul', ['medic' => 'Al medicului ales (dacă are registru separat), altfel comun'] + $ledgerOptions, ['value' => post('ledger') ?: 'medic', 'class' => 'sm:col-span-2'])
+    : '';
+$procForm = static function (array $v, string $op, ?int $id) use ($opts, $docOptions, $locOptions, $err, $toothChart, $ledgerPick, $clinicLists): string {
     $sid = $id !== null ? "-{$id}" : '';
     return '<form method="post" novalidate class="flex flex-col gap-5">' . csrf_field()
         . '<input type="hidden" name="op" value="' . $op . '">' . ($id !== null ? '<input type="hidden" name="id" value="' . $id . '">' : '')
         . '<input type="hidden" name="appointment_id" value="' . e($v['appointment_id']) . '">'
         . '<div class="flex flex-col gap-1.5"><label for="field-service_id' . $sid . '" class="text-control font-medium">Procedura</label>'
-        . '<select id="field-service_id' . $sid . '" name="service_id" data-pret-sursa="#field-price' . $sid . '" data-pret-clinica="#field-location_id' . $sid . '" class="' . e(input_classes('h-control')) . '">' . $opts($v['service_id']) . '</select>'
+        . '<select id="field-service_id' . $sid . '" name="service_id" data-pret-sursa="#field-price' . $sid . '" data-pret-clinica="#field-location_id' . $sid . '" data-liste-clinici="' . e(implode(',', array_keys($clinicLists))) . '" class="' . e(input_classes('h-control')) . '">' . $opts($v['service_id']) . '</select>'
         . field_error("field-service_id{$sid}-error", $id === null ? $err('service_id') : null) . '</div>'
         . text_field('name', 'Sau scrieți procedura', ['id' => "field-name{$sid}", 'value' => $v['name'], 'optional' => true, 'maxlength' => 255, 'hint' => 'Doar dacă nu e în listă (sau ca s-o numiți altfel).'])
         . ($id === null ? $toothChart : '')
@@ -240,6 +273,7 @@ $procForm = static function (array $v, string $op, ?int $id) use ($opts, $docOpt
         . select_field('location_id', 'Clinica', $locOptions, ['id' => "field-location_id{$sid}", 'value' => $v['location_id'], 'error' => $id === null ? $err('location_id') : null])
         . text_field('lab', 'Laborator (lei)', ['id' => "field-lab{$sid}", 'value' => $v['lab'], 'inputmode' => 'decimal', 'optional' => true, 'hint' => 'Costul lucrării de laborator, dacă e.'])
         . '<div class="flex items-end pb-2">' . checkbox_field('done', 'Procedura e efectuată', ['id' => "field-done{$sid}", 'checked' => $v['done'] === '1']) . '</div>'
+        . ($id === null ? $ledgerPick : '')
         . '</div>'
         . text_field('notes', 'Observații', ['id' => "field-notes{$sid}", 'value' => $v['notes'], 'optional' => true, 'maxlength' => 500])
         . '<div><button type="submit" class="' . e(btn('primary')) . '">' . ($id === null ? icon('plus', 18) . 'Adăugați procedura' : 'Salvați') . '</button></div></form>';
@@ -268,12 +302,12 @@ foreach ($rows as $r) {
         . '<td class="px-3 py-2"><span class="font-medium">' . e($r['name']) . '</span>'
         . ((int) $r['discount'] > 0 ? '<span class="block text-mic text-discret">Reducere ' . e(lei((int) $r['discount'])) . '</span>' : '')
         . ((int) $r['lab_cost'] > 0 ? '<span class="block text-mic text-discret">Laborator ' . e(lei((int) $r['lab_cost'])) . '</span>' : '')
-        . ($r['notes'] ? '<span class="block text-mic text-discret">' . e($r['notes']) . '</span>' : '') . $edit . '</td>'
-        . '<td class="px-3 py-2">' . e($r['doctor'] ?? '—') . ($r['clinic'] ? '<span class="block text-mic text-discret">' . e($r['clinic']) . '</span>' : '') . '</td>'
+        . ($r['notes'] ? '<span class="block text-mic text-discret">' . e($r['notes']) . '</span>' : '') . $ledgerTag($r) . $edit . '</td>'
+        . '<td class="whitespace-nowrap px-3 py-2">' . e($r['doctor'] ?? '—') . ($r['clinic'] ? '<span class="block text-mic text-discret">' . e($r['clinic']) . '</span>' : '') . '</td>'
         . '<td class="px-3 py-2 text-right cifre whitespace-nowrap">' . e(lei($due)) . '</td>'
         . '<td class="px-3 py-2 text-right cifre whitespace-nowrap">' . e(lei((int) $r['paid'])) . '</td>'
         . '<td class="px-3 py-2 text-right cifre whitespace-nowrap font-semibold">' . e(lei(max(0, $due - (int) $r['paid']))) . '</td>'
-        . '<td class="px-3 py-2">' . procedure_state_chip($r) . '</td></tr>';
+        . '<td class="whitespace-nowrap px-3 py-2">' . procedure_state_chip($r) . '</td></tr>';
 }
 $table = $list !== ''
     ? '<div class="relative overflow-x-auto rounded-panou border border-linie bg-suprafata"><table class="w-full min-w-[56rem] border-collapse text-corp"><thead class="bg-fundal"><tr>'
@@ -288,14 +322,22 @@ foreach ($payments as $pay) {
     $payRows .= '<tr class="' . e(cn('border-t border-linie', $cancelled ? 'text-discret line-through' : '')) . '">'
         . '<td class="px-3 py-2 cifre whitespace-nowrap">' . e(date('d.m.Y', strtotime($pay['paid_on']))) . '</td>'
         . '<td class="px-3 py-2 text-right cifre whitespace-nowrap font-semibold">' . e(lei((int) $pay['amount'])) . '</td>'
-        . '<td class="px-3 py-2">' . e(PROC_PAY_METHODS[$pay['method']] ?? $pay['method']) . '</td>'
+        . '<td class="whitespace-nowrap px-3 py-2">' . e(PROC_PAY_METHODS[$pay['method']] ?? $pay['method']) . '</td>'
         . '<td class="px-3 py-2 cifre">' . e((string) $pay['reference']) . '</td>'
-        . '<td class="px-3 py-2 text-mic text-discret">' . e(trim(($pay['who'] ?? '') . ($pay['notes'] ? ' · ' . $pay['notes'] : ''), ' ·')) . '</td>'
+        . '<td class="px-3 py-2 text-mic text-discret">' . e(trim(($pay['who'] ?? '') . ($pay['notes'] ? ' · ' . $pay['notes'] : ''), ' ·')) . $ledgerTag($pay) . '</td>'
         . '<td class="px-3 py-2">' . (!$cancelled && is_admin($user) && $writable ? '<form method="post" data-confirma="Anulați plata de ' . e(lei((int) $pay['amount'])) . '?">' . csrf_field() . '<input type="hidden" name="op" value="anuleaza-plata"><input type="hidden" name="id" value="' . (int) $pay['id'] . '"><button type="submit" class="' . e(btn('text', 's')) . '">Anulați</button></form>' : ($cancelled ? 'anulată' : '')) . '</td></tr>';
 }
 $payTable = $payRows !== ''
     ? '<div class="relative overflow-x-auto rounded-panou border border-linie bg-suprafata"><table class="w-full min-w-[40rem] border-collapse text-corp"><thead class="bg-fundal"><tr><th scope="col" class="' . $th . ' w-24">Data</th><th scope="col" class="' . $th . ' w-32 text-right">Suma</th><th scope="col" class="' . $th . ' w-32">Cum</th><th scope="col" class="' . $th . ' w-28">Nr. chitanță</th><th scope="col" class="' . $th . '">Cine / observații</th><th scope="col" class="' . $th . ' w-24"></th></tr></thead><tbody>' . $payRows . '</tbody></table></div>'
     : '<p class="text-corp text-discret">Nicio plată încă.</p>';
+// An administrator's payment goes by default to the ledger of the oldest procedure not yet paid.
+$payLedgerDefault = 'comun';
+foreach (array_reverse($rows) as $r) {
+    if (procedure_due($r) > (int) $r['paid']) {
+        $payLedgerDefault = (int) ($r['ledger_user_id'] ?? 0) > 0 ? (string) (int) $r['ledger_user_id'] : 'comun';
+        break;
+    }
+}
 $payForm = $canPay ? '<form method="post" novalidate class="mt-4 flex flex-col gap-4 rounded-panou border border-linie bg-suprafata p-5">' . csrf_field() . '<input type="hidden" name="op" value="plata">'
     . '<h3 class="text-h3 font-semibold">Încasare</h3>' . (post('op') === 'plata' && $errors !== [] ? error_summary($errors) : '')
     . '<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">'
@@ -303,15 +345,23 @@ $payForm = $canPay ? '<form method="post" novalidate class="mt-4 flex flex-col g
     . text_field('paid_on', 'Data', ['type' => 'date', 'value' => post('op') === 'plata' ? post('paid_on') : $today, 'max' => $today, 'error' => $err('paid_on')])
     . text_field('reference', 'Nr. chitanță', ['value' => post('reference'), 'optional' => true, 'maxlength' => 60])
     . select_field('pay_location', 'Clinica', $locOptions, ['value' => post('pay_location') ?: $v['location_id'], 'error' => $err('pay_location')])
+    . (is_admin($user) && $ledgers !== [] ? select_field('pay_ledger', 'Registrul', $ledgerOptions, ['value' => post('pay_ledger') ?: $payLedgerDefault, 'class' => 'sm:col-span-2', 'hint' => 'Plata se trece doar pe procedurile acestui registru.']) : '')
     . '</div>'
     . radio_group('pay_method', 'Cum a plătit', array_diff_key(PROC_PAY_METHODS, ['qdental' => '']), ['inline' => true, 'value' => post('pay_method') ?: 'numerar', 'error' => $err('pay_method')])
     . text_field('pay_notes', 'Observații', ['value' => post('pay_notes'), 'optional' => true, 'maxlength' => 255])
     . '<div><button type="submit" class="' . e(btn('primary')) . '">' . icon('wallet', 18) . 'Înregistrați plata</button></div></form>' : '';
 
 $actions = $writable ? '<a href="#adauga" data-deschide="adauga" class="' . e(btn('primary')) . '">' . icon('plus', 18) . 'Adaugă procedură</a>' : '';
+$ledgerBar = '';
+if (is_admin($user) && $ledgers !== []) {
+    $ledgerBar = '<form method="get" class="mb-4 flex flex-wrap items-end gap-3">' . select_field('registru', 'Registrul', ['' => 'Toate registrele'] + $ledgerOptions, ['value' => query('registru')])
+        . '<button type="submit" class="' . e(btn('secondary')) . '">Arătați</button></form>';
+} elseif ($scope['ledger'] !== null && $scope['ledger'] > 0) {
+    $ledgerBar = '<p class="mb-4 rounded-panou bg-menta-pal p-3 text-corp">Registrul dumneavoastră: vedeți doar procedurile și plățile trecute de dumneavoastră.</p>';
+}
 $body = patient_header($p, $user, 'proceduri', $actions)
     . (post('op') === 'modifica' && $errors !== [] ? error_summary($errors, 'Procedura nu a fost modificată') : '')
-    . $tiles . $addSection
+    . $ledgerBar . $tiles . $addSection
     . admin_section_open('Procedurile efectuate', 'lista', count_ro($sum['count'], 'o procedură', 'proceduri') . ($sum['lab'] > 0 ? ' · laborator ' . lei($sum['lab']) : '') . '. Cele mai noi sus.')
     . '<div class="mt-4">' . $table . '</div></section>'
     . '<div class="mt-8">' . admin_section_open('Plățile pacientului', 'plati', 'Fiecare plată se trece pe procedurile neachitate; ce rămâne în plus e avans pentru următoarele.')

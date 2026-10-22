@@ -20,6 +20,7 @@ $v = [
     'active' => (string) ($acc['active'] ?? 1),
     'doctor_id' => (string) ($acc['doctor_id'] ?? ''),
     'history_from' => (string) ($acc['history_from'] ?? ''),
+    'own_ledger' => (string) ($acc['own_ledger'] ?? 0),
     'locations' => $isNew ? [] : array_map('intval', array_column(db_all('SELECT location_id FROM user_locations WHERE user_id = ?', [$acc['id']]), 'location_id')),
 ];
 
@@ -38,6 +39,7 @@ if (is_post()) {
     $v['active'] = post('active') === '1' ? '1' : '0';
     $v['doctor_id'] = (string) (admin_int(post('doctor_id')) ?? '');
     $v['history_from'] = preg_match('/^\d{4}-\d{2}-\d{2}$/', post('history_from')) ? post('history_from') : '';
+    $v['own_ledger'] = post('own_ledger') === '1' ? '1' : '0';
     $v['locations'] = array_values(array_filter(array_map('intval', is_array($_POST['locations'] ?? null) ? $_POST['locations'] : []), static fn ($id) => isset($clinicNames[$id])));
     $password = (string) ($_POST['password'] ?? '');
     if ($self) {
@@ -66,10 +68,13 @@ if (is_post()) {
         }
     }
     if ($errors === []) {
-        $id = db_tx(static function () use ($v, $isNew, $acc, $password) {
+        $takeHistory = post('ledger_history') === '1';
+        $moved = 0;
+        $id = db_tx(static function () use ($v, $isNew, $acc, $password, $takeHistory, &$moved) {
             $row = ['name' => mb_substr($v['name'], 0, 120), 'email' => $v['email'], 'role' => $v['role'], 'active' => (int) $v['active'],
                 'doctor_id' => in_array($v['role'], ['medic', 'admin-medic'], true) && $v['doctor_id'] !== '' && db_value('SELECT 1 FROM doctors WHERE id = ?', [(int) $v['doctor_id']]) ? (int) $v['doctor_id'] : null,
-                'history_from' => $v['history_from'] !== '' && !in_array($v['role'], ADMIN_ROLES, true) ? $v['history_from'] : null];
+                'history_from' => $v['history_from'] !== '' && !in_array($v['role'], ADMIN_ROLES, true) ? $v['history_from'] : null,
+                'own_ledger' => $v['own_ledger'] === '1' && !in_array($v['role'], ADMIN_ROLES, true) ? 1 : 0];
             if ($isNew) {
                 $id = db_insert('users', $row + ['password_hash' => password_hash($password, PASSWORD_DEFAULT), 'must_change_password' => 1, 'created_at' => now_sql()]);
             } else {
@@ -82,17 +87,33 @@ if (is_post()) {
             foreach ($locs as $lid) {
                 db_run('INSERT INTO user_locations (user_id, location_id) VALUES (?, ?)', [$id, $lid]);
             }
+            // A doctor's own ledger: their procedures until now (QDental's too) at their clinics.
+            if ($takeHistory && $row['own_ledger'] === 1 && $row['doctor_id'] !== null) {
+                require_once APP_DIR . '/src/admin/procedures.php';
+                $moved = ledger_take_doctor_history($id, (int) $row['doctor_id'], array_map('intval', $locs));
+            }
             return $id;
         });
         if (!$isNew && $password !== '') {
             set_password($id, $password, !$self);
         }
-        audit($isNew ? 'utilizator-nou' : 'utilizator', "{$v['email']} ({$v['role']})" . ($password !== '' && !$isNew ? ', parolă nouă' : ''));
+        audit($isNew ? 'utilizator-nou' : 'utilizator', "{$v['email']} ({$v['role']})" . ($v['own_ledger'] === '1' ? ', registru separat' : '') . ($moved > 0 ? ", {$moved} proceduri mutate în registrul lui" : '') . ($password !== '' && !$isNew ? ', parolă nouă' : ''));
+        if ($moved > 0) {
+            flash("În registrul contului au trecut {$moved} proceduri ale medicului, cu plățile lor.", 'info');
+        }
         flash($isNew ? 'Contul a fost creat. Dați-i persoanei e-mailul și parola; la prima intrare își alege o parolă nouă.' : 'Contul a fost salvat.');
         redirect("/admin/utilizatori/{$id}");
     }
 }
 
+// A doctor's account with its own ledger: how many of the doctor's procedures are still common.
+$ledgerDoctor = null;
+if (!$isNew && $acc['doctor_id'] !== null && !in_array($acc['role'], ADMIN_ROLES, true) && $v['locations'] !== []) {
+    $n = (int) db_value('SELECT COUNT(*) FROM procedures WHERE doctor_id = ? AND ledger_user_id IS NULL AND location_id IN (' . implode(',', array_map('intval', $v['locations'])) . ')', [(int) $acc['doctor_id']]);
+    if ($n > 0) {
+        $ledgerDoctor = ['name' => (string) db_value('SELECT public_name FROM doctors WHERE id = ?', [(int) $acc['doctor_id']]), 'n' => $n];
+    }
+}
 $clinicBoxes = '';
 foreach ($clinicNames as $id => $n) {
     $clinicBoxes .= checkbox_field('locations[]', e($n), ['id' => "field-locations-{$id}", 'value' => (string) $id, 'checked' => in_array($id, $v['locations'], true)]);
@@ -120,6 +141,9 @@ $body = '<p class="mb-4"><a href="/admin/utilizatori" class="inline-flex min-h-c
     . select_field('doctor_id', 'Profilul de medic (pentru Medic și Administrator medic)', ['' => 'Niciunul'] + array_map(static fn ($n) => (string) $n, array_column(db_all('SELECT id, public_name FROM doctors ORDER BY sort_order'), 'public_name', 'id')), ['value' => $v['doctor_id'], 'error' => $errors['doctor_id'] ?? null, 'hint' => 'Programările noi făcute de acest cont se pun implicit la acest medic.'])
     . text_field('history_from', 'Procedurile și plățile vizibile de la (opțional)', ['type' => 'date', 'value' => $v['history_from'], 'optional' => true, 'class' => 'max-w-xs',
         'hint' => 'Pentru un cont care începe de la zero (de exemplu „Luduș 2”): vede pacienții (nume, telefon), dar procedurile, plățile și raportul de casă doar de la această zi. Gol = tot istoricul. Nu se aplică administratorilor.'])
+    . checkbox_field('own_ledger', 'Registru separat: procedurile și încasările lui rămân doar în contul lui', ['checked' => $v['own_ledger'] === '1',
+        'description' => 'Ce adaugă și ce încasează acest cont („Luduș 2”, sau un medic care facturează și încasează singur) nu se vede în celelalte conturi, iar el nu vede ce e în registrul comun sau al altora. Poate adăuga proceduri și încasa, are Casa lui. Administratorii văd toate registrele. Nu se aplică administratorilor.'])
+    . ($ledgerDoctor !== null ? checkbox_field('ledger_history', 'Trec în registrul lui și procedurile de până acum ale medicului (' . e($ledgerDoctor['name']) . ', ' . count_ro($ledgerDoctor['n'], 'o procedură', 'proceduri') . ' la clinicile bifate, cu plățile lor)', ['checked' => false, 'description' => 'De exemplu cele aduse din QDental. Doar cu „Registru separat” bifat; o singură dată, la salvare.']) : '')
     . ($self ? '' : checkbox_field('active', 'Contul este activ', ['checked' => $v['active'] === '1', 'description' => 'Un cont dezactivat nu mai poate intra în panou.']))
     . '</div></section>'
     . admin_section_open($isNew ? 'Parola de început' : 'Parolă nouă', 'parola', $isNew ? 'O spuneți persoanei; la prima intrare își alege una nouă.' : 'Completați doar dacă persoana și-a uitat parola. Va fi rugată să-și aleagă una nouă.')
