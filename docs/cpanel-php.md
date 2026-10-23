@@ -738,3 +738,10 @@ din copia bazei de date nu mai pot fi citite.
   `024_appointment_notice.sql`; programările existente contează ca anunțate). Cere Cron Job-ul
   ca să plece la oră (Setări, sus); fără el, la prima deschidere a panoului după acea oră.
 
+## Starea procedurii, schimbată din rând (octombrie 2026)
+
+- Fișa pacientului → Proceduri și plăți → coloana **Starea** → **Schimbați**: **Încasați …** (restul
+  acelei proceduri, cu felul plății: numerar, card, transfer, altă plată), trecut direct pe ea și în
+  registrul ei; **Marcați efectuată** / **Marcați neefectuată** (doar fără plăți). Pagina Proceduri
+  duce direct la rândul procedurii din fișă.
+

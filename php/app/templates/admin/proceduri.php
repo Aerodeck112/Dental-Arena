@@ -67,7 +67,7 @@ foreach ($shown as $r) {
     $due = procedure_due($r);
     $list .= '<tr class="border-t border-linie align-top">'
         . '<td class="px-3 py-2 cifre whitespace-nowrap">' . e(date('d.m.Y', strtotime($r['performed_on']))) . '</td>'
-        . '<td class="px-3 py-2"><a class="font-medium text-link underline-offset-4 hover:underline" href="/admin/pacienti/' . (int) $r['patient_id'] . '/proceduri">' . e(patient_name($r)) . '</a><span class="block text-mic text-discret cifre">fișa ' . (int) $r['file_number'] . '</span></td>'
+        . '<td class="px-3 py-2"><a class="font-medium text-link underline-offset-4 hover:underline" href="/admin/pacienti/' . (int) $r['patient_id'] . '/proceduri#proc-' . (int) $r['id'] . '">' . e(patient_name($r)) . '</a><span class="block text-mic text-discret cifre">fișa ' . (int) $r['file_number'] . '</span></td>'
         . '<td class="px-3 py-2">' . e($r['name']) . ($r['tooth'] ? '<span class="block text-mic text-discret">dinte ' . e($r['tooth']) . '</span>' : '') . '</td>'
         . '<td class="whitespace-nowrap px-3 py-2">' . e($r['doctor'] ?? '—') . '</td>'
         . '<td class="px-3 py-2 text-right cifre whitespace-nowrap">' . e(lei($due)) . '</td>'

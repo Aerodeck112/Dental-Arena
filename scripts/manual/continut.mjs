@@ -498,6 +498,7 @@ ${pasi([
   `Jos, la ${b("Încasare")}: suma (e completat ce mai are de plată), data, numărul chitanței, clinica și cum a plătit (numerar, card, transfer, altă plată).`,
   `${b("Înregistrați plata")}: plata se trece pe procedurile neachitate, de la cea mai veche. Ce rămâne în plus e avans și se folosește singur la următoarea procedură.`,
 ])}
+${sfat("Mai repede, în dreptul procedurii: în coloana Starea, ${b("Schimbați")} → alegeți cum a plătit → ${b("Încasați …")}: restul acelei proceduri se încasează pe loc și se trece pe ea. Tot acolo: ${b("Marcați efectuată")} (o procedură începută, care acum se plătește) sau ${b("Marcați neefectuată")} (doar cât nu are plăți).")}
 ${sfat("O plată greșită o anulează administratorul (rămâne în listă, tăiată).")}
 <h3>Casa: raportul zilei</h3>
 <p>${b("Casa")} din meniu arată ce s-a încasat într-o zi la o clinică: ${b("Numerar: bani în casă")} (cât trebuie să fie în casă), card, transfer, altă plată și totalul, apoi fiecare plată (ora, pacientul, cum a plătit, cine a încasat, suma). Plățile anulate apar separat și nu intră în total. Alegeți ziua, clinica și „Încasate de” (toată echipa sau doar dumneavoastră); ${b("Tipăriți")} îl scoate pe hârtie la închiderea zilei.</p>` : ""}

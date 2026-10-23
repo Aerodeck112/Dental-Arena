@@ -122,6 +122,37 @@ if (is_post() && $writable) {
             flash($op === 'modifica' ? 'Procedura a fost modificată.' : ($n > 1 ? "Au fost adăugate {$n} proceduri." : 'Procedura a fost adăugată.'));
             redirect($back);
         }
+    } elseif ($op === 'stare') {
+        // „Schimbați” next to a procedure: done / not done, or its rest paid now, on it.
+        $r = db_one('SELECT * FROM procedures WHERE id = ? AND patient_id = ?', [(int) post('id'), $pid]);
+        $what = post('actiune');
+        if ($r !== null && $inScope($r)) {
+            $paidOn = (int) db_value('SELECT COALESCE(SUM(i.amount), 0) FROM procedure_payment_items i JOIN procedure_payments pp ON pp.id = i.payment_id WHERE i.procedure_id = ? AND pp.cancelled_at IS NULL', [(int) $r['id']]);
+            $rest = max(0, procedure_due(['done' => 1] + $r) - $paidOn);
+            $method = isset(PROC_PAY_METHODS[post('pay_method')]) && post('pay_method') !== 'qdental' ? post('pay_method') : 'numerar';
+            if (in_array($what, ['efectuata', 'neefectuata'], true) && can('procedures', $user) && ($what === 'efectuata' || $paidOn === 0)) {
+                db_tx(static function () use ($r, $what, $pid, $scope): void {
+                    db_update('procedures', ['done' => $what === 'efectuata' ? 1 : 0, 'updated_at' => now_sql()], 'id = :id', ['id' => (int) $r['id']]);
+                    procedures_allocate($pid, $scope);
+                });
+                audit('procedura-stare', $r['name'] . ': ' . ($what === 'efectuata' ? 'efectuată' : 'neefectuată'), null, $pid);
+                flash($what === 'efectuata' ? 'Procedura e marcată efectuată.' : 'Procedura e marcată neefectuată (nu se mai plătește până o efectuați).');
+            } elseif ($what === 'achita' && $canPay && (int) $r['done'] === 1 && $rest > 0 && ($hist === null || $today >= $hist)) {
+                $loc = $r['location_id'] !== null && in_array((int) $r['location_id'], $allowed, true) ? (int) $r['location_id'] : ($allowed[0] ?? null);
+                db_tx(static function () use ($r, $rest, $method, $loc, $pid, $user, $today): void {
+                    $payId = db_insert('procedure_payments', [
+                        'patient_id' => $pid, 'location_id' => $loc, 'amount' => $rest, 'paid_on' => $today, 'method' => $method,
+                        'notes' => mb_substr('Pentru: ' . $r['name'], 0, 255), 'received_by' => (int) $user['id'],
+                        // The payment goes to the procedure's ledger (an account with its own sees only that).
+                        'ledger_user_id' => $r['ledger_user_id'] !== null ? (int) $r['ledger_user_id'] : null, 'created_at' => now_sql(),
+                    ]);
+                    db_run('INSERT INTO procedure_payment_items (payment_id, procedure_id, amount) VALUES (?, ?, ?)', [$payId, (int) $r['id'], $rest]);
+                });
+                audit('plata-proceduri', lei($rest) . ', ' . PROC_PAY_METHODS[$method] . ' · ' . $r['name'], null, $pid);
+                flash('Plata de ' . lei($rest) . ' (' . mb_strtolower(PROC_PAY_METHODS[$method]) . ') a fost înregistrată pentru „' . $r['name'] . '”.');
+            }
+        }
+        redirect($back . '#proc-' . (int) post('id'));
     } elseif ($op === 'sterge') {
         $r = db_one('SELECT * FROM procedures WHERE id = ? AND patient_id = ?', [(int) post('id'), $pid]);
         if ($r !== null && $mayEdit($r)) {
@@ -296,7 +327,25 @@ foreach ($rows as $r) {
             . '<form method="post" class="mt-4 border-t border-linie pt-4" data-confirma="Ștergeți procedura „' . e($r['name']) . '”?">' . csrf_field() . '<input type="hidden" name="op" value="sterge"><input type="hidden" name="id" value="' . (int) $r['id'] . '"><button type="submit" class="' . e(btn('danger', 's')) . '">' . icon('trash-2', 16) . 'Ștergeți procedura</button></form>'
             . '</div></details>';
     }
-    $list .= '<tr class="border-t border-linie align-top">'
+    // „Schimbați” in the state cell: the rest paid now (reception), done / not done.
+    $rest = max(0, $due - (int) $r['paid']);
+    $stateForm = static fn (string $actiune, string $label, string $extra = '', string $style = 'secondary') => '<form method="post" class="flex flex-col gap-2">' . csrf_field()
+        . '<input type="hidden" name="op" value="stare"><input type="hidden" name="id" value="' . (int) $r['id'] . '"><input type="hidden" name="actiune" value="' . $actiune . '">' . $extra
+        . '<button type="submit" class="' . e(btn($style, 's', 'w-full justify-center')) . '">' . e($label) . '</button></form>';
+    $stateActions = '';
+    if ($writable && $inScope($r)) {
+        if ($canPay && (int) $r['done'] === 1 && $rest > 0) {
+            $stateActions .= $stateForm('achita', 'Încasați ' . lei($rest), '<label class="sr-only" for="plata-' . (int) $r['id'] . '">Cum a plătit</label><select id="plata-' . (int) $r['id'] . '" name="pay_method" class="' . e(input_classes('h-control')) . '">'
+                . implode('', array_map(static fn ($k, $l) => '<option value="' . e($k) . '">' . e($l) . '</option>', array_keys(array_diff_key(PROC_PAY_METHODS, ['qdental' => ''])), array_diff_key(PROC_PAY_METHODS, ['qdental' => '']))) . '</select>', 'primary');
+        }
+        if (can('procedures', $user) && (int) $r['done'] !== 1) {
+            $stateActions .= $stateForm('efectuata', 'Marcați efectuată');
+        } elseif (can('procedures', $user) && (int) $r['paid'] === 0 && $due > 0) {
+            $stateActions .= $stateForm('neefectuata', 'Marcați neefectuată', '', 'text');
+        }
+    }
+    $stateCell = procedure_state_chip($r) . ($stateActions !== '' ? '<details class="mt-1"><summary class="cursor-pointer text-mic text-link underline">Schimbați</summary><div class="mt-2 flex w-full flex-col gap-2 rounded-panou border border-linie bg-fundal p-2">' . $stateActions . '</div></details>' : '');
+    $list .= '<tr id="proc-' . (int) $r['id'] . '" class="border-t border-linie align-top">'
         . '<td class="px-3 py-2 cifre whitespace-nowrap">' . e(date('d.m.Y', strtotime($r['performed_on']))) . '</td>'
         . '<td class="px-3 py-2 cifre">' . e((string) $r['tooth']) . '</td>'
         . '<td class="px-3 py-2"><span class="font-medium">' . e($r['name']) . '</span>'
@@ -307,12 +356,12 @@ foreach ($rows as $r) {
         . '<td class="px-3 py-2 text-right cifre whitespace-nowrap">' . e(lei($due)) . '</td>'
         . '<td class="px-3 py-2 text-right cifre whitespace-nowrap">' . e(lei((int) $r['paid'])) . '</td>'
         . '<td class="px-3 py-2 text-right cifre whitespace-nowrap font-semibold">' . e(lei(max(0, $due - (int) $r['paid']))) . '</td>'
-        . '<td class="whitespace-nowrap px-3 py-2">' . procedure_state_chip($r) . '</td></tr>';
+        . '<td class="whitespace-nowrap px-3 py-2">' . $stateCell . '</td></tr>';
 }
 $table = $list !== ''
-    ? '<div class="relative overflow-x-auto rounded-panou border border-linie bg-suprafata"><table class="w-full min-w-[56rem] border-collapse text-corp"><thead class="bg-fundal"><tr>'
+    ? '<div class="relative overflow-x-auto rounded-panou border border-linie bg-suprafata"><table class="w-full min-w-[62rem] border-collapse text-corp"><thead class="bg-fundal"><tr>'
         . '<th scope="col" class="' . $th . ' w-24">Data</th><th scope="col" class="' . $th . ' w-20">Dinte</th><th scope="col" class="' . $th . ' min-w-[16rem]">Procedura</th><th scope="col" class="' . $th . ' w-44">Medicul</th>'
-        . '<th scope="col" class="' . $th . ' w-28 text-right">De plată</th><th scope="col" class="' . $th . ' w-28 text-right">Achitat</th><th scope="col" class="' . $th . ' w-28 text-right">Rămas</th><th scope="col" class="' . $th . ' w-36">Starea</th></tr></thead><tbody>' . $list . '</tbody></table></div>'
+        . '<th scope="col" class="' . $th . ' w-28 text-right">De plată</th><th scope="col" class="' . $th . ' w-28 text-right">Achitat</th><th scope="col" class="' . $th . ' w-28 text-right">Rămas</th><th scope="col" class="' . $th . ' w-52 min-w-[13rem]">Starea</th></tr></thead><tbody>' . $list . '</tbody></table></div>'
     : '<p class="rounded-panou border border-dashed border-linie p-6 text-corp text-discret">Nicio procedură încă. Medicul o adaugă după intervenție, cu „Adaugă procedură”.</p>';
 
 // ── The payments ──
