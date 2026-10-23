@@ -87,6 +87,14 @@ if (is_post()) {
         $h = (int) post($k);
         $m[$k] = max($lo, min($hi, $h));
     }
+    // Each clinic: the confirmation at once, or at the end of the day („HH:MM”).
+    $m['confirm_batch'] = [];
+    foreach (clinics() as $c) {
+        $t = post('confirm_batch_' . (int) $c['id']);
+        if (preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $t)) {
+            $m['confirm_batch'][(string) (int) $c['id']] = $t;
+        }
+    }
     if ($m['sms_sender'] !== '' && !preg_match('/^[A-Za-z0-9 .-]{3,11}$/', $m['sms_sender'])) {
         $errors['sms_sender'] = 'Expeditorul are 3–11 litere sau cifre și trebuie aprobat întâi de SMSLink.';
     }
@@ -159,12 +167,21 @@ $emailBox = admin_section_open('E-mail: verificare și probă', 'email', 'Dacă 
     . '<button type="submit" class="' . e(btn('primary')) . '">' . icon('mail', 18) . 'Trimiteți proba</button></form>'
     . '<p class="mt-3 text-mic text-discret">Dacă proba „a plecat” dar nu ajunge nici în Spam: în cPanel → Email Deliverability, apăsați „Repair” la SPF și DKIM pentru dentalarena.ro, sau folosiți contul SMTP de mai jos.</p></section>';
 $hours = static fn (int $a, int $b) => array_combine(array_map('strval', range($a, $b)), array_map(static fn ($h) => sprintf('%02d:00', $h), range($a, $b)));
+$batchTimes = [];
+foreach (range(16 * 60, 21 * 60, 30) as $min) {
+    $t = sprintf('%02d:%02d', intdiv($min, 60), $min % 60);
+    $batchTimes[$t] = 'La final de zi, la ' . $t;
+}
 $set = static fn (string $k) => $m[$k] !== '' ? 'Salvat. Scrieți altul doar ca să-l schimbați.' : null;
 
 $accounts = admin_section_open('Cum pleacă mesajele', 'mod')
     . '<div class="mt-4">' . radio_group('mode', 'Trimitere', ['proba' => ['label' => 'Mod de probă', 'description' => 'Nimic nu pleacă: mesajele apar în jurnal ca „probă”. Pentru copia de test și pentru început.'], 'live' => ['label' => 'Trimitere reală', 'description' => 'Mesajele pleacă la pacienți și la echipă, prin SMSLink, WhatsApp și e-mail.']], ['value' => $m['mode']]) . '</div>'
     . '<div class="mt-4 grid gap-4 sm:grid-cols-2">' . select_field('quiet_start', 'Pacienților le scriem de la ora', $hours(6, 12), ['value' => (string) $m['quiet_start']]) . select_field('quiet_end', 'până la ora', $hours(17, 23), ['value' => (string) $m['quiet_end']]) . '</div>'
-    . '<p class="mt-2 text-mic text-discret">Ce ar pleca în afara orelor așteaptă până dimineață. Ofertele pleacă doar între 10 și 20. Mesajele către echipă pleacă imediat.</p></section>'
+    . '<p class="mt-2 text-mic text-discret">Ce ar pleca în afara orelor așteaptă până dimineață. Ofertele pleacă doar între 10 și 20. Mesajele către echipă pleacă imediat.</p>'
+    . '<h3 class="mt-6 text-control font-semibold">Confirmarea programării, pe clinică</h3>'
+    . '<p class="mt-1 text-mic text-discret">„La final de zi”: pacientul nu primește un mesaj la fiecare mutare făcută de medic în timpul zilei, ci unul singur, seara, cu ziua și ora finale (pentru programările noi sau mutate de la ultimul mesaj; cele anulate nu primesc nimic). Ce se mută după acea oră pleacă la următoarea rulare. „Trimiteți SMS acum” pleacă oricând, pe loc.</p>'
+    . '<div class="mt-3 grid gap-4 sm:grid-cols-2">' . implode('', array_map(static fn ($c) => select_field('confirm_batch_' . (int) $c['id'], (string) $c['shortName'], ['' => 'Imediat, când se face programarea'] + $batchTimes, ['value' => (string) ($m['confirm_batch'][(string) (int) $c['id']] ?? '')]), clinics())) . '</div>'
+    . '</section>'
     . admin_section_open('SMS prin SMSLink', 'smslink', 'Din contul SMSLink → SMS Gateway → Configurare: creați o conexiune și copiați aici Connection ID și parola ei.')
     . '<div class="mt-4 grid gap-4 md:grid-cols-2">'
     . text_field('smslink_id', 'Connection ID', ['value' => $m['smslink_id'], 'autocomplete' => 'off'])

@@ -132,6 +132,9 @@ const MESSAGING_DEFAULTS = [
     'review_link' => '',
     'quiet_start' => 9,
     'quiet_end' => 20,
+    // Clinic id → „HH:MM”: its patients get the confirmation once, at that hour, with the final
+    // time (the doctors move the appointments during the day). Not there: at once.
+    'confirm_batch' => [],
 ];
 
 // ── Secrets (API keys and passwords stored in the database, encrypted with config.php's secret) ──
@@ -636,8 +639,14 @@ function notify_appointment(string $what, int $appointmentId): void
         }
         $vars = appointment_vars($a) + patient_vars($p);
         $future = strtotime($a['starts_at']) > time();
-        if ($future && in_array($what, ['programare-noua', 'programare-mutata', 'programare-anulata'], true)) {
+        $batch = confirm_batch_time((int) $a['location_id']) !== null;
+        if ($future && in_array($what, ['programare-noua', 'programare-mutata'], true) && $batch) {
+            // This clinic tells its patients at the end of the day (send_batch_confirmations).
+        } elseif ($future && in_array($what, ['programare-noua', 'programare-mutata', 'programare-anulata'], true)) {
             notify_patient($what, $p, $vars, ['appointment_id' => $appointmentId]);
+            if ($what !== 'programare-anulata') {
+                db_update('appointments', ['notice_sent_for' => $a['starts_at']], 'id = :id', ['id' => $appointmentId]);
+            }
         }
         $staff = ['programare-noua' => 'staff-programare-noua', 'programare-mutata' => 'staff-programare-mutata', 'programare-anulata' => 'staff-programare-anulata', 'sosit' => 'staff-pacient-sosit'][$what] ?? null;
         if ($staff !== null && ($future || $what === 'sosit')) {
@@ -837,6 +846,8 @@ function send_appointment_sms(array $a, array $p): array
         db_run("DELETE FROM messages WHERE appointment_id = ? AND event = 'reamintire' AND status = 'in-asteptare' AND id <> ?", [(int) $a['id'], $id]);
         db_update('appointments', ['reminder_sent_at' => now_sql()], 'id = :id', ['id' => $a['id']]);
     }
+    // The patient knows this time now: the end-of-day confirmation does not tell it again.
+    db_update('appointments', ['notice_sent_for' => $a['starts_at']], 'id = :id', ['id' => $a['id']]);
     return send_message_now($id);
 }
 
@@ -878,6 +889,40 @@ function send_queue_after_response(): void
 
 // ── Daily jobs (cron.php; the panel runs them too, as a fallback) ─────────────
 
+/** „HH:MM” when a clinic sends its confirmations at the end of the day, or null (at once). */
+function confirm_batch_time(int $locationId): ?string
+{
+    $t = (string) (messaging()['confirm_batch'][(string) $locationId] ?? '');
+    return preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $t) ? $t : null;
+}
+
+/**
+ * The end-of-day confirmations of a clinic (Setări → Mesaje → „La final de zi”): from its hour
+ * (each cron run, so a change made later in the evening goes too; after the patients' hours it
+ * waits for the morning), each future appointment whose time the patient was not told yet (new,
+ * or moved since) gets one confirmation with the final day and hour. Cancelled ones get nothing.
+ */
+function send_batch_confirmations(DateTimeImmutable $now): void
+{
+    foreach (clinics() as $c) {
+        $at = confirm_batch_time((int) $c['id']);
+        if ($at === null || $now->format('H:i') < $at) {
+            continue;
+        }
+        $rows = db_all("SELECT * FROM appointments WHERE location_id = ? AND status IN ('programat', 'confirmat') AND starts_at > ? AND (notice_sent_for IS NULL OR notice_sent_for <> starts_at) ORDER BY starts_at", [(int) $c['id'], $now->format('Y-m-d H:i:s')]);
+        foreach ($rows as $a) {
+            // Claimed first: two runs at the same time do not send it twice.
+            if (db_run('UPDATE appointments SET notice_sent_for = starts_at WHERE id = ? AND NOT (notice_sent_for <=> starts_at)', [(int) $a['id']]) !== 1) {
+                continue;
+            }
+            $p = db_one('SELECT * FROM patients WHERE id = ?', [(int) $a['patient_id']]);
+            if ($p !== null) {
+                notify_patient('programare-noua', $p, appointment_vars($a) + patient_vars($p), ['appointment_id' => (int) $a['id']]);
+            }
+        }
+    }
+}
+
 /** Runs a job at most once a day, from the given hour. */
 function daily_job(string $name, int $fromHour, DateTimeImmutable $now, callable $fn): void
 {
@@ -903,6 +948,9 @@ function run_daily_jobs(?DateTimeImmutable $now = null): void
 
     // The doctors' programme of the day, each at the hour set for them (Echipa → medic).
     send_agendas($now);
+
+    // The clinics that confirm the appointments at the end of the day.
+    send_batch_confirmations($now);
 
     // What VITIM configured, to the administrators (src/admin/clinical.php).
     if (function_exists('send_tech_digest')) {

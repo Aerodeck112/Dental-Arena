@@ -727,3 +727,14 @@ din copia bazei de date nu mai pot fi citite.
 - Migrările: `021_auto_messages.php` (primele migrări în PHP: schimbă o setare JSON), `022_ledgers.sql`,
   `023_clinic_services.sql`.
 
+## Confirmarea programării la final de zi, pe clinică (octombrie 2026)
+
+- Setări → Mesaje → „Confirmarea programării, pe clinică”: pentru fiecare clinică „Imediat” sau „La
+  final de zi, la ora …” (16:00–21:00). La final de zi, pacientul primește o singură confirmare, cu
+  ziua și ora finale, pentru programările noi sau mutate de la ultimul mesaj (anulatele nimic);
+  mutările din timpul zilei nu mai trimit nimic. După acea oră, ce se mai mută pleacă la următoarea
+  rulare (după ora de liniște, dimineața). „Trimiteți SMS acum” pleacă oricând.
+- Ține minte ora despre care a aflat pacientul: `appointments.notice_sent_for` (migrarea
+  `024_appointment_notice.sql`; programările existente contează ca anunțate). Cere Cron Job-ul
+  ca să plece la oră (Setări, sus); fără el, la prima deschidere a panoului după acea oră.
+

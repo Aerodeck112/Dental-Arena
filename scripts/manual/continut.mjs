@@ -374,7 +374,7 @@ export const mesaje = (rol) => ({
   html: `
 <p>Singur, panoul trimite pacienților doar <strong>confirmarea programării</strong> (pe SMS, WhatsApp sau e-mail, cum a ales fiecare în fișă), iar medicilor <strong>programul zilei</strong>, dimineața. Celelalte mesaje se pornesc, dacă doriți, din Setări → Mesaje (bifele „Pe telefon” și „Pe e-mail”):</p>
 ${tabel(["Când", "Ce primește pacientul"], [
-  ["Imediat după programare (pornit)", "Confirmarea: ziua, ora, clinica, medicul și un link de unde confirmă, anulează sau pune programarea în calendarul telefonului."],
+  ["Imediat după programare (pornit), sau la final de zi", "Confirmarea: ziua, ora, clinica, medicul și un link de unde confirmă, anulează sau pune programarea în calendarul telefonului. Pentru o clinică unde medicii mută des programările în timpul zilei (Luduș), în Setări → Mesaje se alege „La final de zi, la ora …”: pacientul primește un singur mesaj, seara, cu ziua și ora finale."],
   ["La mutare sau anulare (oprit)", "Noua dată (cu un link nou), sau anunțul anulării. Oprit: când medicul mută de câteva ori, pacientul ar primi câte un mesaj de fiecare dată. Trimiteți-l cu „Trimiteți SMS acum”."],
   ["Cu o zi înainte (oprit)", "Reamintirea programării; o trimiteți cu „Trimiteți SMS acum” din calendar."],
   ["După o vizită", "Mulțumiri și, eventual, linkul pentru o recenzie Google."],
