@@ -272,6 +272,10 @@ if (is_post()) {
         });
         if ($isNew) {
             notify_appointment('programare-noua', $id);
+            // „Alegeți ora în calendar”: done, the patient is no longer waiting for a time.
+            if ((int) ($_SESSION['de_programat'] ?? 0) === (int) db_value('SELECT patient_id FROM appointments WHERE id = ?', [$id])) {
+                unset($_SESSION['de_programat']);
+            }
         } elseif ($appt['starts_at'] !== $startsAt && in_array($v['status'], ['programat', 'confirmat'], true)) {
             notify_appointment('programare-mutata', $id);
         }

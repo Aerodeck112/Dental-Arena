@@ -13,6 +13,8 @@ if ($plan === null) {
 $items = array_values(array_filter(plan_items((int) $plan['id']), static fn ($i) => $i['status'] !== 'anulat'));
 $t = plan_totals($items, (int) $plan['discount']);
 $docs = db_one('SELECT public_name FROM doctors WHERE id = ?', [(int) $plan['doctor_id']]);
+// A line done by another doctor than the plan's says so.
+$lineDocs = array_map('strval', array_column(db_all('SELECT id, public_name FROM doctors'), 'public_name', 'id'));
 $clinic = $plan['location_id'] ? db_one('SELECT * FROM locations WHERE id = ?', [(int) $plan['location_id']]) : null;
 audit('plan-tiparit', $plan['title'], null, (int) $p['id']);
 
@@ -28,7 +30,8 @@ foreach ($items as $i) {
     $gross = (int) $i['quantity'] * (int) $i['unit_price'];
     $net = $gross - min((int) $i['discount'], $gross);
     $rows .= '<tr><td class="' . $td . ' cifre">' . ($i['tooth'] ? (int) $i['tooth'] : '') . '</td>'
-        . '<td class="' . $td . '">' . e($i['description']) . ($i['status'] === 'efectuat' ? ' <span class="text-mic text-discret">(efectuat)</span>' : '') . '</td>'
+        . '<td class="' . $td . '">' . e($i['description']) . ($i['status'] === 'efectuat' ? ' <span class="text-mic text-discret">(efectuat)</span>' : '')
+        . ($i['doctor_id'] !== null && (int) $i['doctor_id'] !== (int) $plan['doctor_id'] && isset($lineDocs[(int) $i['doctor_id']]) ? '<span class="block text-mic text-discret">' . e($lineDocs[(int) $i['doctor_id']]) . '</span>' : '') . '</td>'
         . '<td class="' . $td . ' cifre text-right">' . (int) $i['quantity'] . '</td>'
         . '<td class="' . $td . ' cifre text-right">' . e(amount_2d((int) $i['unit_price'])) . ((int) $i['discount'] > 0 ? '<span class="block text-mic">−' . e(amount_2d((int) $i['discount'])) . '</span>' : '') . '</td>'
         . '<td class="' . $td . ' cifre text-right">' . e(amount_2d($net)) . '</td></tr>';

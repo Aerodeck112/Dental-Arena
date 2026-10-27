@@ -102,10 +102,12 @@ function admin_page(string $title, string $body, ?array $user = null): void
         <summary class="inline-flex min-h-control list-none items-center gap-2 rounded-control px-3 font-medium hover:bg-adancit"><?= icon('menu', 22) ?>Meniu</summary>
         <div class="absolute right-0 z-40 mt-2 w-72 rounded-panou border border-linie bg-suprafata p-2 shadow-float">
           <nav aria-label="Panou"><ul class="flex flex-col"><?= $nav ?></ul></nav>
+          <?php if (is_admin($user)) { ?><div class="mt-2 border-t border-linie px-3 pt-2"><?= cron_status_line() ?></div><?php } ?>
         </div>
       </details>
       <nav aria-label="Panou" class="hidden lg:mt-8 lg:block"><ul class="flex flex-col gap-1"><?= $nav ?></ul></nav>
       <div class="hidden lg:mt-auto lg:block lg:pt-8">
+        <?php if (is_admin($user)) { ?><div class="mb-4 rounded-control border border-linie p-2"><?= cron_status_line() ?></div><?php } ?>
         <p class="text-control font-semibold"><?= e($user['name']) ?></p>
         <p class="text-mic text-discret"><?= e(ROLES[$user['role']] ?? $user['role']) ?></p>
         <p class="mt-3 flex flex-wrap gap-x-4">
@@ -127,6 +129,7 @@ function admin_page(string $title, string $body, ?array $user = null): void
           }; ?>
       <p role="status" class="<?= e(cn('mb-6 flex items-start gap-3 rounded-panou p-4 text-corp', $cls)) ?>"><?= icon($f['kind'] === 'eroare' ? 'alert-triangle' : ($f['kind'] === 'info' ? 'info' : 'check'), 22, 'mt-0.5') ?><?= e($f['message']) ?></p>
       <?php } ?>
+      <?= $user !== null && function_exists('patient_on_hold_bar') ? patient_on_hold_bar($user) : '' ?>
       <?= $body ?>
       <?php if ($user) { ?>
       <form method="post" action="/admin/iesire" class="mt-12 lg:hidden"><?= csrf_field() ?><p class="text-mic text-discret"><?= e($user['name']) ?> · <a href="/admin/cont" class="text-link underline">Contul meu</a></p><button type="submit" class="<?= e(btn('secondary', 's', 'mt-2')) ?>"><?= icon('log-out', 16) ?>Ieșire</button></form>

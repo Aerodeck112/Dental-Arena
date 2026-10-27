@@ -210,6 +210,21 @@ function cron_last_run(): ?int
 }
 
 /**
+ * The server's time and the last run of the cron job, under the menu (administrators): green while
+ * it ran in the last 20 minutes, so the timely messages are sure to go; red with the way to Setări.
+ */
+function cron_status_line(): string
+{
+    $last = cron_last_run();
+    $ok = $last !== null && time() - $last < 20 * 60;
+    $ago = $last === null ? '' : (time() - $last < 90 ? 'acum un minut' : 'acum ' . (int) round((time() - $last) / 60) . ' min');
+    return '<p class="text-mic text-discret">Ora serverului: <span class="cifre font-semibold text-cerneala">' . e(date('H:i')) . '</span></p>'
+        . '<a href="/admin/setari#cron" class="' . e(cn('mt-1 inline-flex items-center gap-1.5 text-mic underline-offset-4 hover:underline', $ok ? 'text-actiune' : 'font-semibold text-carmin')) . '">'
+        . '<span aria-hidden="true" class="' . e(cn('inline-block size-2 rounded-full', $ok ? 'bg-actiune' : 'bg-carmin')) . '"></span>'
+        . ($ok ? 'Cron: ' . e(date('H:i', $last)) . ' (' . $ago . ')' : ($last === null ? 'Cron: nu rulează' : 'Cron: oprit din ' . e(date('d.m H:i', $last)))) . '</a>';
+}
+
+/**
  * Setări → „Cron Job”: whether it runs, the command to copy and where to put it in cPanel.
  * The messages (reminders, the doctors' programme) leave on time only with it.
  */

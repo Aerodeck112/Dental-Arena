@@ -740,6 +740,7 @@ function patient_header(array $p, array $user, string $active, string $extraActi
     $actions = $extraActions;
     if ($p['anonymized_at'] === null) {
         $actions .= '<a href="/admin/programari/noua?pacient=' . $id . '" class="' . e(btn($extraActions === '' || str_contains($extraActions, 'consultatie-ai') ? 'primary' : 'secondary')) . '">' . icon('calendar-plus', 18) . 'Programare nouă</a>'
+            . '<a href="/admin/calendar?de_programat=' . $id . '" class="' . e(btn('secondary')) . '" title="Pacientul rămâne ales cât căutați ziua în calendar">' . icon('calendar', 18) . 'Alegeți ora în calendar</a>'
             . ($p['phone'] !== '' ? '<a href="' . e(tel_href($p['phone'])) . '" class="' . e(btn('secondary')) . '">' . icon('phone', 18) . 'Sunați</a>' : '');
     }
     $nav = '';

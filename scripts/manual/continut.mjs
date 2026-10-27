@@ -130,6 +130,7 @@ export const programari = () => ({
   html: `
 <h3>O programare nouă</h3>
 <p>Din ${b("Programare nouă")} (pe Azi, în Calendar sau în fișa pacientului), dintr-un clic pe un loc liber în calendar, sau din ${b("Faceți programarea")} într-o cerere de pe site.</p>
+${sfat(`Pacientul „în mână”: în fișa lui, ${b("Alegeți ora în calendar")}. Sus apare „De programat: …” pe orice pagină; mergeți în calendar la ziua dorită (oricât de departe) și dați clic pe ora liberă: programarea se face pentru el. ${b("Renunțați")} îl lasă.`)}
 ${pasi([
   `<strong>Pacientul</strong>: căutați-l după nume, telefonul sau numărul fișei. Dacă e nou, completați numele, prenumele și telefonul în chenarul ${b("Pacient nou")}. Dacă există deja un pacient cu același telefon <em>și același prenume</em>, programarea se pune pe fișa lui; altfel se face o fișă nouă (într-o familie, toți pot avea același telefon).`,
   `<strong>Când și la cine</strong>: clinica, medicul, ziua, ora, durata și, la o clinică cu mai multe cabinete, cabinetul (gol = cabinetul obișnuit al medicului).`,
@@ -464,7 +465,7 @@ ${img("plan", "Un plan de tratament: faze, lucrări, prețuri, starea fiecărei 
 ${rol === "receptie" ? "" : `<h3>Un plan nou</h3>
 ${pasi([
   `${b("Plan nou")} (sau din odontogramă, ${b("Adăugați în plan")}).`,
-  `La ${b("Adăugați o lucrare")}: serviciul din lista de prețuri (prețul se completează singur și îl puteți schimba), dintele, faza (1, 2, 3…), cantitatea, reducerea. ${b("Adăugați lucrarea")}.`,
+  `La ${b("Adăugați o lucrare")}: serviciul din lista de prețuri (prețul se completează singur și îl puteți schimba), dinții (clic pe ei în odontograma din formular, sau scrieți-i: câte o lucrare pe dinte), ${b("Medicul care o face")} (un plan poate avea lucrări la medici diferiți), faza (1, 2, 3…), cantitatea, reducerea. ${b("Adăugați lucrarea")}.`,
   `În ${b("Detaliile planului")}: titlul, medicul, clinica, până când sunt valabile prețurile, observațiile.`,
 ])}`}
 <h3>Pașii unui plan</h3>
@@ -736,7 +737,7 @@ export const intretinere = () => ({
   titlu: "Întreținere: Cron, actualizări, copii de siguranță",
   html: `
 <ul>
-<li><strong>Cron Job (obligatoriu)</strong>: în cPanel → Cron Jobs, la fiecare 5 minute: <span class="adresa-inline">php /home/CONT/dentalarena/cron.php</span>. El trimite mesajele, reamintirile, programul zilei al medicilor, urările, rechemările și rezumatul pentru administrator la timp. Fără el, acestea pleacă doar când cineva deschide panoul. Comanda exactă pentru server, cu butonul ${b("Copiați")}, pașii din cPanel și dacă rulează (ultima rulare) sunt în ${b("Setări")}, sus, la „Cron Job”.</li>
+<li><strong>Cron Job (obligatoriu)</strong>: în cPanel → Cron Jobs, la fiecare 5 minute: <span class="adresa-inline">php /home/CONT/dentalarena/cron.php</span>. El trimite mesajele, reamintirile, programul zilei al medicilor, urările, rechemările și rezumatul pentru administrator la timp. Fără el, acestea pleacă doar când cineva deschide panoul. Comanda exactă pentru server, cu butonul ${b("Copiați")}, pașii din cPanel și dacă rulează (ultima rulare) sunt în ${b("Setări")}, sus, la „Cron Job”. Administratorii văd și jos în meniu ora serverului și „Cron: ora ultimei rulări” (verde când merge, roșu când s-a oprit).</li>
 <li><strong>Actualizări</strong>: din ${b("Setări")} → ${b("Actualizare")} (vezi mai jos).</li>
 <li><strong>Copii de siguranță</strong>: în cPanel → Backup, săptămânal: baza de date și folderul dentalarena/storage (documentele pacienților). Păstrați o copie și în afara găzduirii.</li>
 <li><strong>Parolele</strong>: fiecare om are contul lui; nu folosiți conturi comune. Dezactivați imediat contul cuiva care pleacă.</li>

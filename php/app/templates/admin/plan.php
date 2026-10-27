@@ -34,6 +34,7 @@ $it = [
     'service_id' => (string) ($editItem['service_id'] ?? query('serviciu')),
     'description' => $editItem['description'] ?? '',
     'tooth' => (string) ($editItem['tooth'] ?? query('dinte')),
+    'item_doctor' => (string) ($editItem['doctor_id'] ?? ($plan['doctor_id'] ?? $userDoctor ?? '')),
     'phase' => (string) ($editItem['phase'] ?? query('faza') ?: '1'),
     'quantity' => (string) ($editItem['quantity'] ?? '1'),
     'price' => $editItem ? lei_input((int) $editItem['unit_price']) : '',
@@ -118,10 +119,21 @@ if (is_post() && $manage) {
             if (mb_strlen($it['description']) < 2) {
                 $errors['description'] = 'Alegeți serviciul sau scrieți ce se face.';
             }
-            $tooth = $it['tooth'] !== '' ? (int) $it['tooth'] : null;
-            if ($tooth !== null && !is_fdi_tooth($tooth)) {
-                $errors['tooth'] = 'Scrieți dintele ca în schema FDI, de exemplu 36 (sau 75 la dinții temporari).';
+            // Several teeth („16, 17” or picked on the odontogram): one line for each, at the price.
+            $teeth = array_values(array_unique(array_filter(preg_split('/[\s,;]+/', trim($it['tooth'])) ?: [], static fn ($x) => $x !== '')));
+            foreach ($teeth as $x) {
+                if (!ctype_digit($x) || !is_fdi_tooth((int) $x)) {
+                    $errors['tooth'] = 'Scrieți dintele ca în schema FDI, de exemplu 36 (sau 75 la dinții temporari).';
+                }
             }
+            if ($editItem !== null && count($teeth) > 1) {
+                $errors['tooth'] = 'O lucrare are un singur dinte; pentru alți dinți adăugați lucrări noi.';
+            } elseif (count($teeth) > 16) {
+                $errors['tooth'] = 'Cel mult 16 dinți odată.';
+            }
+            $tooth = $teeth !== [] ? (int) $teeth[0] : null;
+            $itemDoctor = admin_int($it['item_doctor']);
+            $itemDoctor = $itemDoctor !== null && isset($docs[$itemDoctor]) ? $itemDoctor : null;
             $phase = max(1, min(9, (int) $it['phase']));
             $qty = ctype_digit($it['quantity']) ? (int) $it['quantity'] : 0;
             if ($qty < 1 || $qty > 99) {
@@ -142,7 +154,7 @@ if (is_post() && $manage) {
                 $errors['discount'] = 'Reducerea nu poate depăși valoarea lucrării.';
             }
             if ($errors === []) {
-                $row = ['service_id' => $svcRow ? (int) $svcRow['id'] : null, 'tooth' => $tooth, 'description' => mb_substr($it['description'], 0, 255), 'phase' => $phase];
+                $row = ['service_id' => $svcRow ? (int) $svcRow['id'] : null, 'doctor_id' => $itemDoctor, 'tooth' => $tooth, 'description' => mb_substr($it['description'], 0, 255), 'phase' => $phase];
                 if ($editItem === null || plan_prices_editable($plan['status'])) {
                     $row += ['quantity' => $qty, 'unit_price' => $price, 'discount' => $disc];
                 }
@@ -150,11 +162,13 @@ if (is_post() && $manage) {
                     db_update('treatment_plan_items', $row, 'id = :id', ['id' => $editItem['id']]);
                 } else {
                     $order = (int) db_value('SELECT COALESCE(MAX(sort_order), 0) + 1 FROM treatment_plan_items WHERE plan_id = ?', [$plan['id']]);
-                    db_insert('treatment_plan_items', $row + ['plan_id' => $plan['id'], 'status' => in_array($plan['status'], ['acceptat', 'in-curs'], true) ? 'acceptat' : 'propus', 'sort_order' => $order]);
+                    foreach ($teeth !== [] ? $teeth : [null] as $x) {
+                        db_insert('treatment_plan_items', ['tooth' => $x !== null ? (int) $x : null] + $row + ['plan_id' => $plan['id'], 'status' => in_array($plan['status'], ['acceptat', 'in-curs'], true) ? 'acceptat' : 'propus', 'sort_order' => $order++]);
+                    }
                 }
                 db_update('treatment_plans', ['updated_at' => now_sql()], 'id = :id', ['id' => $plan['id']]);
-                audit($editItem ? 'plan-linie' : 'plan-linie-noua', $row['description'] . ($tooth ? " (dinte {$tooth})" : ''), null, $pid);
-                flash($editItem ? 'Lucrarea a fost salvată.' : 'Lucrarea a fost adăugată.');
+                audit($editItem ? 'plan-linie' : 'plan-linie-noua', $row['description'] . ($teeth !== [] ? ' (dinte ' . implode(', ', $teeth) . ')' : '') . ($itemDoctor ? ' · ' . $docs[$itemDoctor] : ''), null, $pid);
+                flash($editItem ? 'Lucrarea a fost salvată.' : (count($teeth) > 1 ? 'Au fost adăugate ' . count($teeth) . ' lucrări, câte una pe dinte.' : 'Lucrarea a fost adăugată.'));
                 redirect("{$base}/{$planId}#lucrari");
             }
         } elseif ($plan !== null && in_array($op, ['stare-linie', 'sterge-linie'], true)) {
@@ -180,7 +194,7 @@ if (is_post() && $manage) {
                 db_tx(static function () use ($item, $to, $plan, $userDoctor, $pid): void {
                     $row = ['status' => $to];
                     if ($to === 'efectuat') {
-                        $row += ['performed_at' => now_sql(), 'performed_by' => $userDoctor ?? ($plan['doctor_id'] !== null ? (int) $plan['doctor_id'] : null)];
+                        $row += ['performed_at' => now_sql(), 'performed_by' => ($item['doctor_id'] !== null ? (int) $item['doctor_id'] : null) ?? $userDoctor ?? ($plan['doctor_id'] !== null ? (int) $plan['doctor_id'] : null)];
                         if ($plan['status'] === 'acceptat') {
                             db_update('treatment_plans', ['status' => 'in-curs', 'updated_at' => now_sql()], 'id = :id', ['id' => $plan['id']]);
                         }
@@ -262,6 +276,7 @@ foreach ($byPhase as $phase => $list) {
         $rows .= '<tr class="' . e(cn('border-t border-linie align-top', $i['status'] === 'anulat' ? 'text-discret' : '')) . '">'
             . '<td class="cifre px-3 py-2 font-semibold">' . ($i['tooth'] ? (int) $i['tooth'] : '—') . '</td>'
             . '<td class="px-3 py-2"><span class="' . ($i['status'] === 'anulat' ? 'line-through' : '') . '">' . e($i['description']) . '</span>'
+            . ($i['doctor_id'] !== null && isset($docs[(int) $i['doctor_id']]) ? '<span class="block text-mic font-medium text-discret">' . e($docs[(int) $i['doctor_id']]) . '</span>' : '')
             . ($i['performed_at'] ? '<span class="block text-mic text-discret">Efectuat ' . e(format_date($i['performed_at'])) . ($i['performed_by'] ? ', ' . e($docs[(int) $i['performed_by']] ?? '') : '') . '</span>' : '')
             . ($isInvoiced ? '<span class="block text-mic font-medium text-actiune">Facturat</span>' : '') . '</td>'
             . '<td class="cifre whitespace-nowrap px-3 py-2 text-right">' . ((int) $i['quantity'] > 1 ? (int) $i['quantity'] . ' × ' : '') . e(lei((int) $i['unit_price'])) . ((int) $i['discount'] > 0 ? '<span class="block text-mic text-discret">−' . e(lei((int) $i['discount'])) . '</span>' : '') . '</td>'
@@ -280,12 +295,28 @@ if ($tables === '') {
 
 $itemForm = '';
 if ($manage && plan_open($plan['status'])) {
+    // The tooth chart, as at „Adaugă procedură”: a click puts the tooth in „Dintele (dinții)”, another
+    // click takes it out (admin.js); the doctors also see what the odontogram notes.
+    $findings = [];
+    if (can('medical', $user)) {
+        foreach (db_all('SELECT tooth, kind, surfaces FROM tooth_conditions WHERE patient_id = ? AND resolved_at IS NULL', [$pid]) as $c) {
+            $findings[(int) $c['tooth']][] = $c;
+        }
+    }
+    $age = !empty($p['birth_date']) ? (new DateTimeImmutable($p['birth_date']))->diff(new DateTimeImmutable())->y : null;
+    $milk = query('temporari') !== '' ? query('temporari') === '1' : (array_filter(array_keys($findings), static fn ($x) => intdiv($x, 10) >= 5) !== [] || ($age !== null && $age < 13));
+    $toothChart = '<div class="flex flex-col gap-2"><div class="flex flex-wrap items-baseline justify-between gap-2"><p class="text-control font-medium">Alegeți dinții pe odontogramă</p>'
+        . '<a class="text-mic text-link underline underline-offset-4" href="' . e(admin_url("{$base}/{$planId}", ['temporari' => $milk ? '0' : '1'])) . '#linie-noua">' . ($milk ? 'Ascundeți dinții temporari' : 'Arătați dinții temporari') . '</a></div>'
+        . '<p class="-mt-1 text-mic text-discret">Clic pe dinte: intră la „Dintele (dinții)”; încă un clic îl scoate. Fiecare dinte devine o lucrare, cu prețul ei.</p>'
+        . '<div class="overflow-x-auto rounded-control border border-linie bg-fundal p-2" data-alege-dinti="#field-tooth">' . odontogram_svg($findings, null, static fn (int $x) => '#dinte-' . $x, $milk) . '</div></div>';
     $itemForm = admin_section_open($editItem ? 'Modificați lucrarea' : 'Adăugați o lucrare', 'linie-noua', $editItem && !$editable ? 'Planul este acceptat: prețul nu se mai schimbă.' : 'Alegeți din lista de prețuri; prețul se completează singur și îl puteți schimba.')
         . '<form method="post" novalidate class="mt-4 grid gap-4 md:grid-cols-12">' . csrf_field() . '<input type="hidden" name="op" value="linie">' . ($editItem ? '<input type="hidden" name="item_id" value="' . (int) $editItem['id'] . '">' : '')
         . '<div class="md:col-span-12">' . error_summary($errors) . '</div>'
         . service_select('service_id', 'Serviciul', admin_int($it['service_id']), ['class' => 'md:col-span-6', 'target' => 'field-price', 'nameTarget' => 'field-description', 'empty' => 'Din lista de prețuri'])
         . text_field('description', 'Descrierea', ['value' => $it['description'], 'error' => $err('description'), 'class' => 'md:col-span-6'])
-        . text_field('tooth', 'Dintele', ['value' => $it['tooth'], 'inputmode' => 'numeric', 'maxlength' => 2, 'optional' => true, 'error' => $err('tooth'), 'class' => 'md:col-span-2'])
+        . ($editItem === null ? '<div class="md:col-span-12">' . $toothChart . '</div>' : '')
+        . text_field('tooth', $editItem === null ? 'Dintele (dinții)' : 'Dintele', ['value' => $it['tooth'], 'maxlength' => $editItem === null ? 80 : 2, 'optional' => true, 'error' => $err('tooth'), 'class' => 'md:col-span-3', 'hint' => $editItem === null ? 'De exemplu 16 sau 13, 14, 15: câte o lucrare pe dinte.' : null])
+        . select_field('item_doctor', 'Medicul care o face', $docOptions, ['value' => $it['item_doctor'], 'class' => 'md:col-span-3'])
         . select_field('phase', 'Faza', array_combine(array_map('strval', range(1, 6)), array_map(static fn ($n) => "Faza {$n}", range(1, 6))), ['value' => $it['phase'], 'class' => 'md:col-span-2'])
         . (($editItem === null || $editable) ? text_field('quantity', 'Cantitatea', ['value' => $it['quantity'], 'inputmode' => 'numeric', 'error' => $err('quantity'), 'class' => 'md:col-span-2'])
             . text_field('price', 'Preț unitar (lei)', ['value' => $it['price'], 'inputmode' => 'decimal', 'error' => $err('price'), 'class' => 'md:col-span-3'])

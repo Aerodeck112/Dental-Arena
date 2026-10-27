@@ -641,3 +641,38 @@ function possible_duplicates(array $q, ?int $exceptId = null): array
     krsort($found);
     return array_slice(array_values($found), 0, 8);
 }
+
+// ── The patient being scheduled („Alegeți ora în calendar”) ──────────────────────
+
+/**
+ * The patient reception is looking a time for: chosen in the patient's file, kept while it moves
+ * through the calendar (two weeks ahead…), so a click on a free slot schedules that patient.
+ */
+function patient_on_hold(array $user): ?array
+{
+    $id = (int) ($_SESSION['de_programat'] ?? 0);
+    if ($id <= 0) {
+        return null;
+    }
+    $p = find_patient($id, $user);
+    if ($p === null) {
+        unset($_SESSION['de_programat']);
+    }
+    return $p;
+}
+
+/** The bar over every page while a patient waits for a time. */
+function patient_on_hold_bar(array $user): string
+{
+    $p = patient_on_hold($user);
+    if ($p === null) {
+        return '';
+    }
+    $onCalendar = str_starts_with((string) parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), '/admin/calendar');
+    return '<div class="mb-6 flex flex-wrap items-center gap-3 rounded-panou border-2 border-actiune bg-menta-pal p-3 text-corp print:hidden">'
+        . icon('calendar-plus', 20, 'shrink-0') . '<span class="min-w-0 flex-1"><strong>De programat: ' . e(patient_name($p)) . '</strong> (fișa ' . (int) $p['file_number'] . ')'
+        . '<span class="block text-mic">' . ($onCalendar ? 'Mergeți la ziua dorită (săgețile, „Săptămână”, data) și dați clic pe ora liberă: programarea se face pentru acest pacient.' : 'Deschideți Calendarul și dați clic pe ora liberă.') . '</span></span>'
+        . ($onCalendar ? '' : '<a href="/admin/calendar" class="' . e(btn('primary', 's')) . '">' . icon('calendar', 16) . 'Calendarul</a>')
+        . '<a href="/admin/calendar?renunta=programat" class="' . e(btn('secondary', 's')) . '">Renunțați</a></div>';
+}
+

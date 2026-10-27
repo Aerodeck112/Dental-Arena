@@ -745,3 +745,16 @@ din copia bazei de date nu mai pot fi citite.
   registrul ei; **Marcați efectuată** / **Marcați neefectuată** (doar fără plăți). Pagina Proceduri
   duce direct la rândul procedurii din fișă.
 
+## Planul pe medici, pacientul „în mână”, ora și cron-ul în meniu (octombrie 2026)
+
+- **Plan de tratament → Adăugați o lucrare**: **Medicul care o face** pe fiecare lucrare (implicit
+  medicul planului; migrarea `025_plan_item_doctor.sql`) și **odontograma** pentru dinți (mai mulți
+  dinți = câte o lucrare pe dinte). Lista și planul tipărit arată medicul lucrării; „Efectuat” îl
+  trece pe medicul lucrării.
+- **Alegeți ora în calendar** (fișa pacientului): pacientul rămâne ales („De programat: …” sus, pe
+  orice pagină) cât căutați ziua; un clic pe o oră liberă face programarea pentru el, apoi banda
+  dispare. „Renunțați” îl lasă.
+- **Ora serverului și cron-ul**, jos în meniu (administratori; pe telefon în meniu): verde
+  „Cron: 14:05 (acum 3 min)” când a rulat în ultimele 20 de minute, roșu altfel (duce la Setări →
+  Cron Job).
+

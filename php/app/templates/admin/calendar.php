@@ -17,6 +17,17 @@ if ($clinicId === null) {
     exit;
 }
 remember_clinic($clinicId);
+// „Alegeți ora în calendar” from a patient's file: the patient stays chosen while the days change.
+if (($hid = admin_int(query('de_programat'))) !== null && find_patient($hid, $user) !== null) {
+    $_SESSION['de_programat'] = $hid;
+    redirect('/admin/calendar' . (query('data') !== '' ? '?data=' . rawurlencode(query('data')) : ''));
+}
+if (query('renunta') === 'programat') {
+    unset($_SESSION['de_programat']);
+    redirect('/admin/calendar');
+}
+$hold = patient_on_hold($user);
+$holdQ = $hold !== null ? ['pacient' => (int) $hold['id']] : [];
 $date = preg_match('/^\d{4}-\d{2}-\d{2}$/', query('data')) && strtotime(query('data')) ? query('data') : date('Y-m-d');
 $view = in_array(query('vizualizare'), ['saptamana', 'lista'], true) ? query('vizualizare') : 'zi';
 $location = db_one('SELECT * FROM locations WHERE id = ?', [$clinicId]);
@@ -145,7 +156,7 @@ if ($view === 'zi') {
         $full = $min % 60 === 0;
         $grid .= '<div' . ($r === 0 ? ' data-cal-row' : '') . ' class="' . e(cn('pr-2 text-right text-mic text-discret cifre', $full ? 'border-t border-linie' : '')) . '" style="grid-row:' . ($r + 2) . ';grid-column:1">' . ($full ? $hhmm : '') . '</div>';
         foreach ($columns as $i => $c) {
-            $q = ['clinica' => $clinicId, 'data' => $date, 'ora' => $hhmm, 'inapoi' => $url([])] + ($c['doctor'] !== null ? ['medic' => $c['doctor']] : []);
+            $q = ['clinica' => $clinicId, 'data' => $date, 'ora' => $hhmm, 'inapoi' => $url([])] + ($c['doctor'] !== null ? ['medic' => $c['doctor']] : []) + $holdQ;
             $grid .= '<a href="' . e(admin_url('/admin/programari/noua', $q)) . '" class="' . e(cn('border-l border-linie hover:bg-menta-pal', $full ? 'border-t' : 'border-t border-t-linie/40')) . '" style="grid-row:' . ($r + 2) . ';grid-column:' . ($i + 2) . '" aria-label="' . e("Programare nouă, {$c['label']}, ora {$hhmm}") . '" tabindex="-1"></a>';
         }
     }
@@ -312,7 +323,7 @@ if ($view === 'zi') {
             . ($off !== '' ? '<p class="mb-1 text-mic font-semibold text-carmin">' . e($off) . '</p>' : '')
             . '<a href="' . e($url(['vizualizare' => 'zi', 'data' => $key])) . '" class="flex items-baseline justify-between gap-2 hover:text-link"><span class="text-control font-semibold">' . e(ucfirst(RO_WEEKDAYS[$i])) . '</span><span class="text-mic text-discret cifre">' . (int) $d->format('j') . ' ' . e(mb_substr(RO_MONTHS[(int) $d->format('n') - 1], 0, 3)) . '.</span></a>'
             . '<ul class="mt-2 flex flex-col gap-1.5">' . ($items !== '' ? $items : '<li class="text-mic text-discret">Liber</li>') . '</ul>'
-            . '<a href="' . e(admin_url('/admin/programari/noua', ['clinica' => $clinicId, 'data' => $key, 'inapoi' => $url([])])) . '" class="mt-auto pt-3 text-mic text-link underline">Adăugați</a></section>';
+            . '<a href="' . e(admin_url('/admin/programari/noua', ['clinica' => $clinicId, 'data' => $key, 'inapoi' => $url([])] + $holdQ)) . '" class="mt-auto pt-3 text-mic text-link underline">Adăugați</a></section>';
     }
     $content .= '</div>';
 }
@@ -341,7 +352,7 @@ $legendBelow = $legendList !== '' ? '<div class="mt-3 2xl:hidden">' . $legendLis
 $body = '<div class="mb-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-1"><div class="flex flex-wrap items-baseline gap-x-4">'
     . '<h1 class="font-display text-[1.875rem] leading-tight text-cerneala">Calendar</h1>'
     . '<p class="text-corp text-discret first-letter:uppercase">' . e($title . ' · ' . ($names[$clinicId] ?? '') . ' · ' . count_ro(count($active), 'o programare', 'programări')) . '</p></div>' . '<div class="flex flex-wrap items-center gap-x-5 gap-y-2">' . $legend
-    . '<a href="' . e(admin_url('/admin/programari/noua', ['clinica' => $clinicId, 'data' => $date, 'inapoi' => $url([])])) . '" class="' . e(btn('primary', 's')) . '">' . icon('plus', 16) . 'Programare nouă</a></div></div>'
+    . '<a href="' . e(admin_url('/admin/programari/noua', ['clinica' => $clinicId, 'data' => $date, 'inapoi' => $url([])] + $holdQ)) . '" class="' . e(btn('primary', 's')) . '">' . icon('plus', 16) . 'Programare nouă</a></div></div>'
     . $toolbar . $notesHtml . $content . $legendBelow
     . '<div data-cal-anunt role="status" aria-live="polite" hidden class="fixed inset-x-4 bottom-4 z-50 mx-auto flex max-w-xl items-center gap-3 rounded-panou bg-cerneala px-4 py-3 text-corp text-fundal shadow-float"></div>'
     . '<input type="hidden" data-cal-csrf value="' . e(csrf_token()) . '">'
