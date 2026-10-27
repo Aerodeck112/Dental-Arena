@@ -25,6 +25,7 @@ const ADMIN_NAV = [
     ['/admin/mesaje', 'Mesaje', 'message-square', null],
     ['/admin/rapoarte', 'Rapoarte', 'chart', null],
     ['/admin/marketing', 'Marketing', 'megaphone', 'admin'],
+    ['/admin/social', 'Social media', 'sparkles', 'admin'],
     ['/admin/servicii', 'Servicii și prețuri', 'tag', 'admin'],
     ['/admin/fotografii', 'Fotografii site', 'image', 'admin'],
     ['/admin/echipa', 'Echipa', 'user-round', 'admin'],

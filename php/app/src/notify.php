@@ -952,6 +952,14 @@ function run_daily_jobs(?DateTimeImmutable $now = null): void
     // The clinics that confirm the appointments at the end of the day.
     send_batch_confirmations($now);
 
+    // Social media: the next three posts, a day ahead (src/admin/social.php).
+    daily_job('social', 8, $now, static function () use ($now): void {
+        if (is_file(APP_DIR . '/src/admin/social.php')) {
+            require_once APP_DIR . '/src/admin/social.php';
+            social_auto($now);
+        }
+    });
+
     // What VITIM configured, to the administrators (src/admin/clinical.php).
     if (function_exists('send_tech_digest')) {
         send_tech_digest($now);

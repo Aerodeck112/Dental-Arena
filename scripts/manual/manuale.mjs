@@ -51,7 +51,7 @@ const MANUALE = [
       parte("Partea medicală"),
       C.anamneza(), C.odontograma(), C.planuri("admin"), C.proceduri("admin"), C.implanturi(), C.consultatieAi(),
       parte("Administrarea"),
-      C.echipa(), C.programulZilei("admin"), C.servicii(), C.fotografii(), C.marketing(), C.gdpr(), C.jurnal(), C.siteul(), C.intrebari("admin"),
+      C.echipa(), C.programulZilei("admin"), C.servicii(), C.fotografii(), C.marketing(), C.social(), C.gdpr(), C.jurnal(), C.siteul(), C.intrebari("admin"),
     ],
   },
   {

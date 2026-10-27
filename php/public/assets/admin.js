@@ -30,7 +30,7 @@
     if (!btn) return;
     var src = document.querySelector(btn.getAttribute("data-copiaza"));
     if (!src) return;
-    var text = src.textContent.trim();
+    var text = ("value" in src ? src.value : src.textContent).trim();
     var done = function () {
       var old = btn.lastChild.textContent;
       btn.lastChild.textContent = "Copiat";
@@ -47,6 +47,96 @@
     if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done, fallback);
     else fallback();
   });
+  // Social media: the post's image, 1080 × 1350 (Instagram and Facebook), from a photo of the
+  // clinic (or one chosen from the computer), with the theme, the title and the logo; downloaded
+  // as JPEG (light enough to post from a phone). A new photo or title draws it again.
+  var socialImgs = document.querySelectorAll("[data-social-imagine]");
+  if (socialImgs.length) {
+    var logo = new Image();
+    logo.src = "/brand/logo-dental-arena.png";
+    var fontsReady = document.fonts && document.fonts.load ? Promise.all([document.fonts.load("96px Forum"), document.fonts.load("600 34px 'Red Hat Text Variable'")]).catch(function () {}) : Promise.resolve();
+    var wrap = function (ctx, text, max) {
+      var words = text.split(/\s+/), lines = [], line = "";
+      words.forEach(function (w) {
+        var t = line ? line + " " + w : w;
+        if (ctx.measureText(t).width > max && line) { lines.push(line); line = w; } else { line = t; }
+      });
+      if (line) lines.push(line);
+      return lines;
+    };
+    var draw = function (box) {
+      var canvas = box.querySelector("canvas"), ctx = canvas.getContext("2d");
+      var W = canvas.width, H = canvas.height, photo = box._photo;
+      ctx.fillStyle = "#1F6B4C";
+      ctx.fillRect(0, 0, W, H);
+      if (photo && photo.naturalWidth) {
+        var s = Math.max(W / photo.naturalWidth, H / photo.naturalHeight);
+        var pw = photo.naturalWidth * s, ph = photo.naturalHeight * s;
+        ctx.drawImage(photo, (W - pw) / 2, (H - ph) / 2, pw, ph);
+      }
+      var g = ctx.createLinearGradient(0, H * 0.38, 0, H);
+      g.addColorStop(0, "rgba(21,48,38,0)");
+      g.addColorStop(0.45, "rgba(21,48,38,0.72)");
+      g.addColorStop(1, "rgba(21,48,38,0.96)");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+      // The logo on a white plate, top left.
+      if (logo.complete && logo.naturalWidth) {
+        var lw = 300, lh = lw * logo.naturalHeight / logo.naturalWidth;
+        ctx.fillStyle = "rgba(255,255,255,0.94)";
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(56, 56, lw + 56, lh + 40, 28); else ctx.rect(56, 56, lw + 56, lh + 40);
+        ctx.fill();
+        ctx.drawImage(logo, 84, 76, lw, lh);
+      }
+      var title = (box._title || "").trim();
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "96px Forum, Georgia, serif";
+      var lines = wrap(ctx, title, W - 160).slice(0, 4);
+      var y = H - 150 - (lines.length - 1) * 104;
+      ctx.font = "600 34px 'Red Hat Text Variable', system-ui, sans-serif";
+      ctx.fillStyle = "#7DC9A1";
+      ctx.fillText((box.getAttribute("data-tema") || "").toUpperCase(), 80, y - 120);
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "96px Forum, Georgia, serif";
+      lines.forEach(function (l, i) { ctx.fillText(l, 80, y + i * 104 - 20); });
+      ctx.font = "34px 'Red Hat Text Variable', system-ui, sans-serif";
+      ctx.fillStyle = "rgba(255,255,255,0.86)";
+      ctx.fillText("dentalarena.ro  ·  Cristești  ·  Luduș", 80, H - 70);
+    };
+    var load = function (box, url) {
+      var img = new Image();
+      img.onload = function () { box._photo = img; fontsReady.then(function () { draw(box); }); };
+      img.onerror = function () { box._photo = null; draw(box); };
+      img.src = url;
+    };
+    Array.prototype.forEach.call(socialImgs, function (box) {
+      var card = box.closest("article") || box.parentNode;
+      var sel = box.querySelector("[data-social-foto]");
+      var chosen = card.querySelector("[data-social-foto-ales]");
+      var titleInput = card.querySelector("[data-social-titlu]");
+      box._title = box.getAttribute("data-titlu") || "";
+      if (sel) {
+        load(box, sel.value);
+        sel.addEventListener("change", function () { if (chosen) chosen.value = sel.value; load(box, sel.value); });
+      }
+      var file = box.querySelector("[data-social-fisier]");
+      if (file) file.addEventListener("change", function () { if (file.files && file.files[0]) load(box, URL.createObjectURL(file.files[0])); });
+      if (titleInput) titleInput.addEventListener("input", function () { box._title = titleInput.value; draw(box); });
+      logo.addEventListener("load", function () { draw(box); });
+      var dl = box.querySelector("[data-social-descarca]");
+      if (dl) dl.addEventListener("click", function () {
+        box.querySelector("canvas").toBlob(function (blob) {
+          var a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = box.getAttribute("data-fisier") || "dental-arena.jpg";
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+        }, "image/jpeg", 0.92);
+      });
+    });
+  }
   var menu = document.querySelector("[data-meniu-panou]");
   if (menu) {
     document.addEventListener("pointerdown", function (e) {

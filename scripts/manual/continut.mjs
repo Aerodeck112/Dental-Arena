@@ -602,6 +602,19 @@ ${img("medic-program", "Programul pe zile, cu pauza, la fiecare clinică.")}
 ${sfat("Lăsați goale zilele în care medicul nu lucrează la acea clinică. Fără program, medicul nu primește programări de pe site, dar recepția îl poate programa normal. Concediile și cursurile se pun la Absențe și zile libere, nu aici.")}`,
 });
 
+export const social = () => ({
+  titlu: "Social media",
+  html: `
+<p>${b("Social media")} din meniu are postările pentru Facebook și Instagram: câte 3 la 2 zile, scrise de asistentul AI al panoului, cu ziua și ora la care se postează (două în prima zi, la 11:00 și 19:00, una a doua zi, la 13:00).</p>
+${pasi([
+  `La ora din plan, deschideți postarea: ${b("Descărcați imaginea")} (pe telefon se salvează în galerie) și ${b("Copiați textul")} (cu hashtag-urile).`,
+  "Pe Facebook sau Instagram: postare nouă, alegeți imaginea, lipiți textul, publicați.",
+  `Înapoi în panou: ${b("Am postat")}.`,
+])}
+${sfat("Imaginea se face din fotografia aleasă (clinica, echipa sau una de-a dumneavoastră, de pe calculator sau telefon), cu titlul postării și logo-ul. Titlul și textul se pot schimba înainte; „Salvați modificările”.")}
+${sfat("„Ce promovăm acum” (în dreapta): de exemplu implanturile la Luduș sau o ofertă reală. AI-ul nu inventează oferte, recenzii sau promisiuni de rezultat și nu primește date despre pacienți.")}`,
+});
+
 export const servicii = () => ({
   titlu: "Servicii și prețuri",
   html: `

@@ -72,6 +72,7 @@ $routes = [
     '#^/admin/pacienti/(\d+)/mesaje$#' => ['pacient-mesaje', null],
     '#^/admin/pacienti/(\d+)/consultatie-ai$#' => ['pacient-ai', 'medical'],
     '#^/admin/mesaje$#' => ['mesaje', null],
+    '#^/admin/social$#' => ['social', 'admin'],
     '#^/admin/marketing$#' => ['marketing', 'admin'],
     '#^/admin/marketing/(noua|\d+)$#' => ['campanie', 'admin'],
     '#^/admin/setari/mesaje$#' => ['setari-mesaje', 'config'],

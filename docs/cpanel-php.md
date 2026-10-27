@@ -758,3 +758,18 @@ din copia bazei de date nu mai pot fi citite.
   „Cron: 14:05 (acum 3 min)” când a rulat în ultimele 20 de minute, roșu altfel (duce la Setări →
   Cron Job).
 
+## Social media (octombrie 2026)
+
+- Meniul **Social media** (administratori): asistentul AI al panoului (Setări → Asistentul AI)
+  scrie câte **3 postări la 2 zile** pentru Facebook și Instagram: două în prima zi (11:00, 19:00),
+  una a doua zi (13:00), cu una-două zile înainte (Cron Job-ul, la 8:00; sau „Scrieți acum”).
+- Fiecare postare: ziua și ora, tema (sfat, serviciu, echipa, mit sau adevăr, întrebare, copiii,
+  programare), **titlul de pe imagine**, **textul** și **hashtag-urile** (editabile), **Copiați
+  textul**, **Descărcați imaginea** (1080 × 1350, JPEG, desenată în browser din fotografia aleasă:
+  a clinicii, a echipei, una încărcată în Fotografii site sau una de pe calculator/telefon, cu
+  titlul, tema, logo-ul și „dentalarena.ro · Cristești · Luduș”), **Am postat** / **Nu o postez**.
+- „Ce promovăm acum” se trimite AI-ului; altfel primește doar informațiile publice ale clinicii
+  (servicii, clinici, medici, site) și titlurile postărilor recente, ca să nu se repete. Regulile:
+  fără promisiuni de rezultat, fără recenzii inventate, fără oferte inventate, fără date de
+  pacienți. Migrarea `026_social_posts.sql`.
+
