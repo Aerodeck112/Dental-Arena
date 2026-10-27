@@ -602,6 +602,18 @@ ${img("medic-program", "Programul pe zile, cu pauza, la fiecare clinică.")}
 ${sfat("Lăsați goale zilele în care medicul nu lucrează la acea clinică. Fără program, medicul nu primește programări de pe site, dar recepția îl poate programa normal. Concediile și cursurile se pun la Absențe și zile libere, nu aici.")}`,
 });
 
+export const sterilizare = () => ({
+  titlu: "Sterilizare: etichetele plicurilor",
+  html: `
+<p>${b("Sterilizare")} din meniu ține evidența ciclurilor autoclavului și face etichetele plicurilor, pe imprimanta de etichete de 62 mm.</p>
+${pasi([
+  `După ciclu: ${b("Ciclu nou")}, alegeți autoclavul și programul, scrieți plicurile (de exemplu „Set extracție” × 4, „Set consultație” × 2) și apăsați ${b("Înregistrați și tipăriți etichetele")}.`,
+  `${b("Tipăriți")}: la imprimanta de etichete alegeți hârtia de 62 mm, margini „Niciuna”, scala 100%. Fiecare etichetă iese separat; lipiți-o pe plic.`,
+  `Când deschideți un plic la pacient: în fișa lui, fila ${b("Sterilizare")} → ${b("Plicurile folosite")}, scrieți sau citiți codul de pe etichetă (cititorul de coduri, ori scanați codul QR cu telefonul) → ${b("Treceți plicul")}.`,
+])}
+${sfat("Eticheta are clinica, conținutul, ziua sterilizării și a expirării, ciclul, autoclavul, programul, cine a sterilizat și codul plicului. Un plic expirat sau folosit deja nu se poate trece la pacient. O etichetă se poate tipări din nou din pagina plicului.")}`,
+});
+
 export const social = () => ({
   titlu: "Social media",
   html: `

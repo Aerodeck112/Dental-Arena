@@ -773,3 +773,20 @@ din copia bazei de date nu mai pot fi citite.
   fără promisiuni de rezultat, fără recenzii inventate, fără oferte inventate, fără date de
   pacienți. Migrarea `026_social_posts.sql`.
 
+## Sterilizare: etichete de 62 mm pentru plicuri și trasabilitate (octombrie 2026)
+
+- Meniul **Sterilizare** (toată echipa): după fiecare ciclu al autoclavului, **Ciclu nou**: clinica,
+  ziua, autoclavul, programul, plicurile (conținutul și câte) → **Înregistrați și tipăriți
+  etichetele**. Ciclurile se numără pe clinică și an; fiecare plic are un cod (de exemplu
+  `C26-0034-03`: clinica, anul, ciclul, plicul).
+- **Etichetele**: câte una pe pagină, 62 mm lățime × 29/40/50/62 mm (Setări sterilizare), pentru
+  imprimanta de etichete (Brother QL, rola de 62 mm): clinica, conținutul, ziua sterilizării,
+  expirarea (implicit +180 de zile), ciclul, autoclavul, programul, operatorul, codul și un cod QR.
+  La tipărire: hârtia de 62 mm, margini „Niciuna”, scala 100%.
+- **Fișa pacientului → Sterilizare → Plicurile folosite**: codul plicului deschis (scris, citit cu
+  cititorul de coduri sau linkul QR) se trece la pacient; un plic expirat sau folosit deja la alt
+  pacient e refuzat. Codul QR scanat cu telefonul deschide pagina plicului (steril / expirat /
+  folosit la cine), de unde se trece la pacient după numărul fișei.
+- Setări (administratori, jos pe pagină): autoclavele, programele, conținuturile obișnuite,
+  valabilitatea, înălțimea etichetei. Migrarea `027_sterilization.sql`.
+

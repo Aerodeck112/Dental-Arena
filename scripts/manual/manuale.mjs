@@ -30,14 +30,14 @@ const MANUALE = [
     rol: "recepție",
     scurt: "Manual pentru recepție",
     intro: "Calendarul și programările (inclusiv cele făcute de pacienți pe site), absențele, pacienții, cererile de pe site, rechemările, acordurile pe tabletă, mesajele.",
-    capitole: [C.despre("recepție"), C.intrare(), C.ecranul(), C.azi("receptie"), C.calendar(), C.programari(), C.absente("receptie"), C.programareOnline("receptie"), C.pacienti("receptie"), C.cereri(), C.rechemari(), C.planuri("receptie"), C.proceduri("receptie"), C.documente("receptie"), C.tableta("receptie"), C.mesaje("receptie"), C.chat("receptie"), C.rapoarte("receptie"), C.intrebari("receptie")],
+    capitole: [C.despre("recepție"), C.intrare(), C.ecranul(), C.azi("receptie"), C.calendar(), C.programari(), C.absente("receptie"), C.programareOnline("receptie"), C.pacienti("receptie"), C.sterilizare(), C.cereri(), C.rechemari(), C.planuri("receptie"), C.proceduri("receptie"), C.documente("receptie"), C.tableta("receptie"), C.mesaje("receptie"), C.chat("receptie"), C.rapoarte("receptie"), C.intrebari("receptie")],
   },
   {
     fisier: "Manual-Medici.pdf",
     rol: "medici",
     scurt: "Manual pentru medici",
     intro: "Ziua de lucru, calendarul, absențele, fișa pacientului, anamneza, odontograma, planurile de tratament, implanturile, consultația cu AI, programul zilei pe WhatsApp.",
-    capitole: [C.despre("medici"), C.intrare(), C.ecranul(), C.azi("medic"), C.calendar(), C.programari(), C.absente("medic"), C.pacienti("medic"), C.anamneza(), C.odontograma(), C.planuri("medic"), C.proceduri("medic"), C.implanturi(), C.consultatieAi(), C.documente("medic"), C.programulZilei("medic"), C.mesaje("medic"), C.rapoarte("medic"), C.intrebari("medic")],
+    capitole: [C.despre("medici"), C.intrare(), C.ecranul(), C.azi("medic"), C.calendar(), C.programari(), C.absente("medic"), C.pacienti("medic"), C.sterilizare(), C.anamneza(), C.odontograma(), C.planuri("medic"), C.proceduri("medic"), C.implanturi(), C.consultatieAi(), C.documente("medic"), C.programulZilei("medic"), C.mesaje("medic"), C.rapoarte("medic"), C.intrebari("medic")],
   },
   {
     fisier: "Manual-Administrator.pdf",
@@ -51,7 +51,7 @@ const MANUALE = [
       parte("Partea medicală"),
       C.anamneza(), C.odontograma(), C.planuri("admin"), C.proceduri("admin"), C.implanturi(), C.consultatieAi(),
       parte("Administrarea"),
-      C.echipa(), C.programulZilei("admin"), C.servicii(), C.fotografii(), C.marketing(), C.social(), C.gdpr(), C.jurnal(), C.siteul(), C.intrebari("admin"),
+      C.echipa(), C.programulZilei("admin"), C.servicii(), C.fotografii(), C.marketing(), C.social(), C.sterilizare(), C.gdpr(), C.jurnal(), C.siteul(), C.intrebari("admin"),
     ],
   },
   {

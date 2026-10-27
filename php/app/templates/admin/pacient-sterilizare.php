@@ -24,10 +24,22 @@ if (query('numar') === '1') {
 }
 
 $qr = upload_qr_current($pid, 'sterilizare');
+require_once APP_DIR . '/src/admin/sterilization.php';
+$packError = null;
 
 if (is_post() && $writable) {
     csrf_check();
     $op = post('op');
+    if ($op === 'plic') {
+        // The code of the pouch opened for the patient: typed, read by a barcode reader (it ends
+        // with Enter) or the link of the label's QR.
+        [$okPack, $msg] = steril_use(post('cod'), $p, $user);
+        if ($okPack) {
+            flash($msg);
+            redirect($base . '#plicuri');
+        }
+        $packError = $msg;
+    }
     if ($op === 'qr') {
         upload_qr_start($pid, 'sterilizare', $user);
         redirect($base . '#telefon');
@@ -100,7 +112,22 @@ $upload = $writable ? '<form method="post" enctype="multipart/form-data" novalid
 // From the phone: the QR code, or the button that makes one.
 $phone = $writable ? '<div class="mt-4">' . upload_qr_panel($qr, $base . '?numar=1', count($photos), 'Se deschide o pagină unde faceți poza sau o alegeți din galerie.') . '</div>' : '';
 
+// The pouches opened for the patient (the labels of Sterilizare in the menu).
+$packRows = '';
+foreach (steril_patient_packs($pid) as $k) {
+    $packRows .= '<li class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-t border-linie py-2 first:border-t-0">'
+        . '<span><span class="font-semibold">' . e($k['content']) . '</span> <span class="cifre text-discret">' . e($k['code']) . '</span>'
+        . '<span class="block text-mic text-discret">Sterilizat ' . e(format_date($k['sterilized_on'])) . ', ciclul ' . (int) $k['cycle_no'] . e($k['autoclave'] !== '' ? ', ' . $k['autoclave'] : '') . ' · expiră ' . e(format_date($k['expires_on'])) . '</span></span>'
+        . '<span class="text-mic text-discret cifre">' . e(format_datetime((string) $k['used_at'])) . ($k['who'] ? ' · ' . e($k['who']) : '') . '</span></li>';
+}
+$packs = admin_section_open('Plicurile folosite', 'plicuri', 'Codul de pe eticheta plicului deschis la pacient: scrieți-l, citiți-l cu cititorul de coduri sau scanați codul QR cu telefonul.')
+    . ($writable ? '<form method="post" novalidate class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">' . csrf_field() . '<input type="hidden" name="op" value="plic">'
+        . text_field('cod', 'Codul plicului', ['value' => $packError !== null ? post('cod') : '', 'placeholder' => 'de exemplu C26-0034-03', 'autocomplete' => 'off', 'error' => $packError, 'class' => 'min-w-0 sm:flex-1'])
+        . '<button type="submit" class="' . e(btn('primary')) . '">Treceți plicul</button></form>' : '')
+    . ($packRows !== '' ? '<ul class="mt-4">' . $packRows . '</ul>' : '<p class="mt-3 text-corp text-discret">Niciun plic trecut încă.</p>')
+    . '</section>';
 $body = patient_header($p, $user, 'sterilizare')
+    . $packs . '<div class="mt-8"></div>'
     . admin_section_open('Sterilizare', 'sterilizare', 'Pozele cu eticheta pungii, indicatorul sau bonul autoclavului pentru instrumentele folosite la pacient. Pe telefon, butonul deschide camera.')
     . $phone . $upload
     . ($grid !== '' ? '<ul class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">' . $grid . '</ul>' : '<p class="mt-4 text-corp text-discret">Nicio poză încă.</p>')

@@ -18,6 +18,7 @@ const ADMIN_NAV = [
     ['/admin/rechemari', 'Rechemări', 'phone-call', null],
     ['/admin/absente', 'Absențe și zile libere', 'user-x', null],
     ['/admin/implanturi', 'Implanturi', 'implant', 'medical'],
+    ['/admin/sterilizare', 'Sterilizare', 'package', null],
     ['/admin/proceduri', 'Proceduri', 'clipboard-list', 'procedures'],
     ['/admin/casa', 'Casa', 'wallet', 'procedures.pay'],
     ['/admin/facturi', 'Facturi', 'receipt', 'billing'],
