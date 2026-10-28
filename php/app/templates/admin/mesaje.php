@@ -81,8 +81,20 @@ $filters = '<form method="get" class="mt-4 flex flex-wrap items-end gap-3">'
     . '<button type="submit" class="' . e(btn('secondary')) . '">' . icon('filter', 18) . 'Filtrați</button></form>';
 $mode = messaging_live() ? '' : '<p class="mb-6 flex items-start gap-3 rounded-panou border border-mustar bg-mustar-pal p-4 text-corp">' . icon('info', 20, 'mt-0.5') . '<span>Mod de probă: mesajele nu pleacă, apar doar aici ca „Probă”.' . (can_configure($user) ? ' Trimiterea reală se pornește din <a class="text-link underline" href="/admin/setari/mesaje">Setări → Mesaje</a>.' : '') . '</span></p>';
 
+// „Verificare”: why a patient got no message (administrators; open when something is wrong).
+$diagnosis = '';
+if (is_admin($user)) {
+    $checks = messages_diagnosis();
+    $bad = array_filter($checks, static fn ($c) => $c['ok'] === false);
+    $diagnosis = '<details class="mb-8 rounded-panou border ' . ($bad !== [] ? 'border-2 border-mustar bg-mustar-pal/40' : 'border-linie bg-suprafata') . ' p-4"' . ($bad !== [] ? ' open' : '') . '>'
+        . '<summary class="cursor-pointer text-h3 font-semibold">Verificare: de ce nu primesc pacienții mesaje?' . ($bad !== [] ? ' <span class="text-mic font-medium text-carmin">(' . count_ro(count($bad), 'o problemă', 'probleme') . ')</span>' : ' <span class="text-mic font-medium text-actiune">(totul pare în regulă)</span>') . '</summary>'
+        . '<ul class="mt-3 flex flex-col">' . implode('', array_map(static fn ($c) => '<li class="flex items-start gap-3 border-t border-linie py-2 first:border-t-0">'
+            . '<span aria-hidden="true" class="' . e(cn('mt-1 inline-block size-3 shrink-0 rounded-full', $c['ok'] === true ? 'bg-actiune' : ($c['ok'] === false ? 'bg-carmin' : 'bg-mustar'))) . '"></span>'
+            . '<span class="min-w-0"><span class="block text-corp font-medium">' . e($c['title']) . '</span>' . ($c['detail'] !== '' ? '<span class="block break-words text-mic text-discret">' . e($c['detail']) . '</span>' : '') . '</span></li>', $checks)) . '</ul></details>';
+}
 $body = admin_header('Mesaje', 'Azi: ' . (int) $today['sent'] . ' trimise, ' . (int) $today['waiting'] . ' în așteptare, ' . (int) $today['failed'] . ' eșuate' . ((int) $today['test'] > 0 ? ', ' . (int) $today['test'] . ' de probă' : '') . '.', can_configure($user) ? '<a href="/admin/setari/mesaje" class="' . e(btn('secondary')) . '">' . icon('settings', 18) . 'Setări mesaje</a>' : '')
     . $mode
+    . $diagnosis
     . '<div class="flex flex-col gap-8">'
     . admin_section_open('WhatsApp: mesajele pacienților', 'whatsapp', 'Răspundeți din fișa pacientului, fila Mesaje.') . ($threadList !== '' ? '<ul class="mt-2">' . $threadList . '</ul>' : '<p class="mt-3 text-corp text-discret">Niciun mesaj primit.</p>') . '</section>'
     . admin_section_open('Toate mesajele', 'jurnal') . $filters

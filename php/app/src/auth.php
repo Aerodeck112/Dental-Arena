@@ -8,12 +8,12 @@
  */
 declare(strict_types=1);
 
-const ROLES = ['admin' => 'Administrator', 'admin-medic' => 'Administrator medic', 'receptie' => 'Recepție', 'medic' => 'Medic', 'tehnic' => 'Suport tehnic (VITIM)'];
+const ROLES = ['admin' => 'Administrator', 'admin-medic' => 'Administrator medic', 'receptie' => 'Recepție', 'medic' => 'Medic', 'asistent' => 'Asistent(ă) medical(ă)', 'tehnic' => 'Suport tehnic (VITIM)'];
 /** The roles that administer (see everything, both clinics). */
 const ADMIN_ROLES = ['admin', 'admin-medic', 'tehnic'];
 /** What each role may do beyond the clinics ticked on the account. */
 const PERMISSIONS = [
-    'medical' => ['admin', 'medic'],          // anamneza, odontograma, note clinice
+    'medical' => ['admin', 'medic', 'asistent'],  // anamneza, odontograma, note clinice (asistentele le văd și le completează)
     'plans.manage' => ['admin', 'medic'],     // planuri de tratament (recepția le vede, pentru facturare)
     'procedures' => ['admin', 'medic', 'receptie'],  // procedurile efectuate (fiecare medic le trece pe ale lui)
     'procedures.pay' => ['admin', 'receptie'],       // plățile pentru proceduri

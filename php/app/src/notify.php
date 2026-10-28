@@ -1072,3 +1072,81 @@ function whatsapp_window_open(string $e164): bool
 {
     return (bool) db_value("SELECT 1 FROM messages WHERE direction = 'in' AND channel = 'whatsapp' AND to_address = ? AND created_at > ?", [$e164, date('Y-m-d H:i:s', time() - 86400 + 300)]);
 }
+
+// ── Why the patients get no messages (Mesaje → „Verificare”) ─────────────────────
+
+/**
+ * The checks that explain a message that did not arrive: the sending mode and the SMS account,
+ * what failed (with the provider's words), what waits too long in the queue, the cron job, the
+ * notices switched on, the clinics that confirm at the end of the day, and for each appointment
+ * made in the last 24 hours whether its confirmation left and, if not, why.
+ *
+ * @return list<array{ok:?bool,title:string,detail:string}>
+ */
+function messages_diagnosis(): array
+{
+    $m = messaging();
+    $out = [];
+    $live = messaging_live();
+    $out[] = ['ok' => $live, 'title' => $live ? 'Trimiterea reală e pornită' : 'Mod de probă: nimic nu pleacă la pacienți', 'detail' => $live ? '' : 'Setări → Mesaje → „Trimitere reală” → Salvați.'];
+    $sms = trim((string) $m['smslink_id']) !== '' && trim((string) $m['smslink_pass']) !== '';
+    $out[] = ['ok' => $sms, 'title' => $sms ? 'Contul SMSLink e completat' : 'Contul SMSLink nu e completat', 'detail' => $sms ? 'Proba: Setări → Mesaje → „Trimiteți proba” la numărul dumneavoastră.' : 'Setări → Mesaje → SMS prin SMSLink: Connection ID și parola.'];
+    $since = date('Y-m-d H:i:s', time() - 86400);
+    // A message waiting with an error failed once and is being retried: count it as failed.
+    $c = db_one("SELECT SUM(status IN ('trimis', 'livrat', 'citit')) AS sent, SUM(status = 'esuat' OR (status = 'in-asteptare' AND error IS NOT NULL)) AS failed, SUM(status = 'proba') AS test FROM messages WHERE direction = 'out' AND created_at >= ?", [$since]);
+    $errors = array_column(db_all("SELECT DISTINCT error FROM messages WHERE direction = 'out' AND error IS NOT NULL AND created_at >= ? ORDER BY id DESC LIMIT 3", [$since]), 'error');
+    $out[] = ['ok' => (int) $c['failed'] === 0, 'title' => 'Ultimele 24 de ore: ' . (int) $c['sent'] . ' trimise, ' . (int) $c['failed'] . ' eșuate' . ((int) $c['test'] > 0 ? ', ' . (int) $c['test'] . ' doar în probă' : ''),
+        'detail' => $errors !== [] ? 'Erorile: ' . implode(' · ', $errors) : ''];
+    $stuck = db_one("SELECT COUNT(*) AS n, MIN(send_after) AS since FROM messages WHERE status IN ('in-asteptare', 'se-trimite') AND send_after < ?", [date('Y-m-d H:i:s', time() - 900)]);
+    $out[] = ['ok' => (int) $stuck['n'] === 0, 'title' => (int) $stuck['n'] === 0 ? 'Coada de mesaje nu e blocată' : (int) $stuck['n'] . ' mesaje stau în coadă din ' . date('d.m H:i', strtotime((string) $stuck['since'])),
+        'detail' => (int) $stuck['n'] === 0 ? '' : 'Ar fi trebuit să plece. Porniți Cron Job-ul (Setări, sus) sau apăsați „Trimiteți acum” la ele, în jurnalul de mai jos.'];
+    $last = (int) @file_get_contents(APP_DIR . '/storage/cron.txt');
+    $out[] = ['ok' => $last > time() - 1200 ? true : null, 'title' => $last > time() - 1200 ? 'Cron Job-ul rulează (' . date('H:i', $last) . ')' : 'Cron Job-ul nu rulează', 'detail' => $last > time() - 1200 ? '' : 'Mesajele pleacă doar când cineva lucrează în panou, iar confirmările de seară și programul medicilor pot întârzia. Setări → Cron Job.'];
+    $on = [];
+    foreach (PATIENT_EVENTS as $ev => $def) {
+        $cfg = patient_event($ev);
+        if (!empty($cfg['phone'])) {
+            $on[] = $def['label'];
+        }
+    }
+    $out[] = ['ok' => in_array(PATIENT_EVENTS['programare-noua']['label'], $on, true), 'title' => 'Pleacă singure pe telefon: ' . ($on !== [] ? implode(', ', $on) : 'nimic'),
+        'detail' => 'Mutarea, anularea și reamintirea de mâine sunt oprite din 22.10 (la cerere): le trimiteți cu „Trimiteți SMS acum” sau le porniți din Setări → Mesaje.'];
+    foreach (clinics() as $cl) {
+        $t = confirm_batch_time((int) $cl['id']);
+        if ($t !== null) {
+            $out[] = ['ok' => null, 'title' => "{$cl['shortName']}: confirmările pleacă la final de zi, la {$t}", 'detail' => 'Până atunci pacienții de la această clinică nu primesc nimic; e normal.'];
+        }
+    }
+    // The appointments made in the last 24 hours: did their confirmation leave? If not, why.
+    $rows = db_all("SELECT a.id, a.location_id, a.starts_at, a.status, a.notice_sent_for, p.phone, p.phone_channel, p.email, p.email_reminders, p.anonymized_at, p.active,
+        (SELECT GROUP_CONCAT(DISTINCT m.status) FROM messages m WHERE m.appointment_id = a.id AND m.direction = 'out' AND m.channel IN ('sms', 'whatsapp')) AS sms,
+        (SELECT m.error FROM messages m WHERE m.appointment_id = a.id AND m.direction = 'out' AND m.channel IN ('sms', 'whatsapp') AND m.error IS NOT NULL ORDER BY m.id DESC LIMIT 1) AS sms_error
+        FROM appointments a JOIN patients p ON p.id = a.patient_id WHERE a.created_at >= ? ORDER BY a.id DESC LIMIT 300", [$since]);
+    $why = [];
+    $ok = 0;
+    foreach ($rows as $r) {
+        $reason = match (true) {
+            $r['sms'] !== null && (str_contains($r['sms'], 'trimis') || str_contains($r['sms'], 'livrat') || str_contains($r['sms'], 'citit')) => null,
+            $r['sms'] !== null && str_contains($r['sms'], 'esuat') => 'SMS-ul a eșuat: ' . ($r['sms_error'] ?? 'eroarea e în jurnal'),
+            $r['sms'] !== null && $r['sms_error'] !== null => 'SMS-ul nu a plecat: ' . $r['sms_error'] . ' (se reîncearcă)',
+            $r['sms'] !== null && str_contains($r['sms'], 'proba') => 'mod de probă',
+            $r['sms'] !== null => 'SMS-ul așteaptă în coadă',
+            strtotime($r['starts_at']) <= strtotime('+0 minutes', time()) && $r['notice_sent_for'] === null => 'programare în trecut sau de azi (fără confirmare)',
+            ($r['phone_channel'] ?? 'sms') === 'nu' => 'pacientul a ales „fără mesaje pe telefon”',
+            phone_ro_mobile((string) $r['phone']) === null && ($r['phone_channel'] ?? 'sms') !== 'whatsapp' => 'pacientul nu are mobil românesc în fișă',
+            confirm_batch_time((int) $r['location_id']) !== null && $r['notice_sent_for'] === null => 'clinica trimite confirmarea la final de zi',
+            in_array($r['status'], ['anulat', 'neprezentat'], true) => 'programare anulată',
+            default => 'confirmarea nu s-a pus în coadă (spuneți-ne)',
+        };
+        if ($reason === null) {
+            $ok++;
+        } else {
+            $why[$reason] = ($why[$reason] ?? 0) + 1;
+        }
+    }
+    arsort($why);
+    $out[] = ['ok' => $rows === [] ? null : $why === [] || array_keys($why) === ['clinica trimite confirmarea la final de zi'],
+        'title' => 'Programări făcute în ultimele 24 de ore: ' . count($rows) . ', cu SMS plecat: ' . $ok,
+        'detail' => $why !== [] ? 'Fără SMS: ' . implode(' · ', array_map(static fn ($k, $n) => "{$n} – {$k}", array_keys($why), $why)) : ''];
+    return $out;
+}

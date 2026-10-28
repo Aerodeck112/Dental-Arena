@@ -88,6 +88,9 @@ ${tabel(["Starea", "Ce înseamnă", "Butonul care urmează"], [
   ["Nu s-a prezentat", `Apăsați ${b("Nu a venit")} dacă pacientul lipsește.`, "—"],
 ])}
 <p>Butonul ${b("⋯")} deschide programarea (pentru mutare, anulare sau rechemare). În dreapta: <strong>Cererile online noi</strong> și câți pacienți sunt de sunat pentru control.</p>
+${rol === "medic" ? "" : `<p>Tot în dreapta, <strong>Încasat azi</strong>: aceeași sumă ca în ${b("Casa")} pentru clinica aleasă, cu numerarul separat.</p>`}
+<h3>Notițe</h3>
+<p>Secțiunea ${b("Notițe")} de pe Azi ține ce nu trebuie uitat (de exemplu „De comandat folie de sterilizare”, „Sunați laboratorul pentru lucrarea doamnei P.”). Scrieți notița, alegeți clinica (sau amândouă) și apăsați ${b("Adăugați")}. O vede toată echipa. Când e gata, bifați-o: rămâne tăiată până seara, apoi dispare. O notiță o poate șterge cine a scris-o sau un administrator.</p>
 <p>La ${b("Finalizat")}, pacientul intră singur pe lista de rechemări pentru control (de obicei peste 6 luni; 3 luni la parodontologie, o lună la ortodonție), dacă nu are deja o rechemare sau o programare viitoare.</p>
 ${rol === "admin" ? `<p>Ca administrator, sus pe pagina Azi vedeți și ce a schimbat <strong>suportul tehnic (VITIM)</strong> în setări, până apăsați ${b("Am văzut")} (vezi capitolul despre VITIM).</p>` : ""}
 ${rol === "medic" ? sfat("Când recepția apasă „A sosit”, medicul care a cerut această notificare în Contul meu primește un mesaj.") : sfat("Când apăsați „A sosit”, medicul poate fi anunțat automat pe telefon (dacă a cerut asta în Contul meu).")}`,
@@ -389,7 +392,7 @@ ${sfat("Pe WhatsApp, un text liber pleacă doar în 24 de ore după ce pacientul
 <h3>Pagina Mesaje</h3>
 <p>Sus: <strong>mesajele primite pe WhatsApp</strong> de la pacienți (răspundeți din fișa lor, fila Mesaje). Dedesubt: jurnalul tuturor mesajelor plecate, cu starea lor (în așteptare, trimis, livrat, citit, eșuat). Un mesaj eșuat se trimite din nou cu ${b("Reîncercați acum")}; unul în așteptare (de exemplu unul scris seara, care ar pleca dimineața) pleacă imediat cu ${b("Trimiteți acum")} sau se oprește cu ${b("Nu mai trimiteți")}.</p>
 ${img("mesaje", "Mesajele primite și jurnalul mesajelor.")}
-${rol === "admin" ? "" : sfat("Dacă un pacient nu primește mesajele, verificați în fișă telefonul și canalul ales (SMS, WhatsApp sau fără mesaje).")}`,
+${rol === "admin" ? sfat("Dacă pacienții nu primesc mesaje, deschideți sus pe pagina Mesaje „Verificare: de ce nu primesc pacienții mesaje?”: arată dacă trimiterea reală și SMSLink sunt pornite, câte mesaje au plecat și câte au eșuat în ultimele 24 de ore (cu eroarea), dacă rulează Cron Job-ul, ce pleacă singur și, pentru fiecare programare nouă fără SMS, de ce.") : sfat("Dacă un pacient nu primește mesajele, verificați în fișă telefonul și canalul ales (SMS, WhatsApp sau fără mesaje).")}`,
 });
 
 export const chat = (rol) => ({
@@ -567,7 +570,7 @@ export const utilizatori = () => ({
 <p>${b("Utilizatori")} (doar VITIM) arată conturile, cu rolul și clinicile fiecăruia.</p>
 ${img("utilizatori", "Conturile panoului.")}
 ${pasi([
-  `${b("Cont nou")}: numele, e-mailul (cu el intră în panou) și rolul: ${b("Recepție")}, ${b("Medic")}, ${b("Administrator")}, ${b("Administrator medic")} sau ${b("Suport tehnic (VITIM)")}.`,
+  `${b("Cont nou")}: numele, e-mailul (cu el intră în panou) și rolul: ${b("Recepție")}, ${b("Medic")}, ${b("Administrator")}, ${b("Administrator medic")}, ${b("Asistent(ă) medical(ă)")} sau ${b("Suport tehnic (VITIM)")}.`,
   "Bifați clinicile în care lucrează persoana (administratorii și VITIM le văd pe amândouă).",
   `Pentru un administrator medic bifați doar clinicile lui (de exemplu Cristești și Luduș, sau doar Luduș): vede pacienții, calendarul și rapoartele doar de acolo.`,
   `Pentru un medic sau un administrator medic, alegeți ${b("Profilul de medic")}: programările lui apar la el și primește notificările lor. La administratorul medic profilul e obligatoriu.`,
@@ -579,6 +582,7 @@ ${sfat("„Registru separat”: ce adaugă și ce încasează contul (de exemplu
 ${tabel(["Rolul", "Pe scurt"], [
   ["Recepție", "Lucrul zilnic, fără anamneza completă și fără administrare."],
   ["Medic", "Fișa completă, odontograma, planurile, implanturile, consultația cu AI."],
+  ["Asistent(ă) medical(ă)", "Calendarul, pacienții și fișa medicală la clinicile bifate, sterilizarea și etichetele plicurilor, notițele. Fără încasări și fără administrare."],
   ["Administrator", "Tot ce ține de clinică: rapoarte, prețuri, echipă, marketing, GDPR, jurnal. Nu vede Setările și Utilizatorii cât timp există un cont VITIM activ."],
   ["Administrator medic", "Tot ce are administratorul, plus tot ce are medicul: consultații (și cu AI), anamneza, odontograma, planurile, notele, implanturile. Programările noi făcute de el se pun implicit la el."],
   ["Suport tehnic (VITIM)", "Tot, plus Setările și Utilizatorii. Ce schimbă ajunge la administrator."],
@@ -599,7 +603,9 @@ ${tabel(["Chenarul", "Ce setați"], [
   ["Serviciile", "Ce face medicul: Nu / Da / Da, și apare la „Cine vă tratează” pe pagina serviciului. Pe site, la programare, un motiv se oferă doar medicilor care fac acel serviciu."],
 ])}
 ${img("medic-program", "Programul pe zile, cu pauza, la fiecare clinică.")}
-${sfat("Lăsați goale zilele în care medicul nu lucrează la acea clinică. Fără program, medicul nu primește programări de pe site, dar recepția îl poate programa normal. Concediile și cursurile se pun la Absențe și zile libere, nu aici.")}`,
+${sfat("Lăsați goale zilele în care medicul nu lucrează la acea clinică. Fără program, medicul nu primește programări de pe site, dar recepția îl poate programa normal. Concediile și cursurile se pun la Absențe și zile libere, nu aici.")}
+<h3>Asistentele</h3>
+<p>Sub medici, ${b("Asistentele")}: ${b("Asistentă nouă")}, numele, rândul de sub nume (de exemplu „Asistentă medicală”), clinicile, fotografia și „Apare pe site”. Pe site apar pe pagina Echipa, sub medici; în calendar și la programare nu apar. Contul de panou al unei asistente îl face VITIM la Utilizatori, cu rolul „Asistent(ă) medical(ă)”.</p>`,
 });
 
 export const sterilizare = () => ({

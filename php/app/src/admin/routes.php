@@ -109,6 +109,7 @@ $routes = [
     '#^/admin/servicii/([a-z0-9-]+)$#' => ['servicii-pagina', 'admin'],
     '#^/admin/fotografii$#' => ['fotografii', 'admin'],
     '#^/admin/echipa$#' => ['echipa', 'admin'],
+    '#^/admin/echipa/asistent/(nou|\d+)$#' => ['asistent', 'admin'],
     '#^/admin/echipa/(nou|\d+)$#' => ['medic', 'admin'],
     '#^/admin/utilizatori$#' => ['utilizatori', 'config'],
     '#^/admin/utilizatori/(nou|\d+)$#' => ['utilizator', 'config'],

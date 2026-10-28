@@ -42,6 +42,19 @@ foreach ($rows as $i => $r) {
         . $arrow($id, 'sus', 'Mai sus: ' . $r['public_name'], 'chevron-up', $i === 0)
         . $arrow($id, 'jos', 'Mai jos: ' . $r['public_name'], 'chevron-down', $i === $last) . '</div></li>';
 }
+// The assistants: on the site's team page (when shown), not in the calendar or at booking.
+$assistantItems = '';
+foreach (db_all('SELECT * FROM team_assistants ORDER BY sort_order, last_name, id') as $a) {
+    $assistantItems .= '<li><a href="/admin/echipa/asistent/' . (int) $a['id'] . '" class="flex items-center gap-4 rounded-panou border border-linie bg-suprafata p-3 hover:underline">'
+        . '<span class="relative block aspect-[4/5] w-16 shrink-0 overflow-hidden rounded-foto bg-menta-pal">' . ($a['photo_path'] ? '<img src="' . e((string) $a['photo_path']) . '" alt="" class="absolute inset-0 size-full object-cover">' : '<span class="flex size-full items-center justify-center font-display text-h3">' . e(mb_substr($a['first_name'], 0, 1) . mb_substr($a['last_name'], 0, 1)) . '</span>') . '</span>'
+        . '<span class="min-w-0"><span class="block text-h3 font-semibold">' . e(trim($a['first_name'] . ' ' . $a['last_name'])) . '</span><span class="block text-mic text-discret">' . e($a['role_line']) . '</span>'
+        . ((int) $a['public_visible'] === 0 ? '<span class="mt-1 inline-block rounded-chip bg-adancit px-2 text-mic">Nu apare pe site</span>' : '') . '</span></a></li>';
+}
+$assistantsBox = '<div class="mt-10 max-w-3xl"><div class="mb-3 flex flex-wrap items-end justify-between gap-3"><div><h2 class="text-h3 font-semibold">Asistentele</h2>'
+    . '<p class="text-mic text-discret">Apar pe pagina Echipa a site-ului, sub medici (dacă e bifat). Nu apar în calendar și la programare. Contul lor de panou îl face VITIM la Utilizatori, cu rolul „Asistent(ă) medical(ă)”.</p></div>'
+    . '<a href="/admin/echipa/asistent/nou" class="' . e(btn('secondary')) . '">' . icon('plus', 18) . 'Asistentă nouă</a></div>'
+    . ($assistantItems !== '' ? '<ul class="grid gap-3">' . $assistantItems . '</ul>' : '<p class="rounded-panou border border-dashed border-linie p-4 text-corp text-discret">Nicio asistentă încă.</p>') . '</div>';
 $body = admin_header('Echipa', 'Medicii de pe site: portretul, numele, specialitatea, descrierea și serviciile fiecăruia. Cu săgețile schimbați ordinea: așa apar pe site, în calendar și la programare.', '<a href="/admin/echipa/nou" class="' . e(btn('primary')) . '">' . icon('plus', 18) . 'Adăugați un medic</a>')
-    . '<ol class="grid max-w-3xl gap-3">' . $items . '</ol>';
+    . '<ol class="grid max-w-3xl gap-3">' . $items . '</ol>'
+    . $assistantsBox;
 admin_page('Echipa', $body, $user);

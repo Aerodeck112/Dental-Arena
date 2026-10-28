@@ -790,3 +790,23 @@ din copia bazei de date nu mai pot fi citite.
 - Setări (administratori, jos pe pagină): autoclavele, programele, conținuturile obișnuite,
   valabilitatea, înălțimea etichetei. Migrarea `027_sterilization.sql`.
 
+
+## Mesajele care nu ajung, Încasat azi, Notițe, asistentele (octombrie 2026)
+
+- **Mesaje (meniu) → „Verificare: de ce nu primesc pacienții mesaje?”** (administratori): modul
+  de trimitere, contul SMSLink, ultimele 24 de ore (trimise / eșuate, cu erorile; un mesaj care
+  așteaptă cu o eroare a eșuat și se reîncearcă), coada blocată, Cron Job-ul, ce evenimente pleacă
+  singure pe telefon, clinicile cu confirmarea la final de zi și, pentru programările din ultimele
+  24 de ore, de ce nu a plecat SMS-ul (eroarea SMSLink, probă, fără mobil românesc, „fără mesaje”,
+  final de zi, programare de azi). Se deschide singură când ceva nu e în regulă.
+- **Azi → Încasat azi**: aceeași sumă ca în Casa pentru clinica aleasă și ziua de azi (plățile
+  procedurilor din registrul contului, plus încasările pe facturi la cine are facturarea), cu
+  numerarul separat și link la Casa.
+- **Azi → Notițe**: ce nu trebuie uitat, pentru o clinică sau pentru amândouă; le vede toată
+  echipa, se bifează când sunt gata (rămân vizibile până la sfârșitul zilei), le șterge autorul sau
+  un administrator.
+- **Rolul „Asistent(ă) medical(ă)”** (Utilizatori, VITIM): calendarul, pacienții și fișa medicală
+  la clinicile bifate, sterilizarea, notițele; fără încasări și fără administrare.
+- **Echipa → Asistentele**: numele, rândul de sub nume, clinicile, fotografia și „Apare pe site”;
+  pe site, pe pagina Echipa, sub medici. Nu apar în calendar și la programare. Migrarea
+  `028_notes_assistants.sql` (tabelele `team_notes`, `team_assistants`).
