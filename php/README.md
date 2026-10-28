@@ -1,0 +1,220 @@
+# Dental Arena, versiunea PHP (pentru cPanel fără Node.js)
+
+The public site and the admin panel in plain PHP 8.1+ with MySQL, no framework and no Composer,
+so it runs on any cPanel shared hosting. The markup, texts and design are the same as the
+Next.js version in `src/`; the texts are exported from `src/content` at build time.
+
+## Layout
+
+```
+php/
+  public/              → public_html on the server (document root)
+    index.php          front controller (finds ../dentalarena)
+    .htaccess          rewrites to index.php, HTTPS, caching
+    assets/site.js     the public site's JavaScript (vanilla, no build)
+    assets/site.css    BUILT: Tailwind from src/app/globals.css + the PHP templates
+    assets/fonts/      BUILT
+    images/, brand/    BUILT: photos as WebP in several widths
+    media/             photos uploaded from the panel (created at runtime)
+  app/                 → dentalarena/ on the server, NEXT TO public_html (not web-accessible)
+    bootstrap.php      loads config.php, src/*.php, templates/components.php
+    config.php         written by the installer (/admin/instalare); never committed. Its `secret`
+                       is also the CNP encryption key: losing it makes stored CNPs unreadable
+    cron.php           CLI only (cPanel Cron Jobs, hourly): e-mail reminders + old-request purge
+    data/*.json        BUILT: content.json (texts), seed.json, icons.json, art.json, images.json
+    migrations/*.sql   applied in order by migrate()
+    src/               helpers.php, db.php, content.php, images.php, seo.php, mail.php, auth.php,
+                       repo.php, forms.php, routes.php, install.php, sitemap.php, admin/
+    templates/
+      layout.php       render_page($body, $meta, $jsonLd, $chrome = true), capture(fn)
+      components/      ui.php, chrome.php, blocks.php, fields.php (shared; see below)
+      pages/*.php      one file per public page; routes.php requires it
+      admin/*.php      the panel's pages
+```
+
+## Build
+
+- `npm run build:php` → data JSON, CSS, fonts, images.
+- `node scripts/php/build.mjs --css` → only the stylesheet (run it after adding Tailwind classes).
+- `npm run build:php:zip` → `deploy/dentalarena-php.zip` (public_html/ + dentalarena/).
+
+Tailwind scans `php/app/templates`, `php/app/src` and `php/public/assets/*.js`. Write class names
+literally (no string concatenation of partial class names), as in the Next.js components.
+
+## Conventions
+
+- `declare(strict_types=1);` in every file. PHP 8.1 compatible: no `readonly` classes, no DNF types.
+- Escape every value with `e()`. Build class lists with `cn(...)`.
+- A page template computes its data, captures its HTML with `capture(function () use (...) { ?> … <?php })`,
+  then calls `render_page($body, page_meta([...]), json_ld(...))`.
+- Same markup and classes as the matching Next.js component/page (reference HTML of the running
+  Next site was saved per page); dynamic data comes from the helpers below.
+
+### Helpers you can use
+
+| Where | Function |
+|---|---|
+| helpers.php | `e`, `cn`, `site_url`, `absolute_url`, `asset`, `post`, `query`, `is_post`, `redirect`, `flash`, `take_flash`, `csrf_field`, `csrf_check`, `format_lei`, `format_phone`, `tel_href`, `format_date`, `format_datetime`, `slugify`, `parse_lei`, `lei_input`, `request_path`, `is_test_site` |
+| db.php | `db()`, `db_all`, `db_one`, `db_value`, `db_run`, `db_insert`, `db_update`, `db_tx`, `now_sql`, `migrate` |
+| content.php | `content('home.hero.lead')`, `service_content($slug)`, `service_slugs()`, `clinics()` (by slug: name, shortName, street, city, county, postalCode, phone, email, hoursText, area, mapsLink, mapsEmbed, photo, directionsPhoto?, id), `clinic_address`, `setting($k)`, `setting_save`, `legal_values()`, `fill_legal` |
+| repo.php | `catalog()` (by slug: id, slug, name, summary, prices[], representative), `public_price`, `prices_by_code`, `public_doctors()`, `public_doctor_by_slug`, `doctors_for_category($slug)`, `site_image($slot)`, `doctor_photo($d)` |
+| images.php | `photo($image, $sizes, $priority, $class, $position)` (fills a `relative` frame), `photo_static(...)`, `photo_sources`, `html_attrs`, `save_uploaded_photo($_FILES[x], $prefix)`, `delete_media` |
+| seo.php | `page_meta([...title, description, path, image?, absoluteTitle?, noindex?])`, `json_ld(...$blocks)`, `breadcrumb_ld`, `dentist_ld`, `organization_ld`, `service_ld`, `faq_ld`, `physician_ld` |
+| ui.php | `CONTAINER`, `icon($name, $size, $class, $label)`, `art($name, $class)`, `logo(...)`, `btn($variant, $size, $class)`, `phone_link($clinic, $class, $innerHtml)`, `booking_href([...])` |
+| blocks.php | `service_hero([...])`, `booking_band(...)`, `service_grid(...)`, `clinic_cards(...)`, `price_table($prices, $label, $class)` (returns string), `doctor_portrait`, `doctor_figure` (return strings), `comfort_note()` (string), `phone_link_full(...)` |
+| fields.php | `text_field`, `text_area`, `select_field`, `radio_group`, `checkbox_field`, `error_summary($errors)`, `success_panel`, `submit_button`, `input_classes` |
+| forms.php | `bot_fields()`, `submit_lead('programare'|'contact')`, `TIME_WINDOWS`, `COMFORT_LABELS`, `LEAD_STATUS`, `purge_old_leads()` |
+| admin/billing.php | `PAYMENT_METHODS`, `next_sequence` (gap-free numbers, inside `db_tx`), `line_totals`, `invoice_totals`, `line_problems`, `payment_state`, `open_amount`, `lei`, `amount_2d`, `patient_balance`, `invoice_candidates`, `create_invoice`, `insert_payment`, `cancel_invoice`, `cancel_payment`, `payments_table`, `invoices_table`, `lei_in_words` |
+| admin/clinical.php | plans (`PLAN_STATUS`, `PLAN_TRANSITIONS`, `ITEM_TRANSITIONS`, `plan_totals`, `service_select`), odontogram (`TOOTH_KINDS`, `superseded_ids`, `odontogram_svg`), documents (`save_document`, `documents_dir`), consents (`CONSENT_TYPES`, `consent_text`), GDPR (`patient_export`, `anonymize_patient`), `patient_header` (the file's tabs), `print_page`, `seller_block`, `audit_label` |
+| admin/lib.php | `csv_download`, `csv_lei`, `admin_period`, `admin_url`, `admin_section_open`, … |
+| admin/crm.php | `APPT_STATUS`, `APPT_NEXT`, `RECALL_STATUS`, `HISTORY_FLAGS`, `can_see_clinical`, `cnp_valid`, `cnp_encrypt`/`cnp_decrypt`/`cnp_hash`/`cnp_masked`, `patient_name`, `patient_scope_sql`, `find_or_create_patient`, `medical_alerts`, `alert_chips`, `doctors_at`, `current_clinic_id`, `appointment_conflicts`, `can_see_appointment`, `set_appointment_status`, `send_due_reminders` |
+| auth.php | `can($permission)` (`PERMISSIONS`: medical, plans.manage, billing, billing.cancel, documents.delete, reports.finance, gdpr, audit), `current_user`, `require_login($adminOnly)`, `is_admin`, `allowed_location_ids`, `attempt_login`, `logout`, `set_password`, `password_problem`, `audit`, `ROLES` |
+
+## Local test environment
+
+Apache + PHP 8.1 + MariaDB in Docker (what a typical cPanel runs):
+the site at http://127.0.0.1:8081, panel at /admin (admin@dentalarena.ro / ParolaTest-2026),
+installed in test mode (e-mails go to `php/app/storage/logs/app.log`).
+
+## CRM (stage 2)
+
+`migrations/002_crm.sql` adds `doctor_locations`, `patients`, `medical_histories`, `appointments`,
+`patient_notes`, `recalls`, `users.doctor_id`, `leads.patient_id/appointment_id`. Access rules:
+
+- every query on patients/appointments goes through `patient_scope_sql()` / `can_see_appointment()`
+  (the user's clinics from `allowed_location_ids()`); another clinic's record is a 404;
+- the full anamnesis and clinical notes only for `can_see_clinical()` (admin, medic); reception
+  sees `medical_alerts()` only;
+- the CNP is stored AES-256-GCM encrypted (`cnp_enc`) with an HMAC (`cnp_hash`) for duplicates.
+
+Reminders: `send_due_reminders()` mails tomorrow's appointments between 10:00 and 21:00 (only those
+booked more than 18 h ahead), from `cron.php` and, as a fallback, from `maybe_send_reminders()` on
+panel visits (at most every 15 minutes).
+
+## Billing and the clinical file (stage 3)
+
+`migrations/003_billing_clinical.sql`: `number_sequences`, `invoices`, `invoice_items`, `payments`,
+`treatment_plans`, `treatment_plan_items`, `tooth_conditions`, `patient_documents`, `consents`,
+`data_requests`, `patients.anonymized_at`, `audit_log.patient_id`.
+
+- Money is integer bani everywhere; totals are computed in `billing.php` and stored. Invoice and
+  receipt numbers come from `next_sequence()` inside the issuing transaction (no gaps). Issued
+  invoices are cancelled, never deleted; cancelling detaches the payments (credit on account).
+- A tooth finding is never edited: a new one resolves the ones it supersedes (history stays).
+- Patient files are stored in `storage/documente/` (random names, MIME checked with finfo) and
+  served by `/admin/documente/{id}` after the patient-scope check.
+- Routes declare who may open them (`null`, `'admin'` or a permission) in `src/admin/routes.php`;
+  every page re-checks the patient or clinic scope.
+
+## Messages and AI (stage 4)
+
+`migrations/004_messages_ai.sql`: `messages` (the queue and the log, both directions), `campaigns`,
+`ai_sessions`, staff `phone`/`notify_prefs`, patient `phone_channel` and per-channel marketing
+consent, `leads.marketing_ok`.
+
+- `src/notify.php` (loaded everywhere): `PATIENT_EVENTS` / `STAFF_EVENTS` (texts, defaults, WhatsApp
+  template parameter order), `notify_patient`, `notify_staff`, `notify_appointment`,
+  `notify_contact`, `queue_message`, `process_message_queue` (claims rows, 3 tries),
+  `send_queue_after_response` (after `fastcgi_finish_request`), `smslink_send`, `whatsapp_send`
+  (Cloud API: templates, or free text inside the 24 h window), `whatsapp_webhook` (signature
+  checked with the App Secret), `run_daily_jobs`, `secret_seal`/`secret_open` for stored keys.
+  In „probă” mode nothing leaves the server.
+- `src/admin/ai.php`: the AI consultation through the official Anthropic PHP SDK
+  (`composer.json`, installed into `vendor/` by `npm run build:php:zip`), model `claude-opus-5-5`,
+  structured output (`ai_schema()`), server-side refusal fallback, the name/CNP/phone removed
+  before sending (`ai_pseudonymize`). The browser does the speech-to-text (Web Speech API, ro-RO).
+- Public routes: `/webhook/whatsapp`, `/d/{token}` (unsubscribe from marketing).
+
+## Tablet signing and the site's AI chat (stage 5)
+
+`migrations/005_tablet_chat.sql`: `kiosk_devices`, `consent_sessions`, `patient_forms`,
+`consents.text_snapshot/session_id/signed_at/integrity_hash`, `doctor_locations.schedule`,
+`chat_conversations`, `chat_messages`.
+
+- `src/admin/kiosk.php` + `src/tablet.php` (`/tableta`, `/tableta/semnare`, `/tableta/gata`,
+  `assets/tableta.js`): a tablet is paired from `/admin/tablete` (random token in an httpOnly
+  cookie, only its hash stored; the admin session ends on the tablet). Reception makes a 6-digit,
+  single-use, 30-minute code (`consent_session_create`); the signature PNG is checked for ink
+  (`signature_has_ink`, GD), stored as a patient document, and each consent keeps the exact text
+  and `integrity_hash = sha256(patient|type|text|sha256(png)|signed_at|device)`, verified on
+  `/admin/pacienti/{id}/acord/{type}?semnat={id}`. The questionnaire becomes a `patient_forms`
+  row that a doctor applies (`apply_history_form`, additive) or sets aside.
+- `src/booking.php`: `schedule_decode`/`schedule_text`, `ro_holidays($year)` (Orthodox Easter by
+  Meeus + 13 days), `free_slots([...])` (schedule − active appointments of the doctor at any clinic
+  − holidays − notice; spread over the day), `slot_check($id)` (re-validates a slot id
+  `YmdHi-location-doctor`), `book_slot()` (MySQL `GET_LOCK` per doctor, patient by phone or new,
+  appointment `programat`, lead kind `chat`, notices). `CHAT_DEFAULTS`/`chat_settings()`.
+- `src/chat.php` (`/api/chat`, `assets/chat.js`): Claude through the SDK with four tools
+  (`cauta_ore_libere`, `trimite_cod_sms` only in direct mode, `programeaza`, `cere_apel`), all
+  validated server-side; thinking/tool blocks are stored as wire JSON and sent back unchanged;
+  the system prompt (rules + clinic data) is cached, the date goes in a second block. Limits: 30
+  turns, 1000 chars, 12 new conversations per IP per day, a daily cap, 4 bookings per IP per day,
+  OTP 10 min / 5 tries / 3 SMS per hour, one request at a time per conversation (`GET_LOCK`).
+  JSON-only POST with an Origin check (no CSRF token needed). Conversations purge after
+  `retention_days`.
+- Admin: `/admin/tablete`, `/admin/setari/chat`, `/admin/chat`, `/admin/chat/{id}`; doctor
+  schedules in `/admin/echipa/{id}`.
+- `php php/tests/run.php`: holidays, schedules, the ink check and the SDK contract the chat needs
+  (runs in CI after the build). For local end-to-end tests without network, `config.php` may set
+  `'ai_test_transport' => '/path/fake.php'` (a file returning a PSR-18 client); never in production.
+
+## Doctors' daily programme (migration 006)
+
+`doctors.phone/email/agenda_channel/agenda_time/agenda_alerts`, `messages.doctor_id`. In
+`notify.php`: `doctor_agenda`, `agenda_vars` (one-line `lista` ≤ 800 chars for the WhatsApp
+template, `linii` for e-mail), `agenda_recipients` (the doctor's own contact + accounts that chose
+`staff-agenda`, one per phone/e-mail), `send_doctor_agenda` (template → free text inside the 24 h
+window → SMS), `send_agendas` (from `run_daily_jobs` on every cron tick: once a day per doctor,
+from `agenda_time` until the last appointment), `notify_doctor_today` (same-day changes after the
+programme went out). `count_ro()` in helpers.php.
+
+## Online booking and days off (migration 007)
+
+`time_off` (doctor and/or clinic, `ends_at` exclusive), `rate_limits`; `doctors.accepts_online`;
+`services.duration_minutes/bookable_online/online_label/online_hint/urgent`;
+`appointments.source/service_id/token_version/confirmed_via/cancelled_by`; `leads.idempotency_key`.
+In `booking.php`: `booking_settings()` (setting `programare_online`), `schedule_decode` with an
+optional break, `time_off_between/applies/label`, `free_slots` (step grid, notice, horizon, buffer,
+breaks, time off, holidays online only; slot id `YmdHi-loc-doc-minutes`), `slot_check`, `book_slot`
+(lead + patient + appointment under a per-doctor `GET_LOCK`), `schedule_warnings`, `rate_hit`,
+`booking_reasons`, `GET /api/sloturi`. Patient link `/p/{token}` (+ `/ics`): `appointment_token`
+(HMAC, expires 24 h after the start, ends when `token_version` changes). Pages: `pages/programare.php`
+(wizard + `assets/programare.js`, request form without JS), `programare-confirmare.php`,
+`link-programare.php`; admin `absente.php`, `setari-programari.php`. `patient_by_phone_name()` in
+crm.php: same phone and a name in common.
+
+## The technical account and the money part (migration 008)
+
+Role `tehnic` (ROLES): `is_admin()` is true for it too; `is_tech()`, `can_configure()` (VITIM, or an
+administrator while no active `tehnic` account exists) guards the routes and menu entries marked
+`'config'` (settings, accounts, tablets, updates). `can()` always allows `tehnic` and refuses
+`FINANCE_PERMISSIONS` while `finance_on()` (setting `modul_financiar`, Setări → Module) is false.
+VITIM's changes: `tech_changes()`, `tech_change_line()`, `send_tech_digest()` (clinical.php, from
+`run_daily_jobs` once VITIM has been quiet 10 minutes, marker setting `vitim_rezumat_pana`), the card on
+„Azi” (`users.changes_seen_id`). Settings pages audit `changes_text($old, $new, $labels)`.
+
+## Calendar, pipeline, patients (migrations 009–010)
+
+009: `locations.hours_json/cabinets/sedation_units`, `doctor_locations.cabinet`, `appointments.cabinet`.
+`location_hours()` cuts doctors' hours in `free_slots`; `appointment_checks()` (booking.php) is the one
+conflict check (block: time off; warn: past, doctor/patient overlap, outside hours, cabinet, sedation
+units). `POST /admin/calendar/muta` (calendar-muta.php, JSON; drag/resize in admin.js, undo, patient
+notice delayed 2 min, `drop_pending_reminder`). `APPT_BACK`, `set_appointment_status()` returns a note
+and calls `auto_recall()` on finish. 010: `leads.assigned_to/lost_reason`, `lead_activities`
+(`lead_log`, `lead_handlers`), `tags`/`patient_tags` (`TAG_CLASSES`), `patient_notes.pinned/updated_at`,
+`patients.guardian_patient_id`, `implant_cases` (`IMPLANT_STAGES`, `implant_set_stage`, /admin/implanturi),
+`users.session_version` (`end_all_sessions`, checked in `current_user`) and `users.theme` (`PANEL_THEMES`).
+`possible_duplicates()` (crm.php) for requests and new files; `patient_by_phone_name()` matches the first name.
+
+## Updating from the panel
+
+`src/admin/update.php` + `/admin/actualizare` (administrators). The package from
+`npm run build:php:zip` (with `dentalarena/VERSION`, stamped by the build) is uploaded in 1 MB
+pieces (`?op=bucata`, CSRF in a header), checked (`zip_raw_names` reads the central directory
+itself, so `../`, absolute or foreign paths are refused whatever library unpacks it; the key files
+must be there), unpacked (ZipArchive, or PharData without the zip extension), and applied by
+`update_apply`: every target must be writable first, then a folder copy of the running version
+(`storage/actualizari/copie-*`, last 3 kept), a lock that shows „Actualizăm site-ul” on public
+pages, the copy (`config.php`, `storage/`, `public_html/media` never touched; cPanel's handler
+block in `.htaccess` kept), `opcache_reset`, and the migrations on the next request. A copy is put
+back the same way (`update_restore`). Files removed in a new version are not deleted.
