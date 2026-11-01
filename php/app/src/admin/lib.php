@@ -277,6 +277,88 @@ function csv_download(string $filename, array $headers, array $rows): never
     exit;
 }
 
+/**
+ * Sends a real Excel file (.xlsx, one sheet) and stops. Built here, without the zip extension.
+ * A cell is a string, a number, null, or ['v' => value, 's' => style]; styles: 'b' bold text,
+ * 'lei' amount (the value in bani), 'lei-b' bold amount, 'data' a Y-m-d date.
+ *
+ * @param list<list<mixed>> $rows
+ * @param list<float> $widths the columns' widths (in characters)
+ */
+function xlsx_download(string $filename, string $sheet, array $rows, array $widths = []): never
+{
+    $styles = ['' => 0, 'b' => 1, 'lei' => 2, 'lei-b' => 3, 'data' => 4];
+    $col = static function (int $i): string {
+        $s = '';
+        for ($i++; $i > 0; $i = intdiv($i - 1, 26)) {
+            $s = chr(65 + ($i - 1) % 26) . $s;
+        }
+        return $s;
+    };
+    $x = static fn (string $v) => htmlspecialchars(preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F]/', '', $v), ENT_XML1 | ENT_QUOTES, 'UTF-8');
+    $data = '';
+    foreach (array_values($rows) as $r => $cells) {
+        $data .= '<row r="' . ($r + 1) . '">';
+        foreach (array_values($cells) as $c => $cell) {
+            $style = is_array($cell) ? ($cell['s'] ?? '') : '';
+            $v = is_array($cell) ? ($cell['v'] ?? null) : $cell;
+            if ($v === null || $v === '') {
+                continue;
+            }
+            $ref = $col($c) . ($r + 1);
+            $si = $styles[$style] ?? 0;
+            if ($style === 'data' && preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $v)) {
+                $serial = (int) ((strtotime($v . ' 00:00:00 UTC') - strtotime('1899-12-30 00:00:00 UTC')) / 86400);
+                $data .= '<c r="' . $ref . '" s="' . $si . '"><v>' . $serial . '</v></c>';
+            } elseif (str_starts_with($style, 'lei')) {
+                $data .= '<c r="' . $ref . '" s="' . $si . '"><v>' . number_format((int) $v / 100, 2, '.', '') . '</v></c>';
+            } elseif (is_int($v) || is_float($v)) {
+                $data .= '<c r="' . $ref . '" s="' . $si . '"><v>' . $v . '</v></c>';
+            } else {
+                $data .= '<c r="' . $ref . '" s="' . $si . '" t="inlineStr"><is><t xml:space="preserve">' . $x((string) $v) . '</t></is></c>';
+            }
+        }
+        $data .= '</row>';
+    }
+    $cols = '';
+    foreach ($widths as $i => $w) {
+        $cols .= '<col min="' . ($i + 1) . '" max="' . ($i + 1) . '" width="' . (float) $w . '" customWidth="1"/>';
+    }
+    $ns = 'xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"';
+    $files = [
+        '[Content_Types].xml' => '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>',
+        '_rels/.rels' => '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>',
+        'xl/workbook.xml' => '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook ' . $ns . '><sheets><sheet name="' . $x(mb_substr(preg_replace('#[\\\\/?*\[\]:]#', ' ', $sheet), 0, 31)) . '" sheetId="1" r:id="rId1"/></sheets></workbook>',
+        'xl/_rels/workbook.xml.rels' => '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>',
+        'xl/styles.xml' => '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="164" formatCode="dd.mm.yyyy"/></numFmts><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="5"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="4" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="4" fontId="1" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" applyFont="1"/><xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>',
+        'xl/worksheets/sheet1.xml' => '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet ' . $ns . '>' . ($cols !== '' ? "<cols>{$cols}</cols>" : '') . '<sheetData>' . $data . '</sheetData><pageSetup orientation="landscape" fitToHeight="0"/></worksheet>',
+    ];
+    $zip = zip_build($files);
+    header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    header('Content-Disposition: attachment; filename="' . preg_replace('/[^a-z0-9._-]+/i', '-', $filename) . '"');
+    header('Content-Length: ' . strlen($zip));
+    header('Cache-Control: no-store');
+    echo $zip;
+    exit;
+}
+
+/** A zip archive (deflated) of name => content, in memory. */
+function zip_build(array $files): string
+{
+    $out = '';
+    $central = '';
+    [$time, $date] = [((int) date('H') << 11) | ((int) date('i') << 5) | intdiv((int) date('s'), 2), (((int) date('Y') - 1980) << 9) | ((int) date('n') << 5) | (int) date('j')];
+    foreach ($files as $name => $content) {
+        $deflated = function_exists('gzdeflate') ? gzdeflate($content, 6) : false;
+        [$method, $body] = $deflated !== false ? [8, $deflated] : [0, $content];
+        $crc = crc32($content);
+        $head = pack('vvvvvVVVvv', 20, 0x0800, $method, $time, $date, $crc, strlen($body), strlen($content), strlen($name), 0);
+        $central .= pack('V', 0x02014b50) . pack('v', 20) . $head . pack('vvvVV', 0, 0, 0, 0, strlen($out)) . $name;
+        $out .= pack('V', 0x04034b50) . $head . $name . $body;
+    }
+    return $out . $central . pack('VvvvvVVv', 0x06054b50, 0, 0, count($files), count($files), strlen($central), strlen($out), 0);
+}
+
 /** „1250,50” for CSV cells (no thousands separator, comma decimals). */
 function csv_lei(int $bani): string
 {

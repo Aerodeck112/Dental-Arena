@@ -21,7 +21,8 @@ $loc = $loc !== null && in_array($loc, $allowed, true) ? $loc : ($allowed[0] ?? 
 if ($loc !== null) {
     remember_clinic($loc);
 }
-$mine = query('cine') === 'eu';
+// A doctor sees only what they took themselves.
+$mine = query('cine') === 'eu' || $user['role'] === 'medic';
 $scope = proc_scope($user, query('registru'));
 $ledgers = ledger_users();
 
@@ -70,9 +71,10 @@ $filters = '<form method="get" class="mb-6 grid gap-4 rounded-panou border borde
     . text_field('ziua', 'Ziua', ['type' => 'date', 'value' => $day, 'max' => $today, 'min' => $hist])
     . (count($allowed) > 1 ? select_field('clinica', 'Clinica', $clinicOptions, ['value' => (string) $loc]) : '<input type="hidden" name="clinica" value="' . (int) $loc . '">')
     . (is_admin($user) && $ledgers !== [] ? select_field('registru', 'Registrul', ['' => 'Toate registrele', 'comun' => 'Registrul comun'] + array_combine(array_map('strval', array_keys($ledgers)), array_map(static fn ($id) => ledger_label((int) $id), array_keys($ledgers))), ['value' => query('registru')]) : '')
-    . select_field('cine', 'Încasate de', ['' => 'Toată echipa', 'eu' => 'Doar de mine'], ['value' => $mine ? 'eu' : ''])
+    . ($user['role'] === 'medic' ? '' : select_field('cine', 'Încasate de', ['' => 'Toată echipa', 'eu' => 'Doar de mine'], ['value' => $mine ? 'eu' : '']))
     . '<div class="flex gap-2"><button type="submit" class="' . e(btn('primary')) . '">Arătați</button>'
-    . '<button type="button" data-tipareste class="' . e(btn('secondary')) . '">' . icon('printer', 18) . 'Tipăriți</button></div></form>';
+    . '<button type="button" data-tipareste class="' . e(btn('secondary')) . '">' . icon('printer', 18) . 'Tipăriți</button></div></form>'
+    . '<p class="mb-6 print:hidden"><a class="inline-flex min-h-control items-center gap-1 text-link underline underline-offset-4" href="' . e(admin_url('/admin/rapoarte/incasari', ['perioada' => 'zi', 'ziua' => $day, 'clinica' => $loc])) . '">' . icon('receipt', 16) . 'Raportul încasărilor pe proceduri și medici (PDF, Excel)</a></p>';
 $tile = static fn (string $label, int $value, string $cls = '', string $note = '') => '<div class="' . e(cn('rounded-panou border border-linie bg-suprafata p-4', $cls)) . '"><p class="text-mic text-discret">' . e($label) . '</p><p class="mt-1 font-display text-[1.75rem] leading-tight cifre">' . e(lei($value)) . '</p>' . ($note !== '' ? '<p class="mt-1 text-mic text-discret">' . e($note) . '</p>' : '') . '</div>';
 $th = 'px-3 py-2 text-left text-mic font-semibold text-discret';
 $table = static fn (string $rowsHtml) => '<div class="relative overflow-x-auto rounded-panou border border-linie bg-suprafata"><table class="w-full min-w-[40rem] border-collapse text-corp"><thead class="bg-fundal"><tr>'

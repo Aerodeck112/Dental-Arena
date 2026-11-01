@@ -414,6 +414,13 @@ export const rapoarte = (rol) => ({
   titlu: "Rapoarte",
   html: `
 <p>${b("Rapoarte")} arată cifrele unei perioade (implicit luna curentă; scurtături: ${b("Luna aceasta")}, ${b("Luna trecută")}, ${b("Anul acesta")}), pe clinică.</p>
+<h3>Raport încasări</h3>
+<p>Sus pe pagina Rapoarte, ${b("Raport încasări")} (și din ${b("Casa")}): încasările unei zile, ale unei luni sau dintre două date, câte un rând pentru fiecare procedură plătită, cu data, ora, numele și prenumele pacientului, procedura, medicul, cine a încasat, modul de plată (numerar, card, transfer) și suma, apoi totalul, totalurile pe modul de plată și pe medic.${rol === "medic" ? " Ca medic vedeți plățile pentru procedurile dumneavoastră și pe cele încasate de dumneavoastră." : ""}</p>
+${pasi([
+  `Alegeți ${b("Perioada")} (${b("O zi")} sau ${b("O lună")}; scurtături: ${b("Azi")}, ${b("Ieri")}, ${b("Luna aceasta")}, ${b("Luna trecută")}), clinica${rol === "medic" ? "" : ", medicul"}, cine a încasat sau modul de plată, și dacă îl vreți ${b("Grupat")} pe zile, pe medici sau pe proceduri (cu subtotal la fiecare). ${b("Arătați")}.`,
+  `${b("PDF / Tipăriți")} deschide raportul pe A4, pe orizontală: ${b("Tipăriți")}, iar în fereastra de tipărire alegeți imprimanta sau „Salvare ca PDF”.`,
+  `${b("Excel")} descarcă raportul ca fișier Excel (.xlsx), cu sumele ca numere (se pot aduna și filtra).`,
+])}
 ${rol === "admin" ? `<ul>
 <li><strong>Programări</strong>: pe medic, efectuate, anulate, rata neprezentărilor, câte au venit de pe site.</li>
 <li><strong>Cereri de pe site</strong>: câte au venit, pe servicii, și câte au devenit programări (conversia).</li>
@@ -497,7 +504,9 @@ ${pasi([
   `${b("Adăugați procedura")}.`,
 ])}
 ${sfat("O procedură greșită se poate modifica sau șterge din rândul ei („Modificați”), de cel care a adăugat-o, în aceeași săptămână; după aceea, de administrator. Ce se plătise pentru ea rămâne ca avans.")}` : ""}
-${rol !== "medic" ? `<h3>Încasare (recepția)</h3>
+${rol === "medic" ? `<h3>Încasare</h3>
+<p>Când pacientul plătește la dumneavoastră: în fila ${b("Proceduri și plăți")}, jos, la ${b("Încasare")}, scrieți suma, alegeți cum a plătit (numerar, card, transfer) și apăsați ${b("Înregistrați plata")}; sau, în dreptul procedurii, ${b("Schimbați")} → ${b("Încasați …")}. În ${b("Casa")} și pe pagina Azi vedeți ce ați încasat dumneavoastră, iar în ${b("Rapoarte")} → ${b("Raport încasări")} plățile pentru procedurile dumneavoastră.</p>` : ""}
+${rol !== "medic" ? `<h3>Încasare (recepția; medicii pot încasa și ei)</h3>
 ${pasi([
   `Jos, la ${b("Încasare")}: suma (e completat ce mai are de plată), data, numărul chitanței, clinica și cum a plătit (numerar, card, transfer, altă plată).`,
   `${b("Înregistrați plata")}: plata se trece pe procedurile neachitate, de la cea mai veche. Ce rămâne în plus e avans și se folosește singur la următoarea procedură.`,
@@ -581,7 +590,7 @@ ${sfat("Un cont care începe de la zero (de exemplu „Luduș 2”, pentru înca
 ${sfat("„Registru separat”: ce adaugă și ce încasează contul (de exemplu „Luduș 2”, sau un medic care facturează și încasează singur, ca Dr. Bologa) rămâne doar în contul lui, iar el nu vede registrul comun sau al altora. Poate adăuga proceduri, încasa și are Casa lui. La un medic, „Trec în registrul lui și procedurile de până acum ale medicului” îi mută și istoricul (de exemplu cel din QDental). Administratorii văd toate registrele, cu filtrul „Registrul”.")}
 ${tabel(["Rolul", "Pe scurt"], [
   ["Recepție", "Lucrul zilnic, fără anamneza completă și fără administrare."],
-  ["Medic", "Fișa completă, odontograma, planurile, implanturile, consultația cu AI."],
+  ["Medic", "Fișa completă, odontograma, planurile, implanturile, consultația cu AI; încasează și el plățile (vede în Casa ce a încasat)."],
   ["Asistent(ă) medical(ă)", "Calendarul, pacienții și fișa medicală la clinicile bifate, sterilizarea și etichetele plicurilor, notițele. Fără încasări și fără administrare."],
   ["Administrator", "Tot ce ține de clinică: rapoarte, prețuri, echipă, marketing, GDPR, jurnal. Nu vede Setările și Utilizatorii cât timp există un cont VITIM activ."],
   ["Administrator medic", "Tot ce are administratorul, plus tot ce are medicul: consultații (și cu AI), anamneza, odontograma, planurile, notele, implanturile. Programările noi făcute de el se pun implicit la el."],

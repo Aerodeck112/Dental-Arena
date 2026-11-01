@@ -152,6 +152,16 @@
       if (input.form && input.value) input.form.submit();
     });
   });
+  // Raport încasări: show the fields of the period chosen (a day, a month, from–to).
+  var perioada = document.getElementById("field-perioada");
+  if (perioada) {
+    var showPeriod = function () {
+      Array.prototype.forEach.call(document.querySelectorAll("[data-perioada]"), function (box) {
+        box.hidden = box.getAttribute("data-perioada") !== perioada.value;
+      });
+    };
+    perioada.addEventListener("change", showPeriod);
+  }
   // Print pages: the „Tipăriți” button.
   Array.prototype.forEach.call(document.querySelectorAll("[data-tipareste]"), function (b) {
     b.addEventListener("click", function () {

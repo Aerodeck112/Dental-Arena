@@ -102,6 +102,7 @@ $routes = [
     '#^/admin/incasari$#' => ['incasari', 'billing'],
     '#^/admin/incasari/(\d+)/chitanta$#' => ['chitanta', 'billing'],
     '#^/admin/rapoarte$#' => ['rapoarte', null],
+    '#^/admin/rapoarte/incasari$#' => ['raport-incasari', 'procedures.pay'],
     '#^/admin/gdpr$#' => ['gdpr', 'gdpr'],
     '#^/admin/jurnal$#' => ['jurnal', 'audit'],
     '#^/admin/servicii$#' => ['servicii', 'admin'],

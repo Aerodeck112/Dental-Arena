@@ -130,7 +130,7 @@ $body = '<p class="mb-4"><a href="/admin/utilizatori" class="inline-flex min-h-c
     . '<div class="mt-4 flex flex-col gap-6">'
     . ($self ? '<p class="text-corp">Rolul dumneavoastră: ' . e(ROLES[$acc['role']] ?? $acc['role']) . '. Nu vă puteți schimba singur rolul.</p>' : radio_group('role', 'Rolul', [
         'receptie' => ['label' => 'Recepție', 'description' => 'Vede și rezolvă cererile și programările clinicilor bifate.'],
-        'medic' => ['label' => 'Medic', 'description' => 'Vede programările și fișele clinicilor bifate.'],
+        'medic' => ['label' => 'Medic', 'description' => 'Vede programările și fișele clinicilor bifate; trece procedurile și încasările lui.'],
         'asistent' => ['label' => 'Asistent(ă) medical(ă)', 'description' => 'Calendarul, pacienții și fișa medicală (anamneză, alerte, odontogramă) la clinicile bifate, sterilizarea și etichetele plicurilor, notițele. Fără încasări și fără administrare.'],
         'admin' => ['label' => 'Administrator', 'description' => 'Vede tot ce ține de clinică: pacienți, rapoarte, prețuri, fotografii, echipa, marketing. Setările și conturile le face suportul tehnic.'],
         'admin-medic' => ['label' => 'Administrator medic', 'description' => 'Administratorul care este și medic: are tot ce are administratorul, plus partea de medic (consultații, anamneză, odontogramă, planuri, note, intervenții), dar doar la clinicile bifate. Se leagă de profilul lui de medic, mai jos.'],

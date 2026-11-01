@@ -180,6 +180,9 @@ $lostTotal = array_sum(array_map(static fn ($r) => (int) $r['n'], $lostRows));
 $sections[] = admin_section_open('De ce nu s-au programat', 'pierdute', 'Cererile închise fără programare, după motivul ales la închidere.') . $table('pierdute', ['Motivul', 'Cereri', 'Pondere'], array_map(static fn ($r) => [LEAD_LOST_REASONS[$r['lost_reason']] ?? $r['lost_reason'], (int) $r['n'], $pct((int) $r['n'], $lostTotal)], $lostRows), [], 'Nicio cerere închisă fără programare în perioadă.') . '</section>';
 
 $body = admin_header('Rapoarte', format_date($from) . ' – ' . format_date($to) . ($clinic !== null && isset($names[$clinic]) ? ' · ' . $names[$clinic] : (count($allowed) > 1 ? ' · ambele clinici' : '')) . '.')
+    . (can('procedures.pay', $user) ? '<a href="' . e(admin_url('/admin/rapoarte/incasari', ['perioada' => 'zi', 'clinica' => $clinic])) . '" class="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-panou border-2 border-actiune bg-menta-pal p-4 hover:underline">'
+        . '<span><span class="block text-h3 font-semibold">Raport încasări</span><span class="block text-corp text-discret">Pe o zi sau pe o lună: data, ora, pacientul, procedura, medicul, cine a încasat, modul de plată, suma și totalul. PDF și Excel.</span></span>'
+        . icon('chevron-right', 22) . '</a>' : '')
     . $form . $quick . $tiles
     . '<div class="flex flex-col gap-8">' . implode('', $sections) . '</div>';
 admin_page('Rapoarte', $body, $user);

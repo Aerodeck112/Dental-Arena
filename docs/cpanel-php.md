@@ -810,3 +810,19 @@ din copia bazei de date nu mai pot fi citite.
 - **Echipa → Asistentele**: numele, rândul de sub nume, clinicile, fotografia și „Apare pe site”;
   pe site, pe pagina Echipa, sub medici. Nu apar în calendar și la programare. Migrarea
   `028_notes_assistants.sql` (tabelele `team_notes`, `team_assistants`).
+
+## Raport încasări (PDF și Excel); medicii încasează (noiembrie 2026)
+
+- **Rapoarte → Raport încasări** (`/admin/rapoarte/incasari`; și din Casa): plățile pentru proceduri
+  ale unei zile, unei luni sau unui interval, câte un rând pe procedură plătită (o plată împărțită
+  pe mai multe proceduri apare pe mai multe rânduri; ce nu e încă pe o procedură apare ca avans):
+  data, ora (doar la plățile trecute în ziua lor), pacientul, procedura, medicul, cine a încasat,
+  modul de plată, suma; totalul, pe modul de plată și pe medic. Filtre: clinica, medicul, cine a
+  încasat, modul de plată, registrul (administratori); grupat pe zile, medici sau proceduri, cu
+  subtotaluri. Plățile anulate nu intră.
+- **PDF / Tipăriți** (`?pdf=1`): pagina pe A4 orizontal, cu firma și adresa clinicii; „Salvare ca
+  PDF” din fereastra de tipărire. **Excel** (`?excel=1`): un .xlsx adevărat (sumele numere, datele
+  date), făcut în PHP fără extensia zip (`xlsx_download()`, `zip_build()` în `src/admin/lib.php`).
+- **Medicii încasează**: rolul Medic are acum `procedures.pay` (Încasare în fișă, Casa). Un medic vede
+  în Casa și la „Încasat azi” doar ce a încasat el, iar în raport plățile pentru procedurile lui și
+  pe cele încasate de el.

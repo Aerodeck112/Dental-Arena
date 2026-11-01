@@ -779,7 +779,8 @@ function log_file_view(int $patientId): void
 }
 
 /** A page for printing (invoice, receipt, plan, consent): A4, no panel menu. */
-function print_page(string $title, string $body, string $back): void
+/** A page for printing (or „Salvați ca PDF”): A4, or A4 landscape and wider on screen with $wide. */
+function print_page(string $title, string $body, string $back, bool $wide = false): void
 {
     header('Content-Type: text/html; charset=utf-8');
     header('X-Robots-Tag: noindex, nofollow');
@@ -795,15 +796,15 @@ function print_page(string $title, string $body, string $back): void
 <title><?= e($title) ?></title>
 <link rel="stylesheet" href="<?= e(asset('/assets/site.css')) ?>">
 <script src="<?= e(asset(is_file(PUBLIC_DIR . '/assets/admin.min.js') ? '/assets/admin.min.js' : '/assets/admin.js')) ?>" defer></script>
-<style>@page { size: A4; margin: 14mm; } @media print { body { background: #fff; } .foaie { box-shadow: none !important; border: 0 !important; padding: 0 !important; max-width: none !important; } }</style>
+<style>@page { size: A4<?= $wide ? ' landscape' : '' ?>; margin: <?= $wide ? '10mm' : '14mm' ?>; } @media print { body { background: #fff; } .foaie { box-shadow: none !important; border: 0 !important; padding: 0 !important; max-width: none !important; } }</style>
 </head>
 <body class="bg-fundal font-sans text-cerneala print:bg-white">
-<div class="mx-auto flex max-w-[52rem] flex-wrap items-center gap-3 px-4 py-4 print:hidden">
+<div class="mx-auto flex <?= $wide ? 'max-w-[76rem]' : 'max-w-[52rem]' ?> flex-wrap items-center gap-3 px-4 py-4 print:hidden">
   <a href="<?= e($back) ?>" class="<?= e(btn('secondary', 's')) ?>"><?= icon('chevron-left', 16) ?>Înapoi</a>
   <button type="button" data-tipareste class="<?= e(btn('primary', 's')) ?>">Tipăriți</button>
   <span class="text-mic text-discret">Sau salvați ca PDF din fereastra de tipărire.</span>
 </div>
-<main class="foaie mx-auto mb-10 max-w-[52rem] rounded-panou border border-linie bg-white p-8 text-[15px] leading-relaxed shadow-sm md:p-12"><?= $body ?></main>
+<main class="foaie mx-auto mb-10 <?= $wide ? 'max-w-[76rem] text-[14px] md:p-8' : 'max-w-[52rem] text-[15px] md:p-12' ?> rounded-panou border border-linie bg-white p-8 leading-relaxed shadow-sm"><?= $body ?></main>
 </body>
 </html>
     <?php

@@ -101,6 +101,10 @@ $cashToday = $cashCash = $invoiceToday = 0;
 if ($clinicId !== null) {
     require_once APP_DIR . '/src/admin/procedures.php';
     [$lw, $lp] = proc_scope_sql(['ledger' => proc_scope($user)['ledger']], 'pp', 'paid_on');
+    if ($user['role'] === 'medic') {
+        $lw .= ' AND pp.received_by = ?';
+        $lp[] = (int) $user['id'];
+    }
     $sums = db_one("SELECT COALESCE(SUM(pp.amount), 0) AS total, COALESCE(SUM(CASE WHEN pp.method = 'numerar' THEN pp.amount END), 0) AS cash FROM procedure_payments pp WHERE pp.cancelled_at IS NULL AND pp.paid_on = ? AND pp.location_id = ?" . $lw, array_merge([$today, $clinicId], $lp));
     $cashToday = (int) $sums['total'];
     $cashCash = (int) $sums['cash'];
