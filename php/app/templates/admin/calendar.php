@@ -88,24 +88,20 @@ $relative = match (true) {
 };
 $weekday = '<p class="flex items-baseline gap-2 whitespace-nowrap" aria-live="polite"><span class="text-[1.5rem] font-semibold leading-none text-cerneala first-letter:uppercase">' . e(RO_WEEKDAYS[(int) $day->format('N') - 1]) . '</span>'
     . '<span class="' . e(cn('rounded-chip px-2 text-mic font-medium', $daysFromToday === 0 ? 'bg-actiune text-pe-actiune' : 'bg-adancit text-discret')) . '">' . e($relative) . '</span></p>';
-// The height of the rows (day view): small, medium, large; remembered on this computer.
-$sizeSwitch = $view === 'zi'
-    ? '<nav aria-label="Mărimea rândurilor" data-cal-marime class="inline-flex items-center rounded-control border border-linie-control bg-suprafata p-1"><span class="px-2 text-mic text-discret">Rânduri</span>'
-        . implode('', array_map(static fn ($px, $l) => '<button type="button" data-marime="' . $px . '" aria-pressed="' . ($px === 32 ? 'true' : 'false') . '" class="inline-flex min-h-control-s items-center rounded-[calc(var(--radius-control)-2px)] px-2.5 text-control hover:bg-adancit aria-pressed:bg-menta-pal aria-pressed:font-semibold">' . $l . '</button>', [24, 32, 44], ['Mici', 'Medii', 'Mari'])) . '</nav>'
-    : '';
-$toolbar = '<div class="mb-3 flex flex-wrap items-center gap-2">'
+$toolbar = '<div class="mb-2 flex flex-wrap items-center gap-2">'
     . (count($allowed) > 1 ? '<nav aria-label="Clinica" class="inline-flex rounded-control border border-linie-control bg-suprafata p-1">' . $clinicSwitch . '</nav>' : '')
     . '<nav aria-label="Vizualizare" class="inline-flex rounded-control border border-linie-control bg-suprafata p-1">' . $viewSwitch . '</nav>'
-    . $colSwitch . $sizeSwitch
+    . $colSwitch
     . '<div class="flex items-center gap-1">'
     . '<a href="' . e($url(['data' => $day->modify("-{$step}")->format('Y-m-d')])) . '" class="' . e(btn('secondary', 's', 'px-2')) . '" aria-label="Înapoi">' . icon('chevron-left', 18) . '</a>'
     . '<a href="' . e($url(['data' => date('Y-m-d')])) . '" class="' . e(btn('secondary', 's')) . '">Azi</a>'
     . '<a href="' . e($url(['data' => $day->modify("+{$step}")->format('Y-m-d')])) . '" class="' . e(btn('secondary', 's', 'px-2')) . '" aria-label="Înainte">' . icon('chevron-right', 18) . '</a></div>'
-    . '<form method="get" class="flex items-center gap-3"><input type="hidden" name="clinica" value="' . $clinicId . '"><input type="hidden" name="vizualizare" value="' . $view . '">'
+    . '</div>';
+// The day chosen, beside the title: the date field and, in the day view, the weekday in large.
+$dateForm = '<form method="get" class="flex items-center gap-3"><input type="hidden" name="clinica" value="' . $clinicId . '"><input type="hidden" name="vizualizare" value="' . $view . '">'
     . ($byCabinet ? '<input type="hidden" name="coloane" value="cabinete">' : '')
     . '<label class="sr-only" for="cal-data">Mergeți la ziua</label><input id="cal-data" type="date" name="data" value="' . e($date) . '" class="' . e(input_classes('h-control-s w-[9.75rem] max-w-[9.75rem] flex-none')) . '" data-trimite-la-schimbare>'
-    . '<button type="submit" class="sr-only focus:not-sr-only">Mergeți</button>' . $weekday . '</form>'
-    . '</div>';
+    . '<button type="submit" class="sr-only focus:not-sr-only">Mergeți</button>' . ($view === 'zi' ? $weekday : '') . '</form>';
 
 $movable = static fn (array $a) => in_array($a['status'], ['programat', 'confirmat', 'sosit', 'in-tratament'], true);
 // The colour says the state at a glance: white not confirmed yet, orange confirmed, green arrived
@@ -130,12 +126,12 @@ $block = static function (array $a, bool $compact = false) use ($movable, $url, 
         // The doctors see two patients in the same half hour: a second appointment at the same time.
         + (in_array($a['status'], ['programat', 'confirmat', 'sosit', 'in-tratament'], true) ? ['alDoilea' => admin_url('/admin/programari/noua', ['clinica' => $a['location_id'], 'medic' => $a['doctor_id'], 'data' => substr($a['starts_at'], 0, 10), 'ora' => hm($a['starts_at']), 'durata' => (int) ((strtotime($a['ends_at']) - strtotime($a['starts_at'])) / 60), 'dublu' => 1, 'inapoi' => $url([])])] : [])
         + ($canProcedures && in_array($a['status'], ['sosit', 'in-tratament', 'finalizat'], true) ? ['proceduri' => admin_url('/admin/pacienti/' . (int) $a['patient_id'] . '/proceduri', ['programare' => $a['id'], 'medic' => $a['doctor_id'], 'data' => substr($a['starts_at'], 0, 10), 'clinica' => $a['location_id']]) . '#adauga'] : []);
-    return '<a href="/admin/programari/' . (int) $a['id'] . '" data-meniu-stare="' . e((string) json_encode($menu, JSON_UNESCAPED_UNICODE)) . '" title="' . e(hm($a['starts_at']) . ' ' . patient_name($a) . ' · ' . (APPT_STATUS[$a['status']] ?? '') . ($noAnswer ? ' · sunat la ' . hm($a['no_answer_at']) . ', nu răspunde' : '')) . '" class="' . e(cn('block h-full overflow-hidden rounded-control border-l-4 border px-1.5 text-mic shadow-sm hover:shadow-float', $compact ? 'flex items-center gap-1 whitespace-nowrap py-0 text-mic leading-none' : 'py-0.5 leading-tight', $cls, $noAnswer ? 'da-alarma' : '', $movable($a) ? 'cursor-grab' : '')) . '" draggable="false">'
+    return '<a href="/admin/programari/' . (int) $a['id'] . '" data-meniu-stare="' . e((string) json_encode($menu, JSON_UNESCAPED_UNICODE)) . '" title="' . e(hm($a['starts_at']) . ' ' . patient_name($a) . ' · ' . (APPT_STATUS[$a['status']] ?? '') . ($noAnswer ? ' · sunat la ' . hm($a['no_answer_at']) . ', nu răspunde' : '')) . '" class="' . e(cn('block h-full overflow-hidden border-l-4 px-1.5 text-mic shadow-sm hover:shadow-float', $compact ? 'flex items-center gap-1 whitespace-nowrap rounded-[3px] border-r py-0 text-[0.6875rem] leading-[0.6875rem]' : 'rounded-control border py-px leading-tight', $cls, $noAnswer ? 'da-alarma' : '', $movable($a) ? 'cursor-grab' : '')) . '" draggable="false">'
         . ($noAnswer ? admin_icon('phone-missed', 12, 'mr-0.5 inline-block shrink-0 align-[-1px] text-carmin', 'Nu răspunde') : '')
         . '<span class="shrink-0 font-semibold cifre" data-ora>' . e(hm($a['starts_at'])) . '</span> <span class="' . ($compact ? 'min-w-0 truncate font-semibold' : 'font-semibold') . '">' . e(patient_name($a)) . '</span>'
         . (in_array($a['comfort'], ['emotii', 'frica'], true) ? ' <span aria-label="emoții" class="inline-block size-2 shrink-0 rounded-full bg-mustar"></span>' : '')
         // A 15-minute appointment has room for one line: the time and the name; the rest is in the title and the menu.
-        . ($compact ? '' : '<span class="block truncate text-discret">' . e($a['reason'] ?: service_title($a['category_slug'])) . '</span>') . '</a>';
+        . ($compact ? '' : '<span data-motiv class="block truncate text-discret">' . e($a['reason'] ?: service_title($a['category_slug'])) . '</span>') . '</a>';
 };
 
 if ($view === 'zi') {
@@ -161,12 +157,11 @@ if ($view === 'zi') {
     $calStart = strtotime("{$date} " . sprintf('%02d:00:00', $startHour));
     $calEnd = $calStart + ($endHour - $startHour) * 3600;
     $cfg = ['url' => '/admin/calendar/muta', 'date' => $date, 'start' => $startHour, 'slot' => CAL_SLOT_MIN, 'rows' => $rowsCount, 'by' => $byCabinet ? 'cabinet' : 'doctor', 'cols' => array_column($columns, 'id'), 'today' => $date === date('Y-m-d'), 'now' => (int) date('G') * 60 + (int) date('i')];
-    // The day scrolls inside its box (the doctors stay on top); a 15-minute row is at least 24 px
-    // high (admin.js sets it from „Rânduri”: mici / medii / mari), so short appointments stay readable.
-    $grid = '<div data-cal-scroll class="relative overflow-auto overscroll-contain rounded-panou border border-linie bg-suprafata"><div data-cal="' . e((string) json_encode($cfg)) . '" class="relative grid min-w-[44rem] select-none" style="grid-template-columns:4rem repeat(' . $cols . ',minmax(9rem,1fr));grid-template-rows:auto repeat(' . $rowsCount . ',minmax(0.625rem,1fr));height:' . ($rowsCount * 2 + 3) . 'rem">';
-    $grid .= '<div class="sticky top-0 z-30 border-b border-linie bg-suprafata" style="grid-row:1;grid-column:1"></div>';
+    // The whole day on one screen (admin.js fits the height), with rows of at least 12 px.
+    $grid = '<div class="relative overflow-x-auto rounded-panou border border-linie bg-suprafata"><div data-cal="' . e((string) json_encode($cfg)) . '" class="relative grid min-w-[44rem] select-none" style="grid-template-columns:4rem repeat(' . $cols . ',minmax(9rem,1fr));grid-template-rows:auto repeat(' . $rowsCount . ',minmax(0.75rem,1fr));height:' . ($rowsCount * 1.6 + 3) . 'rem">';
+    $grid .= '<div class="border-b border-linie bg-suprafata" style="grid-row:1;grid-column:1"></div>';
     foreach ($columns as $i => $c) {
-        $grid .= '<div data-cal-col class="sticky top-0 z-30 border-b border-l border-linie bg-suprafata px-2 py-2 text-control font-semibold" style="grid-row:1;grid-column:' . ($i + 2) . '">' . e($c['label']) . '</div>';
+        $grid .= '<div data-cal-col class="border-b border-l border-linie bg-suprafata px-2 py-1 text-control font-semibold" style="grid-row:1;grid-column:' . ($i + 2) . '">' . e($c['label']) . '</div>';
     }
     for ($r = 0; $r < $rowsCount; $r++) {
         $min = $startHour * 60 + $r * CAL_SLOT_MIN;
@@ -279,7 +274,7 @@ if ($view === 'zi') {
         $data = $movable($a) ? ' data-appt="' . (int) $a['id'] . '" data-rand="' . $s . '" data-lungime="' . $len . '" data-col="' . $colIndex[$key] . '" data-medic="' . (int) $a['doctor_id'] . '" data-cabinet="' . ($a['cabinet'] ?? '') . '"' : '';
         [$li, $ln] = $lane[(int) $a['id']] ?? [0, 1];
         $side = $ln > 1 ? ';width:calc(100% / ' . $ln . ');margin-left:calc(100% * ' . $li . ' / ' . $ln . ')' : '';
-        $grid .= '<div' . $data . ' class="relative z-10 min-h-0 p-px" style="grid-row:' . ($s + 2) . ' / span ' . $len . ';grid-column:' . ($colIndex[$key] + 2) . $side . '">' . $block($a, $len <= 1 || $ln > 2)
+        $grid .= '<div' . $data . ' class="' . ($len <= 1 ? 'relative z-10 min-h-0 px-px pb-px' : 'relative z-10 min-h-0 p-px') . '" style="grid-row:' . ($s + 2) . ' / span ' . $len . ';grid-column:' . ($colIndex[$key] + 2) . $side . '">' . $block($a, $len <= 1 || $ln > 2)
             . ($movable($a) ? '<span data-trage-jos aria-hidden="true" class="absolute inset-x-2 bottom-0 h-2 cursor-ns-resize rounded-full hover:bg-actiune/40"></span>' : '') . '</div>';
     }
     if ($date === date('Y-m-d')) {
@@ -367,9 +362,10 @@ $legendList = $view !== 'lista' ? '<ul class="flex flex-wrap gap-x-4 gap-y-1 tex
 $legend = $legendList !== '' ? '<div class="hidden 2xl:block">' . $legendList . '</div>' : '';
 $legendBelow = $legendList !== '' ? '<div class="mt-3 2xl:hidden">' . $legendList . '</div>' : '';
 // A short header: the day view should show 9:00–21:00 without scrolling.
-$body = '<div class="mb-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-1"><div class="flex flex-wrap items-baseline gap-x-4">'
+$body = '<div class="-mt-4 mb-2 flex flex-wrap items-center justify-between gap-x-6 gap-y-2"><div class="flex flex-wrap items-center gap-x-4 gap-y-2">'
     . '<h1 class="font-display text-[1.875rem] leading-tight text-cerneala">Calendar</h1>'
-    . '<p class="text-lead font-semibold text-cerneala first-letter:uppercase">' . e($title) . '</p>'
+    . $dateForm
+    . ($view === 'zi' ? '' : '<p class="text-lead font-semibold text-cerneala first-letter:uppercase">' . e($title) . '</p>')
     . '<p class="text-corp text-discret">' . e(($names[$clinicId] ?? '') . ' · ' . count_ro(count($active), 'o programare', 'programări')) . '</p></div>' . '<div class="flex flex-wrap items-center gap-x-5 gap-y-2">' . $legend
     . '<a href="' . e(admin_url('/admin/programari/noua', ['clinica' => $clinicId, 'data' => $date, 'inapoi' => $url([])] + $holdQ)) . '" class="' . e(btn('primary', 's')) . '">' . icon('plus', 16) . 'Programare nouă</a></div></div>'
     . $toolbar . $notesHtml . $content . $legendBelow

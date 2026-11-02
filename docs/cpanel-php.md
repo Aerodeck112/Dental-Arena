@@ -838,10 +838,10 @@ din copia bazei de date nu mai pot fi citite.
 - Azi → Încasat azi: sub total, pe rânduri, numerar și card (transfer și altă plată doar când au
   fost), din plățile procedurilor și, la cine are facturarea, din facturi; aceleași sume ca în Casa.
 
-## Calendarul pe zi: rânduri mai înalte (noiembrie 2026)
+## Calendarul pe zi: ziua pe un ecran, programările de 15 minute lizibile (noiembrie 2026)
 
-- Ziua nu mai e înghesuită în înălțimea ecranului (un sfert de oră ajungea la 10–13 px și
-  programările de 15 minute se suprapuneau): un sfert de oră are 24 / 32 / 44 px („Rânduri: Mici /
-  Medii / Mari”, ținut minte în browser), ziua se derulează în casetă, cu numele medicilor fixate
-  sus, și se deschide la ora de acum sau la prima programare. O programare de 15 minute arată ora și
-  numele pe un rând, una de 30 de minute și motivul.
+- Ziua încape pe ecran (calculator, tabletă), fără derulare și fără alegerea mărimii rândurilor:
+  un sfert de oră are cel puțin 12 px. Blocurile de 15 minute nu mai au margini sus/jos, iar textul
+  (ora și numele, 11 px) umple exact rândul, cu 1 px între programări, deci nu se mai suprapun.
+  Motivul de sub nume apare doar când încape întreg. Antetul e mai scund: data și ziua sunt lângă
+  titlul „Calendar”. Pe telefon ziua se derulează ca o pagină.
