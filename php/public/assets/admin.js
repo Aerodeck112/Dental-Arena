@@ -414,15 +414,52 @@
       return pad(Math.floor(m / 60)) + ":" + pad(m % 60);
     };
     var rowHeight = function () { return cal.querySelector("[data-cal-row]").getBoundingClientRect().height; };
-    // The whole day on one screen (computer, tablet): the rows share the height left under the
-    // toolbar, never smaller than 12px each. On a phone the day scrolls as before.
+    // Each 15-minute row has a fixed height (Rânduri: mici 24, medii 32, mari 44 px), so short
+    // appointments do not overlap; the day scrolls inside its box, which fills the screen under the
+    // toolbar, with the doctors' names fixed on top.
+    var box = cal.closest("[data-cal-scroll]");
+    var rowPx = 32;
+    try {
+      rowPx = +localStorage.getItem("cal-rand") || 32;
+    } catch (err) { /* no storage: the default */ }
+    if ([24, 32, 44].indexOf(rowPx) < 0) rowPx = 32;
+    var sizeButtons = document.querySelectorAll("[data-cal-marime] [data-marime]");
     var fit = function () {
-      if (!window.matchMedia("(min-width: 768px)").matches) return;
-      var top = cal.getBoundingClientRect().top + window.scrollY;
-      cal.style.height = Math.max(C.rows * 10 + 40, window.innerHeight - top - 8) + "px";
+      var head = cal.querySelector("[data-cal-col]");
+      cal.style.height = C.rows * rowPx + (head ? head.getBoundingClientRect().height : 40) + "px";
+      if (box) {
+        var top = box.getBoundingClientRect().top + window.scrollY;
+        // On a phone the toolbar takes the screen: the box gets most of the screen's height.
+        box.style.maxHeight = (window.matchMedia("(min-width: 768px)").matches ? Math.max(320, window.innerHeight - top - 8) : Math.round(window.innerHeight * 0.8)) + "px";
+      }
+      Array.prototype.forEach.call(sizeButtons, function (b) {
+        b.setAttribute("aria-pressed", +b.getAttribute("data-marime") === rowPx ? "true" : "false");
+      });
     };
     fit();
     window.addEventListener("resize", fit);
+    Array.prototype.forEach.call(sizeButtons, function (b) {
+      b.addEventListener("click", function () {
+        var keep = box ? box.scrollTop / Math.max(1, cal.getBoundingClientRect().height) : 0;
+        rowPx = +b.getAttribute("data-marime");
+        try {
+          localStorage.setItem("cal-rand", String(rowPx));
+        } catch (err) { /* not remembered */ }
+        fit();
+        if (box) box.scrollTop = keep * cal.getBoundingClientRect().height;
+      });
+    });
+    // Open at the time now (today, an hour before) or at the first appointment of the day.
+    if (box) {
+      var startRow = 0;
+      if (C.today) {
+        startRow = Math.floor((C.now - C.start * 60 - 60) / C.slot);
+      } else {
+        var firstRows = Array.prototype.map.call(cal.querySelectorAll("[data-rand]"), function (el) { return +el.getAttribute("data-rand"); });
+        if (firstRows.length) startRow = Math.min.apply(null, firstRows) - 2;
+      }
+      box.scrollTop = Math.max(0, startRow) * rowPx;
+    }
     var colRects = function () {
       return Array.prototype.map.call(cal.querySelectorAll("[data-cal-col]"), function (h) { return h.getBoundingClientRect(); });
     };

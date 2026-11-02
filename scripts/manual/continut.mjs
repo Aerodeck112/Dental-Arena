@@ -103,6 +103,7 @@ export const calendar = () => ({
 ${img("calendar-zi", "Calendarul pe o zi: orele în care medicul nu lucrează sunt gri, pauza e notată, absențele sunt roșii, iar sus apare lista absențelor zilei.")}
 <ul>
 <li>${b("‹")} ${b("Azi")} ${b("›")} mută ziua; câmpul de dată sare la orice zi. Lângă dată scrie mare ziua săptămânii (de exemplu „Joi”) și cât e până la ea („mâine”, „peste 17 zile”).</li>
+<li>${b("Rânduri")}: ${b("Mici")}, ${b("Medii")} sau ${b("Mari")}, înălțimea unui sfert de oră pe ziua aleasă (panoul o ține minte pe acel calculator). Ziua se derulează în calendar, cu numele medicilor fixate sus; se deschide la ora de acum (azi) sau la prima programare.</li>
 <li>Un <strong>clic pe un loc liber</strong> deschide o programare nouă cu medicul, ziua și ora deja completate.</li>
 <li>Un <strong>clic pe o programare</strong> deschide un meniu mic: ${b("Confirmat")}, ${b("A sosit")}, ${b("Nu a venit")} (și pașii următori: începe tratamentul, finalizat) sau ${b("Deschideți programarea")}. Starea se schimbă pe loc, fără să plecați din calendar.</li>
 <li>${b("+ Încă un pacient la aceeași oră")}: tot din meniul de la clic pe o programare. Deschide o programare nouă la același medic, aceeași oră și durată; alegeți pacientul și salvați. Cei doi pacienți apar unul lângă altul în calendar (medicul îi vede pe amândoi în aceeași jumătate de oră).</li>
