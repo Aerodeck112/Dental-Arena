@@ -28,6 +28,10 @@ const KIOSK_EN = [
     'Nu sunteți dumneavoastră? Ieșiți' => 'Not you? Exit',
     'Acordurile' => 'Consents',
     'Citiți fiecare text și bifați dacă sunteți de acord.' => 'Please read each text and tick it if you agree.',
+    'Citiți fiecare text și bifați-l: se semnează toate acordurile de mai jos.' => 'Please read each text and tick it: all the consents below are signed together.',
+    'Sunt de acord cu toate' => 'I agree to all of them',
+    'Bifate: {n} din {m}' => 'Ticked: {n} of {m}',
+    'Bifați toate acordurile: la fiecare „Am citit și sunt de acord”. Dacă nu sunteți de acord cu unul, chemați recepția.' => 'Please tick every consent („I have read it and I agree”). If you do not agree with one, please ask at reception.',
     'Acordurile sunt date către' => 'The consents are given to',
     'Am citit și sunt de acord' => 'I have read it and I agree',
     'Bifați acordurile pe care le dați. Dacă nu sunteți de acord cu unul, întrebați recepția.' => 'Please tick the consents you give. If you do not agree with one, please ask at reception.',
@@ -217,8 +221,9 @@ if ($path === '/tableta/semnare') {
             }
         }
         $marketing = $withMarketing ? ['sms' => post('m_sms') === '1', 'whatsapp' => post('m_whatsapp') === '1', 'email' => post('m_email') === '1'] : null;
-        if ($types !== [] && array_intersect($types, $accepted) === []) {
-            $errors['acorduri'] = $tr('Bifați acordurile pe care le dați. Dacă nu sunteți de acord cu unul, întrebați recepția.');
+        // Everything reception sent is signed: every consent must be ticked (not only some).
+        if (array_diff($types, $accepted) !== []) {
+            $errors['acorduri'] = $tr('Bifați toate acordurile: la fiecare „Am citit și sunt de acord”. Dacă nu sunteți de acord cu unul, chemați recepția.');
         }
         if ($errors === []) {
             try {
@@ -260,7 +265,9 @@ if ($path === '/tableta/semnare') {
 
     // Each clinic is its own company: the patient sees which one the consents are given to.
     $co = location_company($device && $device['location_id'] ? (int) $device['location_id'] : ($p['preferred_location_id'] ? (int) $p['preferred_location_id'] : null));
-    $parts = $section($tr('Acordurile'), $tr('Citiți fiecare text și bifați dacă sunteți de acord.') . ($co['legalName'] !== '' ? ' ' . $tr('Acordurile sunt date către') . ' ' . $co['legalName'] . ($co['cui'] !== '' ? ($lang === 'en' ? ' (tax code ' : ' (CUI ') . $co['cui'] . ')' : '') . '.' : ''), ($errors['acorduri'] ?? null ? '<p role="alert" class="mb-4 rounded-panou bg-carmin-pal p-3 font-medium text-carmin">' . e($errors['acorduri']) . '</p>' : '') . '<div class="flex flex-col gap-5">' . $consents . '</div>', 'pas-acorduri');
+    $tickAll = count($types) > 1 ? '<div class="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-panou bg-fundal p-3"><p data-acorduri-numar data-text="' . e($tr('Bifate: {n} din {m}')) . '" class="font-medium" aria-live="polite"></p>'
+        . '<button type="button" data-bifeaza-toate class="' . e(btn('secondary')) . '">' . icon('check-check', 20) . e($tr('Sunt de acord cu toate')) . '</button></div>' : '';
+    $parts = $types === [] ? '' : $section($tr('Acordurile'), $tr('Citiți fiecare text și bifați-l: se semnează toate acordurile de mai jos.') . ($co['legalName'] !== '' ? ' ' . $tr('Acordurile sunt date către') . ' ' . $co['legalName'] . ($co['cui'] !== '' ? ($lang === 'en' ? ' (tax code ' : ' (CUI ') . $co['cui'] . ')' : '') . '.' : ''), ($errors['acorduri'] ?? null ? '<p role="alert" class="mb-4 rounded-panou bg-carmin-pal p-3 font-medium text-carmin">' . e($errors['acorduri']) . '</p>' : '') . $tickAll . '<div class="flex flex-col gap-5">' . $consents . '</div>', 'pas-acorduri');
 
     if ($withHistory) {
         // The clinic's „Fișa de tratament / Chestionar de sănătate”: the conditions of the medical
@@ -309,7 +316,7 @@ if ($path === '/tableta/semnare') {
         . '<button type="button" data-renunta-acum class="' . e(btn('text')) . '">' . icon('x', 18) . e($tr('Nu sunteți dumneavoastră? Ieșiți')) . '</button></div>'
         // A new patient in English: what to do, as on the clinic's instruction sheet.
         . ($lang === 'en' && $withHistory ? '<p class="mt-6 rounded-panou border border-actiune bg-menta-pal p-4 text-lead">' . e($tr('Pentru că sunteți pacient nou, vă rugăm să completați chestionarul medical. Citiți și bifați acordurile (inclusiv cel pentru datele personale), apoi semnați. Dacă aveți întrebări, suntem la recepție. Mulțumim!')) . '</p>' : '')
-        . '<form method="post" action="/tableta/semnare" novalidate data-semnare data-msg-acorduri="' . e($tr('Bifați acordurile pe care le dați.')) . '" data-msg-chestionar="' . e($tr('Completați chestionarul sau bifați „Nu am nimic de declarat”.')) . '" data-msg-semnatura="' . e($tr('Semnați în chenar cu degetul.')) . '" class="mt-8 flex flex-col gap-6">' . csrf_field() . $parts
+        . '<form method="post" action="/tableta/semnare" novalidate data-semnare data-msg-acorduri="' . e($tr('Bifați toate acordurile: la fiecare „Am citit și sunt de acord”. Dacă nu sunteți de acord cu unul, chemați recepția.')) . '" data-msg-chestionar="' . e($tr('Completați chestionarul sau bifați „Nu am nimic de declarat”.')) . '" data-msg-semnatura="' . e($tr('Semnați în chenar cu degetul.')) . '" class="mt-8 flex flex-col gap-6">' . csrf_field() . $parts
         . '<div class="sticky bottom-4 z-10 rounded-[1.75rem] border border-linie bg-suprafata/95 p-4 shadow-float backdrop-blur">'
         . '<p data-semnare-eroare role="alert" class="mb-3 hidden font-medium text-carmin"></p>'
         . '<button type="submit" class="' . e(btn('primary', 'l', 'w-full text-[1.25rem]')) . '">' . admin_icon('signature', 22) . e($tr('Semnez și trimit')) . '</button></div>'

@@ -102,7 +102,7 @@ export const calendar = () => ({
 <p>Calendarul arată ziua unei clinici, cu câte o coloană pentru fiecare medic, de la 9:00 la 21:00, pe sferturi de oră, toată pe un singur ecran (fără derulare, pe calculator și pe tabletă). Dacă o programare sau programul clinicii iese din interval, ziua se lărgește singură. Sus alegeți clinica și vederea: ${b("Zi")}, ${b("Săptămână")} sau ${b("Listă")}.</p>
 ${img("calendar-zi", "Calendarul pe o zi: orele în care medicul nu lucrează sunt gri, pauza e notată, absențele sunt roșii, iar sus apare lista absențelor zilei.")}
 <ul>
-<li>${b("‹")} ${b("Azi")} ${b("›")} mută ziua; câmpul de dată sare la orice zi.</li>
+<li>${b("‹")} ${b("Azi")} ${b("›")} mută ziua; câmpul de dată sare la orice zi. Lângă dată scrie mare ziua săptămânii (de exemplu „Joi”) și cât e până la ea („mâine”, „peste 17 zile”).</li>
 <li>Un <strong>clic pe un loc liber</strong> deschide o programare nouă cu medicul, ziua și ora deja completate.</li>
 <li>Un <strong>clic pe o programare</strong> deschide un meniu mic: ${b("Confirmat")}, ${b("A sosit")}, ${b("Nu a venit")} (și pașii următori: începe tratamentul, finalizat) sau ${b("Deschideți programarea")}. Starea se schimbă pe loc, fără să plecați din calendar.</li>
 <li>${b("+ Încă un pacient la aceeași oră")}: tot din meniul de la clic pe o programare. Deschide o programare nouă la același medic, aceeași oră și durată; alegeți pacientul și salvați. Cei doi pacienți apar unul lângă altul în calendar (medicul îi vede pe amândoi în aceeași jumătate de oră).</li>
@@ -350,7 +350,7 @@ ${sfat(`Un cod dat din greșeală se oprește cu ${b("Anulați codul")}. Un cod 
 ${pasi([
   "Introduce codul pe tastatura de pe ecran.",
   "Vede numele lui sus. Dacă nu e el, apasă „Nu sunteți dumneavoastră? Ieșiți”.",
-  "Citește fiecare acord și bifează „Am citit și sunt de acord”.",
+  "Citește fiecare acord și bifează „Am citit și sunt de acord” la fiecare (sau „Sunt de acord cu toate”, sus). Se semnează toate acordurile trimise de recepție: tableta nu trimite până nu sunt bifate toate. Dacă nu e de acord cu unul, vă cheamă, iar dumneavoastră anulați codul și dați altul, fără acel acord.",
   "Completează chestionarul (sau bifează „Nu am nimic de declarat”) și alege unde vrea oferte, dacă i s-a cerut.",
   "Semnează în chenar cu degetul și apasă „Semnez și trimit”.",
 ])}

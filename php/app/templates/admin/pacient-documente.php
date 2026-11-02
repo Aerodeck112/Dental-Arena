@@ -241,7 +241,7 @@ $uploadForm = $writable ? '<form method="post" enctype="multipart/form-data" nov
 
 $body = patient_header($p, $user, 'documente')
     . '<div class="flex flex-col gap-8">'
-    . ($tablet !== '' ? admin_section_open('Semnare pe tabletă', 'tableta', 'Pacientul introduce codul pe tableta de la recepție, bifează acordurile și semnează cu degetul.') . $tablet . '</section>' : '')
+    . ($tablet !== '' ? admin_section_open('Semnare pe tabletă', 'tableta', 'Pacientul introduce codul pe tableta de la recepție, bifează toate acordurile trimise (sau „Sunt de acord cu toate”) și semnează cu degetul.') . $tablet . '</section>' : '')
     . admin_section_open('Acorduri', 'acorduri', 'Tipăriți formularul, dați-l pacientului să-l semneze, apoi înregistrați-l aici (eventual cu copia scanată).')
     . '<ul class="mt-3">' . $consentRows . '</ul>' . $consentForm . '</section>'
     . admin_section_open('Documente', 'documente', 'Radiografii, fotografii, documente semnate, orice fișier al pacientului. Se păstrează în afara site-ului și se deschid doar din panou.')

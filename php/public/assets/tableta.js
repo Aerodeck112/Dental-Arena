@@ -117,7 +117,7 @@
     resize();
   }
 
-  // ── Before sending: at least one consent, a questionnaire answer, a signature ─────────────
+  // ── Before sending: every consent ticked, a questionnaire answer, a signature ─────────────
   var form = document.querySelector("[data-semnare]");
   if (form) {
     var msg = form.querySelector("[data-semnare-eroare]");
@@ -126,6 +126,27 @@
       msg.classList.remove("hidden");
       if (target) target.scrollIntoView({ behavior: "smooth", block: "center" });
     };
+    // „Sunt de acord cu toate” ticks every consent; the counter shows how many are ticked.
+    var count = form.querySelector("[data-acorduri-numar]");
+    var updateCount = function () {
+      if (!count) return;
+      var all = form.querySelectorAll("input[name='accept[]']").length;
+      var on = form.querySelectorAll("input[name='accept[]']:checked").length;
+      count.textContent = count.getAttribute("data-text").replace("{n}", on).replace("{m}", all);
+      count.classList.toggle("text-actiune", on === all);
+    };
+    form.addEventListener("change", function (e) {
+      if (e.target.name === "accept[]") updateCount();
+    });
+    Array.prototype.forEach.call(form.querySelectorAll("[data-bifeaza-toate]"), function (b) {
+      b.addEventListener("click", function () {
+        Array.prototype.forEach.call(form.querySelectorAll("input[name='accept[]']"), function (box) {
+          box.checked = true;
+        });
+        updateCount();
+      });
+    });
+    updateCount();
     // „Nothing to declare” and the answers exclude each other.
     var nothing = form.querySelector("input[name=nothing]");
     if (nothing) {
@@ -141,10 +162,10 @@
     }
     form.addEventListener("submit", function (e) {
       var boxes = form.querySelectorAll("input[name='accept[]']");
-      var ticked = form.querySelectorAll("input[name='accept[]']:checked");
-      if (boxes.length && !ticked.length) {
+      var unticked = form.querySelector("input[name='accept[]']:not(:checked)");
+      if (boxes.length && unticked) {
         e.preventDefault();
-        say(form.getAttribute("data-msg-acorduri") || "Bifați acordurile pe care le dați.", boxes[0].closest("article"));
+        say(form.getAttribute("data-msg-acorduri") || "Bifați toate acordurile.", unticked.closest("article"));
         return;
       }
       if (nothing) {

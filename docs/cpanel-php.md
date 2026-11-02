@@ -826,3 +826,11 @@ din copia bazei de date nu mai pot fi citite.
 - **Medicii încasează**: rolul Medic are acum `procedures.pay` (Încasare în fișă, Casa). Un medic vede
   în Casa și la „Încasat azi” doar ce a încasat el, iar în raport plățile pentru procedurile lui și
   pe cele încasate de el.
+
+## Tableta: se semnează toate acordurile trimise; ziua săptămânii în calendar (noiembrie 2026)
+
+- Pe tabletă, toate acordurile trimise de recepție trebuie bifate (înainte era destul unul, iar cele
+  nebifate nu se salvau și nu apăreau în fișă). Contor „Bifate: n din m” și butonul „Sunt de acord
+  cu toate”; verificat și pe server. Cu doar chestionarul, secțiunea goală „Acordurile” nu mai apare.
+- Calendar: lângă câmpul de dată, ziua săptămânii, mare („Joi”), și cât e până la ea („azi”,
+  „mâine”, „peste 17 zile”); titlul zilei mai vizibil; câmpul de dată nu se mai lățește pe telefon.

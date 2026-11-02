@@ -77,6 +77,17 @@ $title = match ($view) {
     'lista' => format_date($day) . ' – ' . format_date($day->modify('+6 days')),
     default => 'Săptămâna ' . (int) $monday->format('j') . ' ' . RO_MONTHS[(int) $monday->format('n') - 1] . ' – ' . format_date($monday->modify('+6 days')),
 };
+// The weekday of the chosen day, large beside the date, and how far it is from today.
+$daysFromToday = (int) (new DateTimeImmutable(date('Y-m-d')))->diff($day)->format('%r%a');
+$relative = match (true) {
+    $daysFromToday === 0 => 'azi',
+    $daysFromToday === 1 => 'mâine',
+    $daysFromToday === -1 => 'ieri',
+    $daysFromToday > 1 => 'peste ' . count_ro($daysFromToday, 'o zi', 'zile'),
+    default => 'acum ' . count_ro(-$daysFromToday, 'o zi', 'zile'),
+};
+$weekday = '<p class="flex items-baseline gap-2 whitespace-nowrap" aria-live="polite"><span class="text-[1.5rem] font-semibold leading-none text-cerneala first-letter:uppercase">' . e(RO_WEEKDAYS[(int) $day->format('N') - 1]) . '</span>'
+    . '<span class="' . e(cn('rounded-chip px-2 text-mic font-medium', $daysFromToday === 0 ? 'bg-actiune text-pe-actiune' : 'bg-adancit text-discret')) . '">' . e($relative) . '</span></p>';
 $toolbar = '<div class="mb-3 flex flex-wrap items-center gap-2">'
     . (count($allowed) > 1 ? '<nav aria-label="Clinica" class="inline-flex rounded-control border border-linie-control bg-suprafata p-1">' . $clinicSwitch . '</nav>' : '')
     . '<nav aria-label="Vizualizare" class="inline-flex rounded-control border border-linie-control bg-suprafata p-1">' . $viewSwitch . '</nav>'
@@ -85,10 +96,10 @@ $toolbar = '<div class="mb-3 flex flex-wrap items-center gap-2">'
     . '<a href="' . e($url(['data' => $day->modify("-{$step}")->format('Y-m-d')])) . '" class="' . e(btn('secondary', 's', 'px-2')) . '" aria-label="Înapoi">' . icon('chevron-left', 18) . '</a>'
     . '<a href="' . e($url(['data' => date('Y-m-d')])) . '" class="' . e(btn('secondary', 's')) . '">Azi</a>'
     . '<a href="' . e($url(['data' => $day->modify("+{$step}")->format('Y-m-d')])) . '" class="' . e(btn('secondary', 's', 'px-2')) . '" aria-label="Înainte">' . icon('chevron-right', 18) . '</a></div>'
-    . '<form method="get" class="flex items-center gap-2"><input type="hidden" name="clinica" value="' . $clinicId . '"><input type="hidden" name="vizualizare" value="' . $view . '">'
+    . '<form method="get" class="flex items-center gap-3"><input type="hidden" name="clinica" value="' . $clinicId . '"><input type="hidden" name="vizualizare" value="' . $view . '">'
     . ($byCabinet ? '<input type="hidden" name="coloane" value="cabinete">' : '')
-    . '<label class="sr-only" for="cal-data">Mergeți la ziua</label><input id="cal-data" type="date" name="data" value="' . e($date) . '" class="' . e(input_classes('h-control-s w-[9.5rem]')) . '" data-trimite-la-schimbare>'
-    . '<button type="submit" class="sr-only focus:not-sr-only">Mergeți</button></form>'
+    . '<label class="sr-only" for="cal-data">Mergeți la ziua</label><input id="cal-data" type="date" name="data" value="' . e($date) . '" class="' . e(input_classes('h-control-s w-[9.75rem] max-w-[9.75rem] flex-none')) . '" data-trimite-la-schimbare>'
+    . '<button type="submit" class="sr-only focus:not-sr-only">Mergeți</button>' . $weekday . '</form>'
     . '</div>';
 
 $movable = static fn (array $a) => in_array($a['status'], ['programat', 'confirmat', 'sosit', 'in-tratament'], true);
@@ -351,7 +362,8 @@ $legendBelow = $legendList !== '' ? '<div class="mt-3 2xl:hidden">' . $legendLis
 // A short header: the day view should show 9:00–21:00 without scrolling.
 $body = '<div class="mb-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-1"><div class="flex flex-wrap items-baseline gap-x-4">'
     . '<h1 class="font-display text-[1.875rem] leading-tight text-cerneala">Calendar</h1>'
-    . '<p class="text-corp text-discret first-letter:uppercase">' . e($title . ' · ' . ($names[$clinicId] ?? '') . ' · ' . count_ro(count($active), 'o programare', 'programări')) . '</p></div>' . '<div class="flex flex-wrap items-center gap-x-5 gap-y-2">' . $legend
+    . '<p class="text-lead font-semibold text-cerneala first-letter:uppercase">' . e($title) . '</p>'
+    . '<p class="text-corp text-discret">' . e(($names[$clinicId] ?? '') . ' · ' . count_ro(count($active), 'o programare', 'programări')) . '</p></div>' . '<div class="flex flex-wrap items-center gap-x-5 gap-y-2">' . $legend
     . '<a href="' . e(admin_url('/admin/programari/noua', ['clinica' => $clinicId, 'data' => $date, 'inapoi' => $url([])] + $holdQ)) . '" class="' . e(btn('primary', 's')) . '">' . icon('plus', 16) . 'Programare nouă</a></div></div>'
     . $toolbar . $notesHtml . $content . $legendBelow
     . '<div data-cal-anunt role="status" aria-live="polite" hidden class="fixed inset-x-4 bottom-4 z-50 mx-auto flex max-w-xl items-center gap-3 rounded-panou bg-cerneala px-4 py-3 text-corp text-fundal shadow-float"></div>'
