@@ -88,7 +88,7 @@ ${tabel(["Starea", "Ce înseamnă", "Butonul care urmează"], [
   ["Nu s-a prezentat", `Apăsați ${b("Nu a venit")} dacă pacientul lipsește.`, "—"],
 ])}
 <p>Butonul ${b("⋯")} deschide programarea (pentru mutare, anulare sau rechemare). În dreapta: <strong>Cererile online noi</strong> și câți pacienți sunt de sunat pentru control.</p>
-${rol === "medic" ? "" : `<p>Tot în dreapta, <strong>Încasat azi</strong>: aceeași sumă ca în ${b("Casa")} pentru clinica aleasă, cu numerarul separat.</p>`}
+${rol === "medic" ? "" : `<p>Tot în dreapta, <strong>Încasat azi</strong>: aceeași sumă ca în ${b("Casa")} pentru clinica aleasă, iar sub ea cât e <strong>numerar</strong> și cât e <strong>card</strong> (și transfer sau altă plată, dacă au fost).</p>`}
 <h3>Notițe</h3>
 <p>Secțiunea ${b("Notițe")} de pe Azi ține ce nu trebuie uitat (de exemplu „De comandat folie de sterilizare”, „Sunați laboratorul pentru lucrarea doamnei P.”). Scrieți notița, alegeți clinica (sau amândouă) și apăsați ${b("Adăugați")}. O vede toată echipa. Când e gata, bifați-o: rămâne tăiată până seara, apoi dispare. O notiță o poate șterge cine a scris-o sau un administrator.</p>
 <p>La ${b("Finalizat")}, pacientul intră singur pe lista de rechemări pentru control (de obicei peste 6 luni; 3 luni la parodontologie, o lună la ortodonție), dacă nu are deja o rechemare sau o programare viitoare.</p>

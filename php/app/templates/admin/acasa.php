@@ -97,7 +97,9 @@ if ($techNews !== []) {
 }
 // „Încasat azi”: what Casa shows for the clinic today (the procedures' payments, in the account's
 // ledger), plus the invoices' payments when the invoices are on.
-$cashToday = $cashCash = $invoiceToday = 0;
+// By method too: cash and card always shown, transfer and other only when there are some.
+$cashToday = $invoiceToday = 0;
+$byMethod = ['numerar' => 0, 'card' => 0, 'transfer' => 0, 'altele' => 0];
 if ($clinicId !== null) {
     require_once APP_DIR . '/src/admin/procedures.php';
     [$lw, $lp] = proc_scope_sql(['ledger' => proc_scope($user)['ledger']], 'pp', 'paid_on');
@@ -105,12 +107,16 @@ if ($clinicId !== null) {
         $lw .= ' AND pp.received_by = ?';
         $lp[] = (int) $user['id'];
     }
-    $sums = db_one("SELECT COALESCE(SUM(pp.amount), 0) AS total, COALESCE(SUM(CASE WHEN pp.method = 'numerar' THEN pp.amount END), 0) AS cash FROM procedure_payments pp WHERE pp.cancelled_at IS NULL AND pp.paid_on = ? AND pp.location_id = ?" . $lw, array_merge([$today, $clinicId], $lp));
-    $cashToday = (int) $sums['total'];
-    $cashCash = (int) $sums['cash'];
+    $payRows = db_all("SELECT pp.method, SUM(pp.amount) AS s FROM procedure_payments pp WHERE pp.cancelled_at IS NULL AND pp.paid_on = ? AND pp.location_id = ?" . $lw . ' GROUP BY pp.method', array_merge([$today, $clinicId], $lp));
     if (can('billing', $user)) {
-        $invoiceToday = (int) db_value('SELECT COALESCE(SUM(amount), 0) FROM payments WHERE cancelled_at IS NULL AND location_id = ? AND paid_at >= ?', [$clinicId, "{$today} 00:00:00"]);
-        $cashToday += $invoiceToday;
+        $invoiceRows = db_all('SELECT method, SUM(amount) AS s FROM payments WHERE cancelled_at IS NULL AND location_id = ? AND paid_at >= ? GROUP BY method', [$clinicId, "{$today} 00:00:00"]);
+        $invoiceToday = array_sum(array_map(static fn ($r) => (int) $r['s'], $invoiceRows));
+        $payRows = array_merge($payRows, $invoiceRows);
+    }
+    foreach ($payRows as $r) {
+        $m = isset($byMethod[$r['method']]) ? $r['method'] : 'altele';
+        $byMethod[$m] += (int) $r['s'];
+        $cashToday += (int) $r['s'];
     }
 }
 // „Notițe”: what the team must not forget, for this clinic or for all; the done ones of today below.
@@ -149,7 +155,11 @@ $body = admin_header('Azi, ' . format_date(new DateTimeImmutable(), true), $clin
     . $notesBox
     . ($clinicId !== null && (can('procedures.pay', $user) || can('billing', $user)) ? admin_section_open('Încasat azi', 'incasat-azi')
         . '<p class="mt-2 font-display text-[2rem] cifre">' . e(lei($cashToday)) . '</p>'
-        . '<p class="text-mic text-discret">Din Casa: numerar ' . e(lei($cashCash)) . ($invoiceToday > 0 ? ' · din facturi ' . e(lei($invoiceToday)) : '') . '</p>'
+        . '<dl class="mt-2 grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-corp">'
+        . implode('', array_map(static fn ($k, $label) => $k === 'numerar' || $k === 'card' || $byMethod[$k] > 0
+            ? '<dt class="' . ($k === 'numerar' ? 'font-semibold' : 'text-discret') . '">' . e($label) . '</dt><dd class="cifre text-right' . ($k === 'numerar' ? ' font-semibold' : '') . '">' . e(lei($byMethod[$k])) . '</dd>' : '',
+            array_keys($byMethod), ['Numerar', 'Card', 'Transfer (OP)', 'Altă plată'])) . '</dl>'
+        . ($invoiceToday > 0 ? '<p class="mt-1 text-mic text-discret">Din care din facturi: ' . e(lei($invoiceToday)) . '</p>' : '')
         . (can('procedures.pay', $user) ? '<a href="/admin/casa?clinica=' . $clinicId . '" class="mt-2 inline-flex min-h-control items-center font-medium text-link underline underline-offset-4">Casa de azi</a>' : '<a href="/admin/incasari?clinica=' . $clinicId . '" class="mt-2 inline-flex min-h-control items-center font-medium text-link underline underline-offset-4">Jurnalul încasărilor</a>') . '</section>' : '')
     . admin_section_open('Rechemări', 'rechemari-azi') . '<p class="mt-2 text-corp"><span class="font-display text-[2rem] cifre">' . $recallsDue . '</span> pacienți de sunat pentru control în următoarele 7 zile.</p>'
     . '<a href="/admin/rechemari" class="mt-2 inline-flex min-h-control items-center font-medium text-link underline underline-offset-4">Lista de rechemări</a></section>'

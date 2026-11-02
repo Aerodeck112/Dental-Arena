@@ -834,3 +834,6 @@ din copia bazei de date nu mai pot fi citite.
   cu toate”; verificat și pe server. Cu doar chestionarul, secțiunea goală „Acordurile” nu mai apare.
 - Calendar: lângă câmpul de dată, ziua săptămânii, mare („Joi”), și cât e până la ea („azi”,
   „mâine”, „peste 17 zile”); titlul zilei mai vizibil; câmpul de dată nu se mai lățește pe telefon.
+
+- Azi → Încasat azi: sub total, pe rânduri, numerar și card (transfer și altă plată doar când au
+  fost), din plățile procedurilor și, la cine are facturarea, din facturi; aceleași sume ca în Casa.
