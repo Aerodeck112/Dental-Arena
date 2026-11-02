@@ -845,3 +845,8 @@ din copia bazei de date nu mai pot fi citite.
   (ora și numele, 11 px) umple exact rândul, cu 1 px între programări, deci nu se mai suprapun.
   Motivul de sub nume apare doar când încape întreg. Antetul e mai scund: data și ziua sunt lângă
   titlul „Calendar”. Pe telefon ziua se derulează ca o pagină.
+- Ore „elastice”: sferturile de oră care au o programare (în orice coloană) primesc înălțimea (până
+  la 40 px), cele goale se strâng la 8 px; ziua rămâne pe un ecran. Lângă rândurile înalte se scrie
+  și sfertul (10:15). Textul programărilor scurte crește cu rândul. Tragerea cu mouse-ul folosește
+  pozițiile reale ale rândurilor. Programările care nu cad pe sfert (10:00–10:20, 10:20–10:40) se
+  așază pe „culoare” după rândurile desenate, deci nu se mai suprapun.

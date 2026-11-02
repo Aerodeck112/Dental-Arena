@@ -413,15 +413,50 @@
       var m = C.start * 60 + row * C.slot;
       return pad(Math.floor(m / 60)) + ":" + pad(m % 60);
     };
-    var rowHeight = function () { return cal.querySelector("[data-cal-row]").getBoundingClientRect().height; };
-    // The whole day on one screen (computer, tablet): the rows share the height left under the
-    // toolbar, never smaller than 12px each, so a 15-minute appointment keeps its line of text.
-    // On a phone the day scrolls with the page.
+    var rowEls = cal.querySelectorAll("[data-cal-row]");
+    // The row under a point (by the rows' real positions: they are not all the same height).
+    var rowAt = function (rects, y) {
+      for (var i = 0; i < rects.length; i++) if (y < rects[i].bottom) return i;
+      return rects.length - 1;
+    };
+    var rowRects = function () {
+      return Array.prototype.map.call(rowEls, function (r) { return r.getBoundingClientRect(); });
+    };
+    // The whole day on one screen (computer, tablet), with elastic rows: the quarter hours that have
+    // an appointment (in any column) get the height, up to 40px, and the empty ones shrink to 8px,
+    // so short appointments stay large without scrolling. On a phone the day scrolls with the page.
     var fit = function () {
       if (window.matchMedia("(min-width: 768px)").matches) {
+        var head = cal.querySelector("[data-cal-col]");
+        var headH = head ? head.getBoundingClientRect().height : 32;
         var top = cal.getBoundingClientRect().top + window.scrollY;
-        cal.style.height = Math.max(C.rows * 12 + 32, window.innerHeight - top - 8) + "px";
+        var n = C.rows;
+        var H = Math.max(n * 12, window.innerHeight - top - 8 - headH);
+        var busy = [];
+        Array.prototype.forEach.call(cal.querySelectorAll("[data-randuri]"), function (el) {
+          var p = el.getAttribute("data-randuri").split(",");
+          for (var r = +p[0]; r < +p[0] + +p[1] && r < n; r++) busy[r] = true;
+        });
+        var k = busy.filter(Boolean).length;
+        var even = H / n;
+        var big = k > 0 && k < n ? Math.min(40, (H - (n - k) * 8) / k) : even;
+        if (big <= even) big = even;
+        var small = big === even ? even : (H - k * big) / (n - k);
+        var sizes = [];
+        for (var r2 = 0; r2 < n; r2++) sizes.push((busy[r2] ? big : small).toFixed(2) + "px");
+        cal.style.gridTemplateRows = "auto " + sizes.join(" ");
+        cal.style.height = Math.round(headH + (big === even ? H : k * big + (n - k) * small)) + "px";
       }
+      // A short appointment's line grows with its row (11px in a 12px row, 14px from 26px up).
+      Array.prototype.forEach.call(cal.querySelectorAll("[data-scurt]"), function (a) {
+        var h = a.getBoundingClientRect().height;
+        a.style.fontSize = h >= 26 ? "0.875rem" : h >= 19 ? "0.8125rem" : "";
+        a.style.lineHeight = h >= 19 ? "1.2" : "";
+      });
+      // The quarter hours written beside the tall rows.
+      Array.prototype.forEach.call(cal.querySelectorAll("[data-sfert]"), function (q) {
+        q.hidden = q.parentNode.getBoundingClientRect().height < 20;
+      });
       // The reason under the name only when it fits whole (not half a line on a short appointment).
       Array.prototype.forEach.call(cal.querySelectorAll("[data-motiv]"), function (m) {
         m.hidden = false;
@@ -439,9 +474,12 @@
       el.style.gridColumn = String(col + 2);
       el.setAttribute("data-rand", row);
       el.setAttribute("data-lungime", len);
+      el.setAttribute("data-randuri", row + "," + len);
       el.setAttribute("data-col", col);
       var t = el.querySelector("[data-ora]");
       if (t) t.textContent = timeOf(row);
+      // Outside a drag (dropped, undone, refused) the elastic rows follow the appointments.
+      if (!drag) fit();
     };
     var say = function (text, undo) {
       clearTimeout(toastTimer);
@@ -515,7 +553,7 @@
       drag = {
         el: el, x: e.clientX, y: e.clientY, moved: false, resize: !!e.target.closest("[data-trage-jos]"),
         row: +el.getAttribute("data-rand"), len: +el.getAttribute("data-lungime"), col: +el.getAttribute("data-col"),
-        h: rowHeight(), rects: colRects(),
+        rows: rowRects(), rects: colRects(),
       };
     });
     cal.addEventListener("pointermove", function (e) {
@@ -529,13 +567,15 @@
         drag.el.style.opacity = "0.85";
       }
       e.preventDefault();
-      var steps = Math.round(dy / drag.h);
+      // The rows keep the heights they had when the drag began (they are re-fitted after the drop).
+      var at = rowAt(drag.rows, e.clientY);
+      if (drag.grab === undefined) drag.grab = rowAt(drag.rows, drag.y) - drag.row;
       if (drag.resize) {
-        drag.nlen = Math.max(1, Math.min(C.rows - drag.row, drag.len + steps));
+        drag.nlen = Math.max(1, Math.min(C.rows - drag.row, at - drag.row + 1));
         drag.nrow = drag.row;
         drag.ncol = drag.col;
       } else {
-        drag.nrow = Math.max(0, Math.min(C.rows - drag.len, drag.row + steps));
+        drag.nrow = Math.max(0, Math.min(C.rows - drag.len, at - drag.grab));
         drag.nlen = drag.len;
         drag.ncol = drag.col;
         drag.rects.forEach(function (r, i) { if (e.clientX >= r.left && e.clientX < r.right) drag.ncol = i; });

@@ -126,10 +126,12 @@ $block = static function (array $a, bool $compact = false) use ($movable, $url, 
         // The doctors see two patients in the same half hour: a second appointment at the same time.
         + (in_array($a['status'], ['programat', 'confirmat', 'sosit', 'in-tratament'], true) ? ['alDoilea' => admin_url('/admin/programari/noua', ['clinica' => $a['location_id'], 'medic' => $a['doctor_id'], 'data' => substr($a['starts_at'], 0, 10), 'ora' => hm($a['starts_at']), 'durata' => (int) ((strtotime($a['ends_at']) - strtotime($a['starts_at'])) / 60), 'dublu' => 1, 'inapoi' => $url([])])] : [])
         + ($canProcedures && in_array($a['status'], ['sosit', 'in-tratament', 'finalizat'], true) ? ['proceduri' => admin_url('/admin/pacienti/' . (int) $a['patient_id'] . '/proceduri', ['programare' => $a['id'], 'medic' => $a['doctor_id'], 'data' => substr($a['starts_at'], 0, 10), 'clinica' => $a['location_id']]) . '#adauga'] : []);
-    return '<a href="/admin/programari/' . (int) $a['id'] . '" data-meniu-stare="' . e((string) json_encode($menu, JSON_UNESCAPED_UNICODE)) . '" title="' . e(hm($a['starts_at']) . ' ' . patient_name($a) . ' · ' . (APPT_STATUS[$a['status']] ?? '') . ($noAnswer ? ' · sunat la ' . hm($a['no_answer_at']) . ', nu răspunde' : '')) . '" class="' . e(cn('block h-full overflow-hidden border-l-4 px-1.5 text-mic shadow-sm hover:shadow-float', $compact ? 'flex items-center gap-1 whitespace-nowrap rounded-[3px] border-r py-0 text-[0.6875rem] leading-[0.6875rem]' : 'rounded-control border py-px leading-tight', $cls, $noAnswer ? 'da-alarma' : '', $movable($a) ? 'cursor-grab' : '')) . '" draggable="false">'
+    return '<a href="/admin/programari/' . (int) $a['id'] . '" data-meniu-stare="' . e((string) json_encode($menu, JSON_UNESCAPED_UNICODE)) . '" title="' . e(hm($a['starts_at']) . ' ' . patient_name($a) . ' · ' . (APPT_STATUS[$a['status']] ?? '') . ($noAnswer ? ' · sunat la ' . hm($a['no_answer_at']) . ', nu răspunde' : '')) . '" class="' . e(cn('block h-full overflow-hidden border-l-4 px-1.5 text-mic shadow-sm hover:shadow-float', $compact ? 'flex items-center gap-1 whitespace-nowrap rounded-[3px] border-r py-0 text-[0.6875rem] leading-[0.6875rem]' : 'rounded-control border py-px leading-tight', $cls, $noAnswer ? 'da-alarma' : '', $movable($a) ? 'cursor-grab' : '')) . '"' . ($compact ? ' data-scurt' : '') . ' draggable="false">'
         . ($noAnswer ? admin_icon('phone-missed', 12, 'mr-0.5 inline-block shrink-0 align-[-1px] text-carmin', 'Nu răspunde') : '')
+        . ($compact ? '' : '<span class="block truncate">')
         . '<span class="shrink-0 font-semibold cifre" data-ora>' . e(hm($a['starts_at'])) . '</span> <span class="' . ($compact ? 'min-w-0 truncate font-semibold' : 'font-semibold') . '">' . e(patient_name($a)) . '</span>'
         . (in_array($a['comfort'], ['emotii', 'frica'], true) ? ' <span aria-label="emoții" class="inline-block size-2 shrink-0 rounded-full bg-mustar"></span>' : '')
+        . ($compact ? '' : '</span>')
         // A 15-minute appointment has room for one line: the time and the name; the rest is in the title and the menu.
         . ($compact ? '' : '<span data-motiv class="block truncate text-discret">' . e($a['reason'] ?: service_title($a['category_slug'])) . '</span>') . '</a>';
 };
@@ -167,7 +169,7 @@ if ($view === 'zi') {
         $min = $startHour * 60 + $r * CAL_SLOT_MIN;
         $hhmm = sprintf('%02d:%02d', intdiv($min, 60), $min % 60);
         $full = $min % 60 === 0;
-        $grid .= '<div' . ($r === 0 ? ' data-cal-row' : '') . ' class="' . e(cn('pr-2 text-right text-mic text-discret cifre', $full ? 'border-t border-linie' : '')) . '" style="grid-row:' . ($r + 2) . ';grid-column:1">' . ($full ? $hhmm : '') . '</div>';
+        $grid .= '<div data-cal-row class="' . e(cn('pr-2 text-right text-mic text-discret cifre', $full ? 'border-t border-linie' : '')) . '" style="grid-row:' . ($r + 2) . ';grid-column:1">' . ($full ? $hhmm : '<span data-sfert hidden class="block text-[0.6875rem] leading-none pt-0.5">' . $hhmm . '</span>') . '</div>';
         foreach ($columns as $i => $c) {
             $q = ['clinica' => $clinicId, 'data' => $date, 'ora' => $hhmm, 'inapoi' => $url([])] + ($c['doctor'] !== null ? ['medic' => $c['doctor']] : []) + $holdQ;
             $grid .= '<a href="' . e(admin_url('/admin/programari/noua', $q)) . '" class="' . e(cn('border-l border-linie hover:bg-menta-pal', $full ? 'border-t' : 'border-t border-t-linie/40')) . '" style="grid-row:' . ($r + 2) . ';grid-column:' . ($i + 2) . '" aria-label="' . e("Programare nouă, {$c['label']}, ora {$hhmm}") . '" tabindex="-1"></a>';
@@ -221,17 +223,25 @@ if ($view === 'zi') {
             }
         }
     }
-    // Appointments that overlap in one column share it side by side, each in its own lane.
+    // The rows an appointment takes in the grid (snapped to the quarter hours, as drawn).
+    $rowsOf = static function (array $a) use ($calStart, $rowsCount): array {
+        $s = max(0, min($rowsCount - 1, (int) floor((strtotime($a['starts_at']) - $calStart) / 60 / CAL_SLOT_MIN)));
+        $len = min(max(1, (int) ceil((strtotime($a['ends_at']) - strtotime($a['starts_at'])) / 60 / CAL_SLOT_MIN)), $rowsCount - $s);
+        return [$s, $len];
+    };
+    // Appointments that share a row in one column (as drawn: 10:00–10:20 and 10:20–10:40 both take
+    // the 10:15 row) stand side by side, each in its own lane.
     $lane = [];
     $byColumn = [];
     foreach ($appts as $a) {
         $key = $byCabinet ? ($a['cabinet'] !== null ? (int) $a['cabinet'] : ($usualCabinet[(int) $a['doctor_id']] ?? 1)) : (int) $a['doctor_id'];
-        $byColumn[$key][] = $a;
+        [$rs, $rl] = $rowsOf($a);
+        $byColumn[$key][] = ['id' => (int) $a['id'], 'from' => $rs, 'to' => $rs + $rl];
     }
     foreach ($byColumn as $list) {
-        usort($list, static fn ($x, $y) => [$x['starts_at'], $y['ends_at']] <=> [$y['starts_at'], $x['ends_at']]);
+        usort($list, static fn ($x, $y) => [$x['from'], $y['to']] <=> [$y['from'], $x['to']]);
         $group = [];
-        $groupEnd = '';
+        $groupEnd = -1;
         $laneEnds = [];
         $close = static function () use (&$group, &$laneEnds, &$lane): void {
             foreach ($group as $id) {
@@ -241,22 +251,22 @@ if ($view === 'zi') {
             $laneEnds = [];
         };
         foreach ($list as $a) {
-            if ($group !== [] && $a['starts_at'] >= $groupEnd) {
+            if ($group !== [] && $a['from'] >= $groupEnd) {
                 $close();
-                $groupEnd = '';
+                $groupEnd = -1;
             }
             $free = null;
             foreach ($laneEnds as $i => $end) {
-                if ($end <= $a['starts_at']) {
+                if ($end <= $a['from']) {
                     $free = $i;
                     break;
                 }
             }
             $free ??= count($laneEnds);
-            $laneEnds[$free] = $a['ends_at'];
-            $lane[(int) $a['id']] = [$free, 1];
-            $group[] = (int) $a['id'];
-            $groupEnd = max($groupEnd, $a['ends_at']);
+            $laneEnds[$free] = $a['to'];
+            $lane[$a['id']] = [$free, 1];
+            $group[] = $a['id'];
+            $groupEnd = max($groupEnd, $a['to']);
         }
         $close();
     }
@@ -267,14 +277,11 @@ if ($view === 'zi') {
             $others[] = $a;
             continue;
         }
-        $s = (int) floor((strtotime($a['starts_at']) - $calStart) / 60 / CAL_SLOT_MIN);
-        $len = max(1, (int) ceil((strtotime($a['ends_at']) - strtotime($a['starts_at'])) / 60 / CAL_SLOT_MIN));
-        $s = max(0, min($rowsCount - 1, $s));
-        $len = min($len, $rowsCount - $s);
+        [$s, $len] = $rowsOf($a);
         $data = $movable($a) ? ' data-appt="' . (int) $a['id'] . '" data-rand="' . $s . '" data-lungime="' . $len . '" data-col="' . $colIndex[$key] . '" data-medic="' . (int) $a['doctor_id'] . '" data-cabinet="' . ($a['cabinet'] ?? '') . '"' : '';
         [$li, $ln] = $lane[(int) $a['id']] ?? [0, 1];
         $side = $ln > 1 ? ';width:calc(100% / ' . $ln . ');margin-left:calc(100% * ' . $li . ' / ' . $ln . ')' : '';
-        $grid .= '<div' . $data . ' class="' . ($len <= 1 ? 'relative z-10 min-h-0 px-px pb-px' : 'relative z-10 min-h-0 p-px') . '" style="grid-row:' . ($s + 2) . ' / span ' . $len . ';grid-column:' . ($colIndex[$key] + 2) . $side . '">' . $block($a, $len <= 1 || $ln > 2)
+        $grid .= '<div' . $data . ' data-randuri="' . $s . ',' . $len . '" class="' . ($len <= 1 ? 'relative z-10 min-h-0 px-px pb-px' : 'relative z-10 min-h-0 p-px') . '" style="grid-row:' . ($s + 2) . ' / span ' . $len . ';grid-column:' . ($colIndex[$key] + 2) . $side . '">' . $block($a, $len <= 1 || $ln > 2)
             . ($movable($a) ? '<span data-trage-jos aria-hidden="true" class="absolute inset-x-2 bottom-0 h-2 cursor-ns-resize rounded-full hover:bg-actiune/40"></span>' : '') . '</div>';
     }
     if ($date === date('Y-m-d')) {
