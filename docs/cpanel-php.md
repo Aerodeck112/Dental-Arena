@@ -850,3 +850,12 @@ din copia bazei de date nu mai pot fi citite.
   și sfertul (10:15). Textul programărilor scurte crește cu rândul. Tragerea cu mouse-ul folosește
   pozițiile reale ale rândurilor. Programările care nu cad pe sfert (10:00–10:20, 10:20–10:40) se
   așază pe „culoare” după rândurile desenate, deci nu se mai suprapun.
+
+## Medicul la a doua procedură; listele doar pentru panou (Medoc) (noiembrie 2026)
+
+- Adaugă procedură: după salvare, formularul următor pornește cu același medic, zi, clinică și
+  programare (înainte revenea gol și a doua procedură se salva fără medic). O procedură nouă fără
+  medic ia medicul programării sau al contului; dacă nu are de unde, cere „Alegeți medicul”.
+- Un serviciu ascuns pe site sau cu toate prețurile ascunse (Medoc, CAS) e o listă doar pentru
+  panou: la Adaugă procedură apare la ambele clinici, și lângă lista proprie a Luduș-ului
+  (`procedure_panel_lists()`, `data-mereu` în admin.js), ca „… (prețuri doar în panou)”.

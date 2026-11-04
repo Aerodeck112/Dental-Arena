@@ -69,6 +69,18 @@ if (is_post() && $writable) {
         if ($doc !== null && !isset($doctors[$doc])) {
             $doc = null;
         }
+        // A new procedure always has its doctor: the one chosen, else the appointment's, else the
+        // doctor's own account; none of these → the doctor must be chosen.
+        if ($doc === null && $op === 'adauga') {
+            $fromAppt = admin_int($v['appointment_id']) !== null ? admin_int((string) db_value('SELECT doctor_id FROM appointments WHERE id = ? AND patient_id = ?', [admin_int($v['appointment_id']), $pid])) : null;
+            $doc = $fromAppt ?? admin_int((string) ($user['doctor_id'] ?? ''));
+            $doc = $doc !== null && isset($doctors[$doc]) ? $doc : null;
+            if ($doc === null) {
+                $errors['doctor_id'] = 'Alegeți medicul care a făcut procedura.';
+            } else {
+                $v['doctor_id'] = (string) $doc;
+            }
+        }
         $loc = admin_int($v['location_id']);
         if ($loc === null || !in_array($loc, $allowed, true)) {
             $errors['location_id'] = 'Alegeți clinica.';
@@ -120,7 +132,8 @@ if (is_post() && $writable) {
             $n = max(1, count($teeth));
             audit($op === 'modifica' ? 'procedura-modificata' : 'procedura', $name . ($teeth !== [] ? ' · ' . implode(', ', $teeth) : '') . ' · ' . lei((int) $price - $row['discount']) . ($n > 1 ? " × {$n}" : ''), null, $pid);
             flash($op === 'modifica' ? 'Procedura a fost modificată.' : ($n > 1 ? "Au fost adăugate {$n} proceduri." : 'Procedura a fost adăugată.'));
-            redirect($back);
+            // The next procedure starts with the same doctor, day, clinic (and appointment).
+            redirect($op === 'modifica' ? $back : admin_url($back, ['medic' => $doc, 'data' => $v['performed_on'], 'clinica' => $loc, 'programare' => admin_int($v['appointment_id'])]));
         }
     } elseif ($op === 'stare') {
         // „Schimbați” next to a procedure: done / not done, or its rest paid now, on it.
@@ -240,7 +253,9 @@ $priceClinic = (int) $v['location_id'];
 // A clinic with its own price list (Luduș) gets it instead of the site's: its options carry
 // data-clinica, and admin.js shows those of the clinic chosen below.
 $clinicLists = array_intersect_key(clinic_service_lists(), array_flip($allowed));
-$opts = static function (string $selected) use ($priceList, $priceClinic, $clinicLists, $names): string {
+// Medoc and the like (not on the site): offered at every clinic, also next to Luduș's own list.
+$panelLists = procedure_panel_lists($priceList);
+$opts = static function (string $selected) use ($priceList, $priceClinic, $clinicLists, $names, $panelLists): string {
     $out = '<option value="">Alegeți din lista de prețuri…</option>';
     foreach ($clinicLists as $lid => $items) {
         $out .= '<optgroup label="' . e('Lista ' . ($names[$lid] ?? '')) . '" data-clinica="' . (int) $lid . '">';
@@ -251,7 +266,7 @@ $opts = static function (string $selected) use ($priceList, $priceClinic, $clini
         $out .= '</optgroup>';
     }
     foreach ($priceList as $cat => $items) {
-        $out .= '<optgroup label="' . e($cat) . '">';
+        $out .= '<optgroup label="' . e($cat . (isset($panelLists[$cat]) ? ' (prețuri doar în panou)' : '')) . '"' . (isset($panelLists[$cat]) ? ' data-mereu' : '') . '>';
         foreach ($items as $sid => $s) {
             $shown = $s['clinics'][$priceClinic] ?? $s['price'];
             $out .= '<option value="' . $sid . '" data-pret="' . e($s['price'] !== null ? lei_input($s['price']) : '') . '"'
@@ -300,7 +315,7 @@ $procForm = static function (array $v, string $op, ?int $id) use ($opts, $docOpt
         . text_field('tooth', 'Dintele (dinții)', ['id' => "field-tooth{$sid}", 'value' => $v['tooth'], 'optional' => true, 'maxlength' => 80, 'hint' => $id === null ? 'De exemplu 16 sau 13, 14, 15 (câte un rând pe dinte).' : null, 'error' => $id === null ? $err('tooth') : null])
         . text_field('price', 'Prețul (lei)', ['id' => "field-price{$sid}", 'value' => $v['price'], 'inputmode' => 'decimal', 'error' => $id === null ? $err('price') : null, 'attrs' => ['data-pret-tinta' => '']])
         . text_field('discount', 'Reducere (%)', ['id' => "field-discount{$sid}", 'value' => $v['discount'], 'inputmode' => 'decimal', 'optional' => true, 'error' => $id === null ? $err('discount') : null])
-        . select_field('doctor_id', 'Medicul', $docOptions, ['id' => "field-doctor_id{$sid}", 'value' => $v['doctor_id']])
+        . select_field('doctor_id', 'Medicul', $docOptions, ['id' => "field-doctor_id{$sid}", 'value' => $v['doctor_id'], 'error' => $id === null ? $err('doctor_id') : null])
         . select_field('location_id', 'Clinica', $locOptions, ['id' => "field-location_id{$sid}", 'value' => $v['location_id'], 'error' => $id === null ? $err('location_id') : null])
         . text_field('lab', 'Laborator (lei)', ['id' => "field-lab{$sid}", 'value' => $v['lab'], 'inputmode' => 'decimal', 'optional' => true, 'hint' => 'Costul lucrării de laborator, dacă e.'])
         . '<div class="flex items-end pb-2">' . checkbox_field('done', 'Procedura e efectuată', ['id' => "field-done{$sid}", 'checked' => $v['done'] === '1']) . '</div>'

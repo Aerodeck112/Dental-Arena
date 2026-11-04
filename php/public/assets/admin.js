@@ -824,7 +824,8 @@
     var own = lists.indexOf(clinic.value) !== -1;
     Array.prototype.forEach.call(sel.querySelectorAll("optgroup"), function (g) {
       var c = g.getAttribute("data-clinica");
-      var show = own ? c === clinic.value : !c;
+      // data-mereu: a list kept only for the panel (Medoc), offered at every clinic.
+      var show = g.hasAttribute("data-mereu") || (own ? c === clinic.value : !c);
       g.hidden = !show;
       Array.prototype.forEach.call(g.querySelectorAll("option"), function (o) { o.hidden = !show; o.disabled = !show; });
     });

@@ -227,10 +227,24 @@ function procedure_price_options(): array
 {
     $out = [];
     $clinic = service_clinic_prices();
-    foreach (db_all('SELECT s.id, s.name, s.price_min, c.name AS category FROM services s JOIN categories c ON c.id = s.category_id ORDER BY c.sort_order, s.sort_order, s.id') as $s) {
-        $out[$s['category']][(int) $s['id']] = ['name' => $s['name'], 'price' => $s['price_min'] !== null ? (int) $s['price_min'] : null, 'clinics' => $clinic[(int) $s['id']] ?? []];
+    foreach (db_all('SELECT s.id, s.name, s.price_min, s.public_visible, c.name AS category, c.public_visible AS category_visible FROM services s JOIN categories c ON c.id = s.category_id ORDER BY c.sort_order, s.sort_order, s.id') as $s) {
+        $out[$s['category']][(int) $s['id']] = ['name' => $s['name'], 'price' => $s['price_min'] !== null ? (int) $s['price_min'] : null, 'clinics' => $clinic[(int) $s['id']] ?? [],
+            'panel_only' => (int) $s['public_visible'] === 0 || (int) $s['category_visible'] === 0];
     }
     return $out;
+}
+
+/**
+ * The lists kept only for the panel (Medoc, or a service like CAS whose prices are not on the site):
+ * a service hidden on the site, or all of whose prices are. „Adaugă procedură” offers them at every
+ * clinic, also at one with its own price list (Luduș).
+ *
+ * @param array<string,array<int,array>> $options procedure_price_options()
+ * @return array<string,true> category name → true
+ */
+function procedure_panel_lists(array $options): array
+{
+    return array_map(static fn () => true, array_filter($options, static fn ($items) => $items !== [] && !in_array(false, array_column($items, 'panel_only'), true)));
 }
 
 /**

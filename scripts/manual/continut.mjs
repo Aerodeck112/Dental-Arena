@@ -502,8 +502,9 @@ ${pasi([
   `Alegeți procedura din lista de prețuri: prețul se completează singur, cu prețul aprobat la clinica aleasă (îl puteți schimba). Dacă nu e în listă, scrieți-o la „Sau scrieți procedura”.`,
   `Dinții: dați clic pe ei în ${b("odontograma")} din formular (încă un clic îl scoate) sau scrieți-i (16, sau 13, 14, 15). Se face câte un rând pentru fiecare dinte, fiecare cu prețul de sus. Pe odontogramă se văd și cariile, obturațiile etc. notate la pacient.`,
   `Opțional: reducerea (%), costul de laborator, observații. Debifați „Procedura e efectuată” pentru una începută, care încă nu se plătește.`,
-  `${b("Adăugați procedura")}.`,
+  `${b("Adăugați procedura")}. Pentru a doua procedură a aceluiași pacient, formularul pornește cu același medic, aceeași zi și clinică (și aceeași programare); schimbați doar procedura.`,
 ])}
+${sfat(`Fiecare procedură nouă are medicul ei: dacă câmpul ${b("Medicul")} e gol, panoul pune medicul programării sau al contului dumneavoastră; dacă nu are de unde, vă cere să-l alegeți.`)}
 ${sfat("O procedură greșită se poate modifica sau șterge din rândul ei („Modificați”), de cel care a adăugat-o, în aceeași săptămână; după aceea, de administrator. Ce se plătise pentru ea rămâne ca avans.")}` : ""}
 ${rol === "medic" ? `<h3>Încasare</h3>
 <p>Când pacientul plătește la dumneavoastră: în fila ${b("Proceduri și plăți")}, jos, la ${b("Încasare")}, scrieți suma, alegeți cum a plătit (numerar, card, transfer) și apăsați ${b("Înregistrați plata")}; sau, în dreptul procedurii, ${b("Schimbați")} → ${b("Încasați …")}. În ${b("Casa")} și pe pagina Azi vedeți ce ați încasat dumneavoastră, iar în ${b("Rapoarte")} → ${b("Raport încasări")} plățile pentru procedurile dumneavoastră.</p>` : ""}
@@ -660,6 +661,7 @@ ${img("servicii-pagina", "Prețurile unei pagini de servicii.")}
 <ul>
 <li>Fiecare rând: numele, prețul, bifa „de la”, un al doilea preț (pentru „200 / 400 lei”), unitatea (de exemplu „/dinte”), bifa „pe site” și prețul reprezentativ (cel afișat pe cardul serviciului). Prețul gol înseamnă „Prețul îl aflați la telefon”.</li>
 <li>${b("Listele de prețuri ale clinicilor")} (în dreapta): o clinică cu alte denumiri și prețuri (Luduș) are lista ei, care nu apare pe site. Cât timp lista are servicii, la ${b("Adaugă procedură")} pentru acea clinică se alege din ea. Lista Luduș a pornit din QDental Luduș (denumirile și ultimele prețuri) și se poate schimba oricând.</li>
+<li><strong>O listă doar pentru panou</strong> (de exemplu Medoc): un serviciu cu toate prețurile debifate la „pe site” (pe site rămâne pagina, fără prețuri, ca la CAS), sau cu „Serviciul apare pe site” debifat (nu apare deloc pe site). La ${b("Adaugă procedură")} apare la ambele clinici, ca „Medoc (prețuri doar în panou)”, cu prețurile lui.</li>
 <li>${b("Preț aprobat în clinică")}: sub fiecare rând, câte un preț pentru Cristești și pentru Luduș. Nu apare pe site; se completează singur la ${b("Adaugă procedură")}, după clinica aleasă. Gol = prețul de pe site.</li>
 <li><strong>Durează</strong>: cât ține serviciul. Pe site, programarea pentru el ocupă atât.</li>
 <li><strong>Programare online</strong>: bifat, serviciul apare ca motiv pe pagina Programare de pe site, cu textul pentru pacient (de exemplu „Consultație sau control”) și o explicație scurtă. „Urgență” îl pune al doilea, evidențiat, cu telefoanele clinicilor.</li>
