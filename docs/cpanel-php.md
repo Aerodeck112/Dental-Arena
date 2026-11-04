@@ -859,3 +859,8 @@ din copia bazei de date nu mai pot fi citite.
 - Un serviciu ascuns pe site sau cu toate prețurile ascunse (Medoc, CAS) e o listă doar pentru
   panou: la Adaugă procedură apare la ambele clinici, și lângă lista proprie a Luduș-ului
   (`procedure_panel_lists()`, `data-mereu` în admin.js), ca „… (prețuri doar în panou)”.
+- MEDOC (migrarea `029_medoc.php`): pagina „Servicii prin contract cu MEDOC” (`/servicii-medoc`) apare
+  pe site doar cu mențiunea contractului, fără prețuri (ca CAS); cele 49 de proceduri din fișierul
+  clinicii (cu prețurile contractului, 0 lei inclus) sunt ascunse pe site și se aleg la Adaugă
+  procedură, la ambele clinici. Rulează o singură dată; o listă MEDOC existentă e păstrată.
+- După „Adăugați procedura”, formularul rămâne deschis pentru următoarea.

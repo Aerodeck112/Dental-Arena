@@ -132,8 +132,8 @@ if (is_post() && $writable) {
             $n = max(1, count($teeth));
             audit($op === 'modifica' ? 'procedura-modificata' : 'procedura', $name . ($teeth !== [] ? ' · ' . implode(', ', $teeth) : '') . ' · ' . lei((int) $price - $row['discount']) . ($n > 1 ? " × {$n}" : ''), null, $pid);
             flash($op === 'modifica' ? 'Procedura a fost modificată.' : ($n > 1 ? "Au fost adăugate {$n} proceduri." : 'Procedura a fost adăugată.'));
-            // The next procedure starts with the same doctor, day, clinic (and appointment).
-            redirect($op === 'modifica' ? $back : admin_url($back, ['medic' => $doc, 'data' => $v['performed_on'], 'clinica' => $loc, 'programare' => admin_int($v['appointment_id'])]));
+            // The form stays open for the next procedure, with the same doctor, day, clinic (and appointment).
+            redirect($op === 'modifica' ? $back : admin_url($back, ['adauga' => 1, 'medic' => $doc, 'data' => $v['performed_on'], 'clinica' => $loc, 'programare' => admin_int($v['appointment_id'])]) . '#adauga');
         }
     } elseif ($op === 'stare') {
         // „Schimbați” next to a procedure: done / not done, or its rest paid now, on it.
