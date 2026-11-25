@@ -753,10 +753,32 @@ function patient_header(array $p, array $user, string $active, string $extraActi
         $nav .= '<a href="' . e($href) . '"' . ($on ? ' aria-current="page"' : '') . ' class="' . e(cn('inline-flex min-h-control shrink-0 items-center border-b-2 px-3 text-control', $on ? 'border-actiune font-semibold text-cerneala' : 'border-transparent text-discret hover:text-cerneala')) . '">' . e($label) . '</a>';
     }
     $chips = alert_chips($alerts, 'text-corp') . comfort_chip($p['comfort']);
+    // „Următoarea programare”: the next one not yet over (today's included), on every tab of the file.
+    $next = db_all("SELECT a.id, a.starts_at, a.ends_at, a.status, a.reason, a.category_slug, d.public_name AS doctor, l.short_name AS clinic FROM appointments a
+        LEFT JOIN doctors d ON d.id = a.doctor_id LEFT JOIN locations l ON l.id = a.location_id
+        WHERE a.patient_id = ? AND a.ends_at >= ? AND a.status IN ('programat', 'confirmat', 'sosit', 'in-tratament') ORDER BY a.starts_at LIMIT 4", [$id, now_sql()]);
+    $nextBox = '';
+    if ($p['anonymized_at'] === null) {
+        if ($next !== []) {
+            $a = $next[0];
+            $day = substr($a['starts_at'], 0, 10);
+            $when = $day === date('Y-m-d') ? 'Azi' : ($day === date('Y-m-d', strtotime('+1 day')) ? 'Mâine' : ucfirst(format_date($day, true)));
+            $more = count($next) - 1;
+            $nextBox = '<a href="/admin/programari/' . (int) $a['id'] . '" class="-mt-4 mb-6 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-panou border-2 border-actiune bg-menta-pal px-4 py-3 text-corp hover:underline">'
+                . '<span class="flex items-center gap-2 font-semibold">' . icon('calendar', 18) . 'Următoarea programare</span>'
+                . '<span class="font-semibold text-cerneala">' . e($when . ', ' . hm($a['starts_at']) . '–' . hm($a['ends_at'])) . '</span>'
+                . '<span>' . e(implode(' · ', array_filter([$a['doctor'], $a['clinic'], $a['reason'] ?: ($a['category_slug'] ? service_title($a['category_slug']) : '')]))) . '</span>'
+                . appt_status_chip($a['status'])
+                . ($more > 0 ? '<span class="text-mic text-discret">+ ' . match ($more) { 1 => 'încă una', 2 => 'încă 2', default => 'încă 3 sau mai multe' } . ' (fila Fișa → Programări)</span>' : '') . '</a>';
+        } else {
+            $nextBox = '<p class="-mt-4 mb-6 flex flex-wrap items-center gap-2 rounded-panou border border-dashed border-linie-control px-4 py-3 text-corp text-discret">' . icon('calendar', 18) . 'Nicio programare viitoare.</p>';
+        }
+    }
     return '<p class="mb-4"><a href="/admin/pacienti" class="inline-flex min-h-control items-center gap-1 text-link underline underline-offset-4">' . icon('chevron-left', 18) . 'Pacienți</a></p>'
         . admin_header(patient_name($p), $lead, $actions)
         . ($p['anonymized_at'] !== null ? '<p class="-mt-4 mb-6 rounded-panou bg-adancit p-4 text-corp">Fișă anonimizată la ' . e(format_datetime($p['anonymized_at'])) . '. Datele medicale și financiare se păstrează, fără datele de identificare.</p>' : '')
         . ($chips !== '' ? '<div class="-mt-4 mb-6 flex flex-wrap gap-2">' . $chips . '</div>' : '')
+        . $nextBox
         . '<nav aria-label="Fișa pacientului" class="mb-8 flex relative overflow-x-auto border-b border-linie">' . $nav . '</nav>';
 }
 

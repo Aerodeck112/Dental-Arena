@@ -880,3 +880,10 @@ din copia bazei de date nu mai pot fi citite.
   „Intervenția / dinții” e opțional. Gol: în textul semnat scrie „dinții stabiliți de medic la
   consultație” (chirurgie: „cea stabilită de medic la consultație”; în engleză la fel), nu o linie
   goală. Pe hârtie rămâne linia de completat.
+
+## Fișa pacientului: Următoarea programare (noiembrie 2026)
+
+- Sub numele pacientului, pe toate filele fișei (`patient_header()`): cea mai apropiată programare
+  care nu s-a terminat (programat, confirmat, sosit, în tratament; anulatele și trecutele nu), cu
+  ziua („Azi”, „Mâine” sau ziua săptămânii și data), ora, medicul, clinica, motivul, starea și câte
+  mai urmează; un clic deschide programarea. Altfel: „Nicio programare viitoare”.

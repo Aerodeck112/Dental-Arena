@@ -223,6 +223,7 @@ ${img("pacient-nou", "Fișa nouă de pacient.")}
 ${img("pacient-nou-dubluri", "Posibile fișe dublate, la o fișă nouă.")}
 <h3>Fișa</h3>
 <p>Sus: numele, numărul fișei, vârsta, telefonul și alertele. Butoanele ${b("Programare nouă")} și ${b("Sunați")} sunt mereu la îndemână. Filele: ${rol === "medic" ? `${b("Fișa")}, ${b("Odontogramă")}, ${b("Planuri de tratament")}, ${b("Documente și acorduri")}, ${b("Sterilizare")}, ${b("Mesaje")}` : `${b("Fișa")}, ${b("Planuri de tratament")}, ${b("Documente și acorduri")}, ${b("Sterilizare")}, ${b("Mesaje")}`}.</p>
+<p>Sub nume, căsuța <strong>Următoarea programare</strong> (pe toate filele fișei): ziua și ora, medicul, clinica, motivul și starea, plus câte mai urmează. Un clic deschide programarea. Fără programări viitoare scrie „Nicio programare viitoare”.</p>
 ${img(rol === "medic" ? "fisa-medic" : "fisa-receptie", rol === "medic" ? "Fișa văzută de medic: anamneza completă, programările, rechemările." : "Fișa văzută de recepție: alertele, datele, etichetele, programările, rechemările, notele.")}
 <p>Pe fila ${b("Fișa")}: ${rol === "medic" ? "anamneza (alergii, medicamente, afecțiuni), " : "alertele medicale, "}datele pacientului, ${rol === "medic" ? "implanturile, " : ""}etichetele, programările, rechemările și notele.</p>
 <h3>Etichetele</h3>
