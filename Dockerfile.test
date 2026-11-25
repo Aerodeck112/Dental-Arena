@@ -1,0 +1,41 @@
+# The test copy of the site and CRM (docs/mediu-test.md): demo patients, appointments and invoices,
+# hidden from Google. Built by .github/workflows/test-image.yml as ghcr.io/aerodeck112/dental-arena:test.
+
+FROM node:22-bookworm-slim AS build
+# python3, make and g++ build better-sqlite3 when no ready-made binary can be downloaded.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends openssl ca-certificates python3 make g++ \
+  && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY package.json package-lock.json prisma.config.ts ./
+COPY prisma ./prisma
+RUN npm ci --no-audit --no-fund
+COPY . .
+ENV NODE_ENV=production SITE_MODE=test NEXT_TELEMETRY_DISABLED=1
+# The build reads the clinic data from a throw-away database; the secrets are for the build only.
+RUN set -a && . ./.env.example && set +a \
+  && export DATABASE_URL="file:/tmp/build.db" SEED_DEMO=0 APP_URL="https://dentalarena.ro" \
+     AUTH_SECRET="build-$(openssl rand -hex 32)" PII_ENCRYPTION_KEY="$(openssl rand -base64 32)" \
+     CRON_SECRET="build-$(openssl rand -hex 16)" \
+  && npx prisma migrate deploy && npx prisma db seed \
+  && npx next build \
+  && cp -R .next/static .next/standalone/.next/static \
+  && cp -R public .next/standalone/public \
+  && rm -rf /tmp/build.db .next/cache
+
+# Without the compilers: the server, plus what the start needs to create the database (prisma, tsx,
+# the seed and the content it reads).
+FROM node:22-bookworm-slim
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends openssl ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY --from=build /app/package.json /app/prisma.config.ts /app/tsconfig.json ./
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/prisma ./prisma
+COPY --from=build /app/src ./src
+COPY --from=build /app/scripts/test-env ./scripts/test-env
+COPY --from=build /app/.next/standalone ./.next/standalone
+ENV NODE_ENV=production SITE_MODE=test NEXT_TELEMETRY_DISABLED=1 PORT=10000 HOSTNAME=0.0.0.0
+EXPOSE 10000
+CMD ["node", "scripts/test-env/start.cjs"]

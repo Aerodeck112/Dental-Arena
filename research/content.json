@@ -1,0 +1,1000 @@
+{
+  "services": [
+    {
+      "slug": "stomatologie-generala",
+      "title": "Stomatologie generală",
+      "seoTitle": "Stomatologie Generală Cristești Luduș | Dental Arena Consultații",
+      "sections": [
+        {
+          "heading": "Stomatologie generală",
+          "body": "Servicii\n\n[Adnotare: banner titlu pagină. H2 „Stomatologie generală” și dedesubt subtitlul „Servicii”, pe imaginea de fundal Untitled-design-2024-05-27T131528.593.png (2000x320, verde mentă cu dinți 3D).]"
+        },
+        {
+          "heading": "[Text introductiv – fără titlu pe site]",
+          "body": "[Imagine: Untitled-design-2024-05-29T125747.619.png, alt gol]\n\nExistă diverse probleme dentare comune care pot apărea atât la adulți, cât și la copii. Spre exemplu, caria dentară apare atunci când bacteriile din cavitatea bucală produc acizi care atacă dintele. Ca urmare, pulpa dentară se poate inflama sau infecta, de obicei din cauza unei carii profunde, a unor obturații (plombe) întinse, fisuri în smalț sau din cauza unor traumatisme. În acest caz, specialiștii noștri recomandă tratamentul de canal, ale cărui etape le urmărim cu strictețe. Pentru a preveni apariția acestor probleme, recomandăm control stomatologic periodic, folosirea regulată a aței dentare și periajul adecvat al dinților."
+        },
+        {
+          "heading": "Tratamente și prețuri",
+          "body": "- Pansament calmant 50 lei\n- Obturație compozit de la 200 lei\n- Obturație estetică de la 300 lei\n- Reconstrucție cu pivot din fibră de sticlă 550 lei\n- Obturație glas-ionomer 120 lei\n- Tratament endodontic rotativ monoradiculari 350 lei\n- Tratament endodontic rotativ pluriradiculari 400 lei\n- Retratament monoradiculari 400 lei\n- Retratament pluriradiculari 600 lei"
+        },
+        {
+          "heading": "Servicii",
+          "body": "[Adnotare: bara laterală, identică pe toate paginile de servicii. Fiecare element este link.]\n\n- Consultație și profilaxie\n- Stomatologie generală\n- Inhalosedare\n- Implantologie\n- Chirurgie dento-alveolară\n- Protetică dentară (lucrări dentare)\n- Pedodonție\n- Ortodonție\n- Parodontologie\n- Estetică dentară"
+        },
+        {
+          "heading": "Contact",
+          "body": "0265 326 316\n\n[Adnotare: bara laterală, casetă cu iconiță telefon (H3).]"
+        }
+      ],
+      "images": [
+        "Untitled-design-2024-05-29T125747.619.png",
+        "Untitled-design-2024-05-27T131528.593.png"
+      ],
+      "faqs": [],
+      "notes": "Textul dintre [paranteze drepte] este adnotare, nu text de pe site. Verificat față de HTML-ul live (https://dentalarena.ro/stomatologie-generala/), nu lipsește nimic: fără acordeoane, tab-uri sau FAQ. Introducerea este un singur <p>. Ultima propoziție („Pentru a preveni apariția acestor probleme, … periajul adecvat al dinților.”) este în <strong> (bold). Imaginea principală: mâini cu mănuși albastre și instrumente dentare, pacientă zâmbind, cu sigla Dental Arena pe bavețică; 800x489, alt gol. Bannerul hero Untitled-design-2024-05-27T131528.593.png lipsea din research/media; l-am descărcat acolo de pe site. Bannerul e folosit pe toate cele 5 pagini (din CSS post-45.css, background-image pe containerul titlului). Meta description Yoast este doar o listă de cuvinte cheie, de aceea lipsește shortDescription: „stomatologie generală dental arena cristești luduș consultație profilaxie obturații detartraj cabinet stomatologic tratamente dentare”. og:title este identic cu seoTitle. În lista de prețuri nu apare nicio taxă de consultație. Pagina nu are CTA în corp (lipsesc casetele „Programează o consultație”/„Zâmbește cu noi” de pe pagina de profilaxie). Date Yoast: publicat 2024-03-20, modificat 2025-08-27."
+    },
+    {
+      "slug": "consultatie-profilaxie",
+      "title": "Consultație și profilaxie",
+      "seoTitle": "Ortodonție Cristești Luduș | Aparat Dentar Fix & Mobil Dental Arena",
+      "shortDescription": "Consultație stomatologică și profilaxie Dental Arena Cristești-Luduș. Igienizare profesională, detartraj preventiv. Tel: 0265.326.316",
+      "sections": [
+        {
+          "heading": "Consultație și profilaxie",
+          "body": "Servicii\n\n[Adnotare: banner titlu pagină. H2 „Consultație și profilaxie” și dedesubt subtitlul „Servicii”, pe imaginea de fundal Untitled-design-2024-05-27T131528.593.png.]"
+        },
+        {
+          "heading": "[Text introductiv – fără titlu pe site]",
+          "body": "[Imagine: Untitled-design-2024-05-27T130820.634.png, alt=„Cabinet stomatologic modern Dental Arena cu fotoliu dentar și echipament pentru consultații și profilaxie”]\n\nEste foarte important să vă examinați periodic dantura, pentru a păstra un zâmbet sănătos pentru mult timp. De aceea, vă așteptăm la o consultație stomatologică, în urma căreia vă vom evalua problemele dentare și vă vom întocmi un plan de tratament adecvat nevoilor dumneavoastră. Specialiștii noștri vă recomandă să nu neglijați importanța examinărilor dentare preventive!"
+        },
+        {
+          "heading": "Tratamente și prețuri",
+          "body": "- Detartraj+periaj profesional/arcada 200 lei\n- Detartraj+periaj+air-flow/arcada 250 lei\n- Albire dentara 1000 lei\n- Sigilare santuri 130 lei"
+        },
+        {
+          "heading": "Programează o consultație",
+          "body": "[Adnotare: casetă CTA (promo box, H3), fără alt text și fără link. Imagine de fundal: b62b3b23-1e7f-43d7-a84a-688331554f15.jpg, cu efect zoom la hover.]"
+        },
+        {
+          "heading": "Zâmbește cu noi",
+          "body": "[Adnotare: a doua casetă CTA (promo box, H3). Titlul are rupere de rând: „Zâmbește” / „cu noi”. Toată caseta duce la http://dentalarena.ro. Imagine de fundal: Untitled-design-2024-05-13T112021.742.png. Apare cu animație slideInUp.]"
+        },
+        {
+          "heading": "Servicii",
+          "body": "[Adnotare: bara laterală, identică pe toate paginile de servicii. Fiecare element este link.]\n\n- Consultație și profilaxie\n- Stomatologie generală\n- Inhalosedare\n- Implantologie\n- Chirurgie dento-alveolară\n- Protetică dentară (lucrări dentare)\n- Pedodonție\n- Ortodonție\n- Parodontologie\n- Estetică dentară"
+        },
+        {
+          "heading": "Contact",
+          "body": "0265 326 316\n\n[Adnotare: bara laterală, casetă cu iconiță telefon (H3).]"
+        }
+      ],
+      "images": [
+        "Untitled-design-2024-05-27T130820.634.png",
+        "b62b3b23-1e7f-43d7-a84a-688331554f15.jpg",
+        "Untitled-design-2024-05-13T112021.742.png",
+        "Untitled-design-2024-05-27T131528.593.png"
+      ],
+      "faqs": [],
+      "notes": "Textul dintre [paranteze drepte] este adnotare. Verificat față de HTML-ul live: fără acordeoane, tab-uri sau FAQ. EROARE SEO: <title> și og:title sunt „Ortodonție Cristești Luduș | Aparat Dentar Fix & Mobil Dental Arena”, copiate de la pagina de ortodonție. Pe site-ul nou trebuie un titlu propriu pentru Consultație și profilaxie. Introducerea este un singur <p>. Ultima propoziție („Specialiștii noștri vă recomandă … preventive!”) este în <strong>. Prețuri fără diacritice în original: „arcada” → „arcadă”, „Albire dentara” → „Albire dentară”, „Sigilare santuri” → „Sigilare șanțuri”. În HTML, „Sigilare santuri” e urmat de zeci de spații (aliniere manuală); le-am redus la unul. Albirea apare aici la 1000 lei, iar pe pagina Estetică dentară „Albire profesională Opalescence Boost” costă 800 lei, deci prețurile se contrazic. Nu există preț pentru consultația propriu-zisă. Imaginea principală: cabinet alb cu unit dentar și dulap cu sigla „Dental Arena”, 800x489. În biblioteca media are caption-ul: „Clinica stomatologică modernă Dental Arena din Cristești și Luduș este dotată cu echipamente de ultimă generație pentru consultații stomatologice și profilaxie dentară. Fotolii dentare ergonomice și tehnologia avansată asigură confortul pacienților în timpul igienizării profesionale, detartrajului și examinărilor preventive. Mediul steril și designul contemporan creează o atmosferă relaxantă pentru toate procedurile de consultație și profilaxie.” Pagina e și ținta linkului „Servicii” din meniul footer-ului. Date Yoast: modificat 2025-09-02."
+    },
+    {
+      "slug": "inhalosedare",
+      "title": "Inhalosedare",
+      "seoTitle": "Inhalosedare Cristești Luduș | Sedare Conștientă Dental Arena",
+      "shortDescription": "Inhalosedare la Dental Arena Cristești-Luduș. Sedare conștientă sigură pentru copii și adulți. Tratament fără durere. Tel: 0265.326.316",
+      "sections": [
+        {
+          "heading": "Inhalosedare",
+          "body": "Servicii\n\n[Adnotare: banner titlu pagină. H2 „Inhalosedare” și dedesubt subtitlul „Servicii”, pe imaginea de fundal Untitled-design-2024-05-27T131528.593.png.]"
+        },
+        {
+          "heading": "[Text introductiv – fără titlu pe site]",
+          "body": "[Imagine: Untitled-design-2024-05-29T130144.544.png, alt gol]\n\nLa Dental Arena Clinic vă puteți relaxa în timpul tratamentului dentar, mai ales dacă de obicei vă cuprinde frica de dentist. Avem o metodă de sedare conștientă și sigură, care poate fi aplicată tuturor, chiar și copiilor. În timpul ședinței de inhalosedare, pacientul simte o stare de relaxare generală, rămâne conștient, răspunde la stimuli și colaborează cu medicul. Cu ajutorul ei, tratamentul se realizează într-un timp mai scurt, iar recuperarea se face rapid, în 3-5 minute."
+        },
+        {
+          "heading": "Tratamente și prețuri",
+          "body": "- Preț / oră 150 lei"
+        },
+        {
+          "heading": "Servicii",
+          "body": "[Adnotare: bara laterală, identică pe toate paginile de servicii. Fiecare element este link.]\n\n- Consultație și profilaxie\n- Stomatologie generală\n- Inhalosedare\n- Implantologie\n- Chirurgie dento-alveolară\n- Protetică dentară (lucrări dentare)\n- Pedodonție\n- Ortodonție\n- Parodontologie\n- Estetică dentară"
+        },
+        {
+          "heading": "Contact",
+          "body": "0265 326 316\n\n[Adnotare: bara laterală, casetă cu iconiță telefon (H3).]"
+        }
+      ],
+      "images": [
+        "Untitled-design-2024-05-29T130144.544.png",
+        "Untitled-design-2024-05-27T131528.593.png"
+      ],
+      "faqs": [],
+      "notes": "Textul dintre [paranteze drepte] este adnotare. Verificat față de HTML-ul live: fără acordeoane, tab-uri, FAQ sau CTA în corpul paginii. Pagina are un singur paragraf, fără bold, și un singur preț. Imaginea principală: fotoliu dentar gri și unit în cabinet alb, cu sigla Dental Arena (dinte verde) în colț; 800x489, alt gol. og:title este identic cu seoTitle. Date Yoast: modificat 2025-08-27."
+    },
+    {
+      "slug": "implantologie",
+      "title": "Implantologie",
+      "seoTitle": "Implantologie Dental Arena Cristești | Implant Dentar & Coroane",
+      "shortDescription": "Implantologie Dental Arena Cristești-Luduș. Implant dentar titan, coroane pe implant, elevare sinus. Înlocuire dinți. Tel: 0265.326.316",
+      "sections": [
+        {
+          "heading": "Implantologie",
+          "body": "Servicii\n\n[Adnotare: banner titlu pagină. H2 „Implantologie” și dedesubt subtitlul „Servicii”, pe imaginea de fundal Untitled-design-2024-05-27T131528.593.png.]"
+        },
+        {
+          "heading": "[Text introductiv – fără titlu pe site]",
+          "body": "[Imagine: Untitled-design-2024-05-29T130321.118.png, alt gol]\n\nLipsa dinților creează neplăceri atât din punct de vedere funcțional, cât și estetic. Însă dinții se pot înlocui prin implant dentar. După ce extracția este vindecată sau imediat după extracție, se inserează o piesă din titan de forma unui șurub, ca înlocuitor pentru rădăcină. Perioada de vindecare este de 3-6 luni, după care se atașează un bont protetic, deasupra căruia medicul plasează coroana, puntea sau proteza. Totul se face cu precizie, după analiza unui set de radiografii speciale."
+        },
+        {
+          "heading": "Tratamente și prețuri",
+          "body": "- Implant Neodent 2200 lei\n- Bont protetic drept/angulat 550 lei\n- Aditie os tehnica Khoury 3000 lei\n- Aditie os preiimplantar 1500 lei\n- Augmentare osoasa cu plasa de titan 3500 lei\n- Proteza mandibulara pe doua implanturi 9000 lei\n- Proteza maxilara pe 4 implanturi 15000 lei"
+        },
+        {
+          "heading": "Servicii",
+          "body": "[Adnotare: bara laterală, identică pe toate paginile de servicii. Fiecare element este link.]\n\n- Consultație și profilaxie\n- Stomatologie generală\n- Inhalosedare\n- Implantologie\n- Chirurgie dento-alveolară\n- Protetică dentară (lucrări dentare)\n- Pedodonție\n- Ortodonție\n- Parodontologie\n- Estetică dentară"
+        },
+        {
+          "heading": "Contact",
+          "body": "0265 326 316\n\n[Adnotare: bara laterală, casetă cu iconiță telefon (H3).]"
+        }
+      ],
+      "images": [
+        "Untitled-design-2024-05-29T130321.118.png",
+        "Untitled-design-2024-05-27T131528.593.png"
+      ],
+      "faqs": [],
+      "notes": "Textul dintre [paranteze drepte] este adnotare. Verificat față de HTML-ul live: fără acordeoane, tab-uri, FAQ sau CTA în corpul paginii. Pagina are un singur paragraf, fără bold. Prețuri fără diacritice în original: „Aditie” → „Adiție”, „tehnica” → „tehnică”, „osoasa” → „osoasă”, „Proteza mandibulara” → „Proteză mandibulară”, „Proteza maxilara” → „Proteză maxilară”. Greșeală de tipar: „preiimplantar” → „preimplantar”. În HTML, prețurile sunt aliniate cu multe spații; le-am redus la unul. Meta description pomenește „elevare sinus”, dar procedura nu apare nici în text, nici în lista de prețuri. og:title diferă de seoTitle: „Află cum poți înlocui dinții lipsă prin proceduri moderne de implantologie!”. og:description conține trei teasere stricate de ghilimele: „Redă-ți zâmbetul cu implanturi dentare de calitate la Dental Arena!”, „Află cum poți înlocui dinții lipsă prin proceduri moderne de implantologie!”, „Coroane pe implant realizate cu precizie pentru un zâmbet perfect!”. og:image este Untitled-design-2024-05-13T112021.742.png (aceeași imagine ca a doua casetă CTA de la profilaxie), doar pentru share social, nu apare în corp. Imaginea principală: macheta unei arcade cu implanturi din titan și sigla Dental Arena pe un dinte; 800x489, alt gol. Linkul din bara laterală spre Implantologie nu are slash final (https://dentalarena.ro/implantologie). Date Yoast: modificat 2025-09-02."
+    },
+    {
+      "slug": "chirurgie-dento-alveolara",
+      "title": "Chirurgie dento-alveolară",
+      "seoTitle": "Chirurgie Dento-Alveolară Cristești | Extracții Dental Arena",
+      "shortDescription": "Specialiști în chirurgie dentară pentru cazuri complexe la Dental Arena!",
+      "sections": [
+        {
+          "heading": "Chirurgie dento-alveolară",
+          "body": "Servicii\n\n[Adnotare: banner titlu pagină. H2 „Chirurgie dento-alveolară” și dedesubt subtitlul „Servicii”, pe imaginea de fundal Untitled-design-2024-05-27T131528.593.png.]"
+        },
+        {
+          "heading": "[Text introductiv – fără titlu pe site]",
+          "body": "[Imagine: Untitled-design-2024-05-29T130503.088.png, alt gol]\n\nMedicii noștri sunt pregătiți pentru cele mai complexe cazuri de chirurgie dentară, atât la adulți, cât și la copii: extracții laborioase, rezecții apicale, chistectomii dentare și odontectomii. Toate intervențiile chirurgicale se realizează sub anestezie locală sau prin inhalosedare, pentru a-i permite medicului să lucreze fără întreruperi și pentru a-l scăpa pe pacient de anxietate și durere."
+        },
+        {
+          "heading": "Tratamente și prețuri",
+          "body": "- Extractie dinte parodontotic 100 lei\n- Extractie dinte monoradicular 200 lei\n- Extractie dinte pluriradicular 250 lei\n- Extractie molar de minte erupt 300 lei\n- Extractie cu alveolotomie 350 lei\n- Odontectomie, chistectomie, rezectie apicala 600 lei\n- Chiuretaj alveolar 150 lei\n- Incizie abces 100 lei\n- Separare de radacini 50 lei\n- Sutura 100 lei\n- Tratamentul hemoragiei postextractionale 100 lei"
+        },
+        {
+          "heading": "Servicii",
+          "body": "[Adnotare: bara laterală, identică pe toate paginile de servicii. Fiecare element este link.]\n\n- Consultație și profilaxie\n- Stomatologie generală\n- Inhalosedare\n- Implantologie\n- Chirurgie dento-alveolară\n- Protetică dentară (lucrări dentare)\n- Pedodonție\n- Ortodonție\n- Parodontologie\n- Estetică dentară"
+        },
+        {
+          "heading": "Contact",
+          "body": "0265 326 316\n\n[Adnotare: bara laterală, casetă cu iconiță telefon (H3).]"
+        }
+      ],
+      "images": [
+        "Untitled-design-2024-05-29T130503.088.png",
+        "Untitled-design-2024-05-27T131528.593.png"
+      ],
+      "faqs": [],
+      "notes": "Textul dintre [paranteze drepte] este adnotare. Verificat față de HTML-ul live: fără acordeoane, tab-uri, FAQ sau CTA în corpul paginii. Pagina are un singur paragraf, fără bold. shortDescription vine din og:description, pentru că meta description este doar o listă de cuvinte cheie: „chirurgie dento-alveolară dental arena cristești luduș extracții odontectomie rezecție apicală chistectomie inhalosedare molar de minte”. og:description conține trei teasere stricate de ghilimele: „Specialiști în chirurgie dentară pentru cazuri complexe la Dental Arena!”, „Extracții și intervenții chirurgicale fără durere pentru sănătatea ta orală!”, „Programează-te pentru o consultație de specialitate în chirurgie dento-alveolară!”. og:title: „Extracții și intervenții chirurgicale fără durere pentru sănătatea ta orală!”. og:image este 438716692_938311954749425_6793390655779106115_n.jpg (1536x2048, aflată în media), doar pentru share social, nu apare în corp. Prețuri fără diacritice în original: „Extractie” → „Extracție”, „rezectie apicala” → „rezecție apicală”, „radacini” → „rădăcini”, „Sutura” → „Sutură”, „postextractionale” → „postextracționale”. În HTML, prețurile sunt aliniate cu multe spații; le-am redus la unul. Imaginea principală: tavă cu instrumente stomatologice și seringă, cu sigla Dental Arena pe oglinda dentară; 800x489, alt gol. Date Yoast: modificat 2025-09-02."
+    },
+    {
+      "slug": "protetica-dentara",
+      "title": "Protetică dentară (lucrări dentare)",
+      "seoTitle": "Protetică Dentară Cristești Luduș | Coroane Ceramice Dental Arena",
+      "shortDescription": "Protetică dentară premium Dental Arena Cristești-Luduș. Coroane zirconiu, fațete ceramice, proteze All on 4. Tel: 0265.326.316",
+      "sections": [
+        {
+          "heading": "Protetică dentară (lucrări dentare)",
+          "body": "Servicii Dental Arena Clinic\n\n[Hero/page-title banner: H2 \"Protetică dentară (lucrări dentare)\" + H2 subtitle \"Servicii Dental Arena Clinic\"; background image Untitled-design-2024-05-27T131528.593.png]"
+        },
+        {
+          "heading": "Servicii",
+          "body": "[Sidebar list, identical on all service pages; each item links to its page]\n- Consultație și profilaxie (https://dentalarena.ro/consultatie-profilaxie/)\n- Stomatologie generală (https://dentalarena.ro/stomatologie-generala/)\n- Inhalosedare (https://dentalarena.ro/inhalosedare/)\n- Implantologie (https://dentalarena.ro/implantologie/)\n- Chirurgie dento-alveolară (https://dentalarena.ro/chirurgie-dento-alveolara/)\n- Protetică dentară (lucrări dentare) (https://dentalarena.ro/protetica-dentara/)\n- Pedodonție (https://dentalarena.ro/pedodontie/)\n- Ortodonție (https://dentalarena.ro/ortodontie/)\n- Parodontologie (https://dentalarena.ro/parodontologie/)\n- Estetică dentară (https://dentalarena.ro/estetica-dentara/)"
+        },
+        {
+          "heading": "Contact",
+          "body": "0265 326 316\n\n[Sidebar icon-box with phone icon; the number is not a tel: link]"
+        },
+        {
+          "heading": "(Introducere)",
+          "body": "[Image: Untitled-design-2024-05-29T130628.643.png, alt empty]\n\nFolosim concepte noi în medicina dentară. Planificarea, designul și realizarea lucrărilor dentare au la bază un sistem computerizat de cea mai mare precizie. Coroanele dentare și fațetele dentare sunt realizate din ceramică integrală, pe suport de metal laser sintetizat sau structură de zirconiu. De asemenea, protezele dentare fixe și mobile se pot realiza după conceptul „All on 4”, fiind susținute de 4 implanturi dentare. Reconstruim zâmbetele și le oferim dinților o durată lungă de viață."
+        },
+        {
+          "heading": "Tratamente și prețuri",
+          "body": "- Indepartat coroana 80 lei\n- Coroana provizorie in cabinet 120 lei\n- Coroana provizorie PMMA 200/350 lei\n- Coroana metalo-ceramica total fizionomica 900/1100 lei\n- Coroana zirconiu monolitic 900/1200 lei\n- Coroana metalo-ceramica pe implant 1000 lei\n- Coroana zirconiu monolitic pe implant 1100/1500 lei\n- Coroana EMAX 1500 lei\n- Proteza dentara scheletata metalica 3800 lei\n- Proteza dentara scheletata Bio-Hpp 5200 lei\n- Rebazare proteza acrilica 350 lei\n- Wax-up + Mock-up /dinte 150 lei"
+        },
+        {
+          "heading": "CTA",
+          "body": "- Programează o consultație [promo box, H3; background image b62b3b23-1e7f-43d7-a84a-688331554f15.jpg; NO link on the live site]\n- Zâmbește / cu noi [promo box, H3 \"Zâmbește <br>cu noi\"; background image Untitled-design-2024-05-13T112021.742.png; links to http://dentalarena.ro (homepage)]"
+        }
+      ],
+      "images": [
+        "Untitled-design-2024-05-29T130628.643.png",
+        "Untitled-design-2024-05-27T131528.593.png",
+        "b62b3b23-1e7f-43d7-a84a-688331554f15.jpg",
+        "Untitled-design-2024-05-13T112021.742.png"
+      ],
+      "faqs": [],
+      "notes": "Checked against the live HTML (Elementor page id 70). The snapshot is complete; the page has no accordions, tabs or FAQ. Only one text block. Price list items: in the HTML, the service name and the price are separated by many spaces for visual alignment, and some items have trailing spaces. I normalised this to one space. Each item is \"<service> <price> lei\", so a slash means a range or variants (e.g. 200/350 lei). Price names are missing diacritics on the live site: Indepartat (Îndepărtat), Coroana (Coroană), in (în), metalo-ceramica (metalo-ceramică), fizionomica (fizionomică), Proteza dentara scheletata (Proteză dentară scheletată), acrilica (acrilică). Likely typo in the body: \"metal laser sintetizat\" should probably be \"sinterizat\". The image alt is empty. The hero background Untitled-design-2024-05-27T131528.593.png (2000x320, the same on all 5 service pages, set in post CSS) was missing from research/media, so I downloaded it there. The page has two meta description tags: one auto-generated from the whole page text and the curated one used as shortDescription. og:image = Untitled-design-2024-05-29T130628.643.png."
+    },
+    {
+      "slug": "pedodontie",
+      "title": "Pedodonție",
+      "seoTitle": "Pedodonție Copii Cristești | Stomatologie Fără Frică Dental Arena",
+      "shortDescription": "pedodonție dental arena cristești luduș stomatologie copii dentist copii fluorizare sigilare dinți de lapte obturații inhalosedare fără frică",
+      "sections": [
+        {
+          "heading": "Pedodonție",
+          "body": "Servicii Dental Arena Clinic\n\n[Hero/page-title banner: H2 \"Pedodonție\" + H2 subtitle \"Servicii Dental Arena Clinic\"; background image Untitled-design-2024-05-27T131528.593.png]"
+        },
+        {
+          "heading": "Servicii",
+          "body": "[Sidebar list, identical on all service pages; each item links to its page]\n- Consultație și profilaxie (https://dentalarena.ro/consultatie-profilaxie/)\n- Stomatologie generală (https://dentalarena.ro/stomatologie-generala/)\n- Inhalosedare (https://dentalarena.ro/inhalosedare/)\n- Implantologie (https://dentalarena.ro/implantologie/)\n- Chirurgie dento-alveolară (https://dentalarena.ro/chirurgie-dento-alveolara/)\n- Protetică dentară (lucrări dentare) (https://dentalarena.ro/protetica-dentara/)\n- Pedodonție (https://dentalarena.ro/pedodontie/)\n- Ortodonție (https://dentalarena.ro/ortodontie/)\n- Parodontologie (https://dentalarena.ro/parodontologie/)\n- Estetică dentară (https://dentalarena.ro/estetica-dentara/)"
+        },
+        {
+          "heading": "Contact",
+          "body": "0265 326 316\n\n[Sidebar icon-box with phone icon; the number is not a tel: link]"
+        },
+        {
+          "heading": "(Introducere)",
+          "body": "[Image: Untitled-design-2024-05-29T130748.635.png, alt empty]\n\nLa Dental Arena Clinic oferim și servicii de stomatologie pentru copii. Dantura lor trebuie îngrijită și nu este recomandat să așteptați până la apariția durerilor. Caria netratată apărută la dinții de lapte se complică și afectează creșterea dinților definitivi. Există tratamente cu ajutorul cărora se pot preveni cariile prin fluorizări și sigilări ale șanțurilor și fosetelor. Iar pentru a învinge frica micuților de dentist, avem o metodă de sedare conștientă, 100% sigură – inhalosedarea."
+        },
+        {
+          "heading": "Tratamente și prețuri",
+          "body": "- Fluorizare / arcadă 50 lei\n- Sigilare dinte temporar / permanent 100 lei\n- Obturație dinte temporar 120 lei\n- Obturație dinte permanent de la 200 lei\n- Pansament calmant endodontic 100 lei"
+        },
+        {
+          "heading": "CTA",
+          "body": "- Programează o consultație [promo box, H3; background image b62b3b23-1e7f-43d7-a84a-688331554f15.jpg; NO link on the live site]\n- Zâmbește / cu noi [promo box, H3 \"Zâmbește <br>cu noi\"; background image Untitled-design-2024-05-13T112021.742.png; links to http://dentalarena.ro (homepage)]"
+        }
+      ],
+      "images": [
+        "Untitled-design-2024-05-29T130748.635.png",
+        "Untitled-design-2024-05-27T131528.593.png",
+        "b62b3b23-1e7f-43d7-a84a-688331554f15.jpg",
+        "Untitled-design-2024-05-13T112021.742.png"
+      ],
+      "faqs": [],
+      "notes": "Checked against the live HTML (Elementor page id 1696). The snapshot is complete; the page has no accordions, tabs or FAQ. This is the only one of the five pages whose price items have correct diacritics. The body mentions inhalosedarea, which has its own page (/inhalosedare/) and is a natural cross-link for the new site. The curated meta description is a keyword-stuffed, all-lowercase string (copied verbatim above) and should be rewritten for the new site. The image alt is empty. og:image = Untitled-design-2024-05-29T130748.635.png. The hero background Untitled-design-2024-05-27T131528.593.png is shared by all five pages (I added it to research/media)."
+    },
+    {
+      "slug": "ortodontie",
+      "title": "Ortodonție",
+      "seoTitle": "Ortodonție Cristești Luduș | Aparat Dentar Fix | Dental Arena",
+      "shortDescription": "Ortodonție la Dental Arena Cristești-Luduș. Aparate dentare fixe/mobile, brackeți ceramici/metalici pentru adulți și copii. Tel: 0265.326.316",
+      "sections": [
+        {
+          "heading": "Ortodonție",
+          "body": "Servicii Dental Arena Clinic\n\n[Hero/page-title banner: H2 \"Ortodonție\" + H2 subtitle \"Servicii Dental Arena Clinic\"; background image Untitled-design-2024-05-27T131528.593.png]"
+        },
+        {
+          "heading": "Servicii",
+          "body": "[Sidebar list, identical on all service pages; each item links to its page]\n- Consultație și profilaxie (https://dentalarena.ro/consultatie-profilaxie/)\n- Stomatologie generală (https://dentalarena.ro/stomatologie-generala/)\n- Inhalosedare (https://dentalarena.ro/inhalosedare/)\n- Implantologie (https://dentalarena.ro/implantologie/)\n- Chirurgie dento-alveolară (https://dentalarena.ro/chirurgie-dento-alveolara/)\n- Protetică dentară (lucrări dentare) (https://dentalarena.ro/protetica-dentara/)\n- Pedodonție (https://dentalarena.ro/pedodontie/)\n- Ortodonție (https://dentalarena.ro/ortodontie/)\n- Parodontologie (https://dentalarena.ro/parodontologie/)\n- Estetică dentară (https://dentalarena.ro/estetica-dentara/)"
+        },
+        {
+          "heading": "Contact",
+          "body": "0265 326 316\n\n[Sidebar icon-box with phone icon; the number is not a tel: link]"
+        },
+        {
+          "heading": "(Introducere)",
+          "body": "[Image: Untitled-design-2024-05-29T130914.564.png, alt empty]\n\nProblemele de poziție ale dinților afectează masticația și oferă un aspect neplăcut zâmbetului. Pot fi corectate cu ajutorul aparatelor dentare, care sunt de mai multe tipuri – fixe, mobile, vizibile (cu brackeți metalici), invizibile (cu brackeți ceramici). Ortodonția nu se adresează doar copiilor, ci și adulților. Datorită tehnicilor folosite în prezent, dinții pot fi îndreptați la orice vârstă. Durata unui astfel de tratament variază în funcție de complexitatea cazului însă, în general, se situează între 18-24 de luni."
+        },
+        {
+          "heading": "Tratamente și prețuri",
+          "body": "- Consultatie 150 lei\n- Aparat fix cu bracketi metalici 2400 lei\n- Aparat fix cu bracketi ceramici 3500 lei\n- Aparat mobilizabil 900 lei\n- Control si activare aparat fix 100/150 lei\n- Indepartare aparat fix si fluorizare 700 lei"
+        },
+        {
+          "heading": "CTA",
+          "body": "- Programează o consultație [promo box, H3; background image b62b3b23-1e7f-43d7-a84a-688331554f15.jpg; NO link on the live site]\n- Zâmbește / cu noi [promo box, H3 \"Zâmbește <br>cu noi\"; background image Untitled-design-2024-05-13T112021.742.png; links to http://dentalarena.ro (homepage)]"
+        }
+      ],
+      "images": [
+        "Untitled-design-2024-05-29T130914.564.png",
+        "Untitled-design-2024-05-27T131528.593.png",
+        "b62b3b23-1e7f-43d7-a84a-688331554f15.jpg",
+        "Untitled-design-2024-05-13T112021.742.png"
+      ],
+      "faqs": [],
+      "notes": "Checked against the live HTML (Elementor page id 1704). The snapshot is complete; the page has no accordions, tabs or FAQ. Price items in the HTML use runs of spaces between name and price, plus some trailing spaces; I normalised these to one space. Price names are missing diacritics on the live site: Consultatie (Consultație), bracketi (brackeți), si (și), Indepartare (Îndepărtare). The body text spells \"brackeți\" correctly, so the price list is inconsistent with it. \"Control si activare aparat fix 100/150 lei\" is two price variants. The image alt is empty. og:image = Untitled-design-2024-05-29T130914.564.png."
+    },
+    {
+      "slug": "parodontologie",
+      "title": "Parodontologie",
+      "seoTitle": "Tratament Parodontoză Dental Arena | Cristești Luduș",
+      "shortDescription": "Tratament parodontoză la Dental Arena Cristești-Luduș. Chiuretaj parodontal, gingivectomie, parodontometrie. Prevenirea pierderii dinților.",
+      "sections": [
+        {
+          "heading": "Parodontologie",
+          "body": "Servicii Dental Arena Clinic\n\n[Hero/page-title banner: H2 \"Parodontologie\" + H2 subtitle \"Servicii Dental Arena Clinic\"; background image Untitled-design-2024-05-27T131528.593.png]"
+        },
+        {
+          "heading": "Servicii",
+          "body": "[Sidebar list, identical on all service pages; each item links to its page]\n- Consultație și profilaxie (https://dentalarena.ro/consultatie-profilaxie/)\n- Stomatologie generală (https://dentalarena.ro/stomatologie-generala/)\n- Inhalosedare (https://dentalarena.ro/inhalosedare/)\n- Implantologie (https://dentalarena.ro/implantologie/)\n- Chirurgie dento-alveolară (https://dentalarena.ro/chirurgie-dento-alveolara/)\n- Protetică dentară (lucrări dentare) (https://dentalarena.ro/protetica-dentara/)\n- Pedodonție (https://dentalarena.ro/pedodontie/)\n- Ortodonție (https://dentalarena.ro/ortodontie/)\n- Parodontologie (https://dentalarena.ro/parodontologie/)\n- Estetică dentară (https://dentalarena.ro/estetica-dentara/)"
+        },
+        {
+          "heading": "Contact",
+          "body": "0265 326 316\n\n[Sidebar icon-box with phone icon; the number is not a tel: link]"
+        },
+        {
+          "heading": "(Introducere)",
+          "body": "[Image: Untitled-design-2024-05-29T131031.652.png, alt empty]\n\nBoala parodontală sau parodontoza este cauzată în principal de placa bacteriană. În timp, dacă este lăsată netratată, duce la pierderea dinților. Poate fi tratată dacă este depistată devreme, iar acest lucru se face prin igienizare profesională și investigații radiologice. Vă recomandăm să vă programați periodic la o consultație pentru a evita efectele provocate de parodontoză."
+        },
+        {
+          "heading": "Tratamente și prețuri",
+          "body": "- Parodontometrie 200 lei\n- Imobilizare cu bandă din fibră de sticlă 450 lei\n- Chiuretaj parodontal subgingival / arcadă 700 lei\n- Gingivectomie / dinte 100 lei"
+        },
+        {
+          "heading": "CTA",
+          "body": "- Programează o consultație [promo box, H3; background image b62b3b23-1e7f-43d7-a84a-688331554f15.jpg; NO link on the live site]\n- Zâmbește / cu noi [promo box, H3 \"Zâmbește <br>cu noi\"; background image Untitled-design-2024-05-13T112021.742.png; links to http://dentalarena.ro (homepage)]"
+        }
+      ],
+      "images": [
+        "Untitled-design-2024-05-29T131031.652.png",
+        "Untitled-design-2024-05-27T131528.593.png",
+        "b62b3b23-1e7f-43d7-a84a-688331554f15.jpg",
+        "Untitled-design-2024-05-13T112021.742.png",
+        "1-1.jpg"
+      ],
+      "faqs": [],
+      "notes": "Checked against the live HTML (Elementor page id 1712). The snapshot is complete; the page has no accordions, tabs or FAQ. Price items have correct diacritics. Unlike the other pages, the og:image (social share image) is 1-1.jpg (present in research/media), not the body image Untitled-design-2024-05-29T131031.652.png. 1-1.jpg is not shown in the visible page body. The image alt is empty."
+    },
+    {
+      "slug": "estetica-dentara",
+      "title": "Estetică dentară",
+      "seoTitle": "Estetică Dentară Dental Arena Cristești Luduș | Albire Profesională",
+      "shortDescription": "Estetică dentară Dental Arena Cristești-Luduș. Albire profesională o ședință, bijuterie dentară. Zâmbet frumos. Tel: 0265.326.316",
+      "sections": [
+        {
+          "heading": "Estetică dentară",
+          "body": "Servicii Dental Arena Clinic\n\n[Hero/page-title banner: H2 \"Estetică dentară\" + H2 subtitle \"Servicii Dental Arena Clinic\"; background image Untitled-design-2024-05-27T131528.593.png]"
+        },
+        {
+          "heading": "Servicii",
+          "body": "[Sidebar list, identical on all service pages; each item links to its page]\n- Consultație și profilaxie (https://dentalarena.ro/consultatie-profilaxie/)\n- Stomatologie generală (https://dentalarena.ro/stomatologie-generala/)\n- Inhalosedare (https://dentalarena.ro/inhalosedare/)\n- Implantologie (https://dentalarena.ro/implantologie/)\n- Chirurgie dento-alveolară (https://dentalarena.ro/chirurgie-dento-alveolara/)\n- Protetică dentară (lucrări dentare) (https://dentalarena.ro/protetica-dentara/)\n- Pedodonție (https://dentalarena.ro/pedodontie/)\n- Ortodonție (https://dentalarena.ro/ortodontie/)\n- Parodontologie (https://dentalarena.ro/parodontologie/)\n- Estetică dentară (https://dentalarena.ro/estetica-dentara/)"
+        },
+        {
+          "heading": "Contact",
+          "body": "0265 326 316\n\n[Sidebar icon-box with phone icon; the number is not a tel: link]"
+        },
+        {
+          "heading": "(Introducere)",
+          "body": "[Image: Untitled-design-2024-05-29T131203.581.png, alt empty]\n\nAspectul zâmbetului influențează viața de zi cu zi mai mult decât ne-am dori. De aceea, există metode de înfrumusețare după înlăturarea problemelor dentare. Albirea dentară este cel mai comun tratament cosmetic, care se realizează într-o singură ședință cu un gel de albire mai concentrat. Bineînțeles, se poate adăuga și un accesoriu, cum ar fi o bijuterie dentară."
+        },
+        {
+          "heading": "Tratamente și prețuri",
+          "body": "- Albire profesională Opalescence Boost 800 lei\n- Albire internă dinte 200 lei\n- Aplicare bijuterie dentară 200 lei\n- Gutieră bruxism / arcadă 300 lei"
+        },
+        {
+          "heading": "CTA",
+          "body": "- Programează o consultație [promo box, H3; background image b62b3b23-1e7f-43d7-a84a-688331554f15.jpg; NO link on the live site]\n- Zâmbește / cu noi [promo box, H3 \"Zâmbește <br>cu noi\"; background image Untitled-design-2024-05-13T112021.742.png; links to http://dentalarena.ro (homepage)]"
+        }
+      ],
+      "images": [
+        "Untitled-design-2024-05-29T131203.581.png",
+        "Untitled-design-2024-05-27T131528.593.png",
+        "b62b3b23-1e7f-43d7-a84a-688331554f15.jpg",
+        "Untitled-design-2024-05-13T112021.742.png"
+      ],
+      "faqs": [],
+      "notes": "Checked against the live HTML (Elementor page id 1720, wrapped in a WPR theme-builder post-content template, id 1500, which adds no content). The snapshot is complete; the page has no accordions, tabs or FAQ. Price items have correct diacritics. \"Gutieră bruxism\" (a bruxism night guard) is listed here under Estetică dentară even though it is not cosmetic. The image alt is empty. og:image = Untitled-design-2024-05-29T131203.581.png."
+    }
+  ],
+  "general": {
+    "clinic": {
+      "name": "Dental Arena Clinic",
+      "tagline": "Zâmbete sănătoase pentru o viață fericită.",
+      "slogans": [
+        "Zâmbete sănătoase pentru o viață fericită.",
+        "Calea ta către un zâmbet perfect.",
+        "Zâmbește cu noi",
+        "Experiență Completă la Stomatolog",
+        "Clinică stomatologică la 1 km de Târgu Mureș",
+        "Ești din Târgu Mureș? Avem o clinică foarte aproape de tine!",
+        "Sărbătorim 15 Ani de Zâmbete Sănătoase!",
+        "La Dental Arena, suntem dedicați să creăm zâmbete strălucitoare!"
+      ],
+      "email": "office@dentalarena.ro",
+      "phones": [
+        {
+          "label": "Pentru Programări Cristești",
+          "number": "0265 326 316"
+        },
+        {
+          "label": "Pentru Programări Luduș",
+          "number": "0365 430 125"
+        }
+      ],
+      "locations": [
+        {
+          "name": "Dental Arena Clinic Cristești",
+          "street": "str. Principală, 536J/1",
+          "city": "Cristești",
+          "county": "Mureș",
+          "phone": "0265 326 316",
+          "mapUrl": "https://maps.google.com/maps?q=str.%20Principal%C4%83%2C%20536J%2F1%20Criste%C8%99ti&t=m&z=16&output=embed&iwloc=near"
+        },
+        {
+          "name": "Dental Arena Clinic Luduș",
+          "street": "str. Gheorghe Barițiu, nr. 6",
+          "city": "Luduș",
+          "county": "Mureș",
+          "phone": "0365 430 125",
+          "mapUrl": "https://maps.google.com/maps?q=str.%20Gheorghe%20Bari%C8%9Biu%2C%20nr.%206%2C%20Ludu%C8%99%2C%20Mure%C8%99&t=m&z=16&output=embed&iwloc=near"
+        }
+      ],
+      "social": [
+        {
+          "network": "Facebook",
+          "url": "https://www.facebook.com/www.dentalarena.ro"
+        },
+        {
+          "network": "Instagram",
+          "url": "https://www.instagram.com/clinicadentalarena/"
+        }
+      ],
+      "legalLinks": [
+        {
+          "label": "ANPC – Soluționarea alternativă a litigiilor (SAL)",
+          "url": "https://anpc.ro/ce-este-sal/"
+        },
+        {
+          "label": "Soluționarea online a litigiilor (SOL)",
+          "url": "https://ec.europa.eu/consumers/odr/main/index.cfm?event=main.home2.show&lng=RO"
+        }
+      ]
+    },
+    "team": [
+      {
+        "name": "Dr. Andrei Marcoci",
+        "role": "stomatologie generală",
+        "photo": "312167804_577320624181895_7536328341001133742_n.jpg",
+        "specialties": [
+          "Stomatologie generală"
+        ]
+      },
+      {
+        "name": "Dr. Mihail Dan Mașca",
+        "role": "medic dentist, stomatologie generală, competență în implantologie",
+        "photo": "Untitled-design-2024-05-27T102139.723.png",
+        "specialties": [
+          "Stomatologie generală",
+          "Implantologie"
+        ]
+      },
+      {
+        "name": "Dr. Paul Bologa",
+        "role": "medic dentist, stomatologie generală",
+        "photo": "328740551_1261847997699717_3209855370680217997_n.jpg",
+        "specialties": [
+          "Stomatologie generală"
+        ]
+      },
+      {
+        "name": "Dr. Podar Victoria-Ana",
+        "role": "medic dentist specializat în ortodonție și ortopedie dento-facială",
+        "photo": "Untitled-design-2024-05-29T130321.118.png",
+        "specialties": [
+          "Ortodonție",
+          "Ortopedie dento-facială"
+        ]
+      },
+      {
+        "name": "Dr. Fertea Ana-Maria",
+        "role": "medic dentist, medic specialist în chirurgie dento-alveolară",
+        "photo": "431150871_18047793892613789_4261121530290906434_n.jpg",
+        "specialties": [
+          "Chirurgie dento-alveolară"
+        ]
+      }
+    ],
+    "home": {
+      "sections": [
+        {
+          "heading": "Header – bară de sus (pe toate paginile)",
+          "body": "Logo: 164964094_176511157596179_4287899319184109583_n-e1716794678679.jpg (link spre https://dentalarena.ro/).",
+          "items": [
+            {
+              "title": "str. Principală, 536J/1",
+              "text": "Cristești, România"
+            },
+            {
+              "title": "str. Gheorghe Barițiu, nr. 6",
+              "text": "Luduș, România"
+            },
+            {
+              "title": "office@dentalarena.ro",
+              "text": "Contact"
+            },
+            {
+              "title": "0265 326 316",
+              "text": "Apel"
+            },
+            {
+              "title": "0365 430 125",
+              "text": "Apel"
+            }
+          ]
+        },
+        {
+          "heading": "Meniu principal",
+          "items": [
+            {
+              "title": "Acasă",
+              "text": "https://dentalarena.ro/"
+            },
+            {
+              "title": "Servicii",
+              "text": "https://dentalarena.ro/servicii/ (submeniu: Stomatologie generală, Parodontologie, Ortodonție, Pedodonție, Protetică dentară, Inhalosedare, Chirurgie dento-alveolară, Implantologie, Estetică dentară, Consultație și profilaxie)"
+            },
+            {
+              "title": "Despre Noi",
+              "text": "https://dentalarena.ro/despre-noi/"
+            },
+            {
+              "title": "Contact",
+              "text": "https://dentalarena.ro/contact/"
+            }
+          ]
+        },
+        {
+          "heading": "Zâmbete sănătoase pentru o viață fericită.",
+          "body": "Clinica Stomatologică\nDental Arena Clinic\n\nLa Dental Arena, suntem dedicați să creăm zâmbete strălucitoare! Fie că este vorba despre o consultație de rutină sau despre o transformare totală a zâmbetului, echipa noastră este aici să vă satisfacă toate nevoile dentare cu precizie și grijă.",
+          "items": [
+            {
+              "title": "Text animat (cuvinte rotative după „Clinica Stomatologică”)",
+              "text": "Dental Arena Clinic | Consultație și profilaxie | Stomatologie generală | Inhalosedare | Implantologie | Chirurgie dento-alveolară | Protetică dentară (lucrări dentare) | Pedodonție | Ortodonție | Parodontologie | Estetică dentară"
+            },
+            {
+              "title": "Buton CTA",
+              "text": "Consultație și profilaxie → https://dentalarena.ro/consultatie-profilaxie/"
+            },
+            {
+              "title": "Slider fundal hero (3 slide-uri)",
+              "text": "Untitled-design-2024-05-27T102007.291.png (exterior Luduș, seara); 438712305_938311964749424_5696109962466858468_n.jpg (sală de așteptare); 438716692_938311954749425_6793390655779106115_n.jpg (cabinet, fotoliu stomatologic)"
+            }
+          ]
+        },
+        {
+          "heading": "Povestea Noastră – Despre Dental Arena Clinic",
+          "body": "O clinică stomatologică în care te întorci cu plăcere de fiecare dată, unde problemele tale dentare vor fi înlăturate cu răbdare, pasiune, dedicare și seriozitate, de o echipă de medici profesioniști, tineri, în care poți avea încredere. Un loc pozitiv, cu o atmosferă plăcută, în care punem pe primul loc confortul și siguranța pacientului.",
+          "items": [
+            {
+              "title": "Buton CTA",
+              "text": "Citește mai mult → https://dentalarena.ro/despre-noi/"
+            },
+            {
+              "title": "Imagine",
+              "text": "DSC1557-Copy.jpg (alt: „Dental Arena cabinet stomatologic Cristești - clinică stomatologică modernă”)"
+            }
+          ]
+        },
+        {
+          "heading": "Dental Arena Clinic – Servicii",
+          "items": [
+            {
+              "title": "Stomatologie generală",
+              "text": "Planuri de tratament personalizate în funcție de cerințele și nevoile pacientului."
+            },
+            {
+              "title": "Inhalosedare",
+              "text": "Pacientul este relaxat și cooperant în timpul anesteziei prin inhalosedare."
+            },
+            {
+              "title": "Implantologie & chirurgie",
+              "text": "Medici pregătiți pentru cele mai complexe cazuri de implantologie și chirurgie dentară."
+            },
+            {
+              "title": "Endodonție",
+              "text": "Tratamente de canal realizate cu cea mai mare precizie datorită tehnologiei din cabinet."
+            },
+            {
+              "title": "Radiologie",
+              "text": "Înainte și după fiecare intervenție, pentru a trata cu exactitate fiecare problemă dentară."
+            },
+            {
+              "title": "Pedodonție",
+              "text": "Stomatologie pentru copii, care se întorc de fiecare dată cu plăcere și fără frică."
+            }
+          ]
+        },
+        {
+          "heading": "Dental Arena Clinic – Experiență Completă la Stomatolog",
+          "body": "Imagine secțiune: Untitled-design-2024-05-13T112021.742.png (zâmbet cu oglindă dentară).",
+          "items": [
+            {
+              "title": "Fără Frică",
+              "text": "Pacienții noștri nu cunosc acest cuvânt, „frică”. Vin cu zâmbetul pe buze în clinică și pleacă mult mai fericiți."
+            },
+            {
+              "title": "Fără Durere",
+              "text": "Problemele dentare se pot rezolva fără durere, datorită tehnologiei din cabinet și specialiștilor noștri."
+            },
+            {
+              "title": "Precizie",
+              "text": "Un dinte bine tratat are o durată de viață mai mare, de aceea realizăm toate tratamentele dentare cu cea mai mare precizie."
+            }
+          ]
+        },
+        {
+          "heading": "Echipa Dental Arena Clinic",
+          "items": [
+            {
+              "title": "Dr. Andrei Marcoci",
+              "text": "stomatologie generală"
+            },
+            {
+              "title": "Dr. Mihail Dan Mașca",
+              "text": "medic dentist, stomatologie generală, competență în implantologie"
+            },
+            {
+              "title": "Dr. Paul Bologa",
+              "text": "medic dentist, stomatologie generală"
+            },
+            {
+              "title": "Dr. Podar Victoria-Ana",
+              "text": "medic dentist specializat în ortodonție și ortopedie dento-facială"
+            },
+            {
+              "title": "Dr. Fertea Ana-Maria",
+              "text": "medic dentist, medic specialist în chirurgie dento-alveolară"
+            }
+          ]
+        },
+        {
+          "heading": "Panou lateral (off-canvas) – Servicii: / Formular Contact",
+          "body": "Formular Contact\nLasă-ne un mesaj\nCâmpuri: Nume Prenume, E-mail, Mesaj\nButon: Trimite",
+          "items": [
+            {
+              "title": "Servicii:",
+              "text": "Profilaxie și igienă dentară | Stomatologie generală | Estetică dentară | Ortodonție | Parodontologie | Implantologie | Protetică dentară | Chirurgie orală și maxilo-facială"
+            }
+          ]
+        },
+        {
+          "heading": "Calea ta către un zâmbet perfect.",
+          "body": "0265.326.316\nSună acum !",
+          "items": [
+            {
+              "title": "Notă",
+              "text": "Bloc CTA din footer (pe toate paginile); folosește numărul de Cristești."
+            }
+          ]
+        },
+        {
+          "heading": "Footer (pe toate paginile)",
+          "body": "Cristești, str. principală, 536J/1\nLuduș, str. Gheorghe Barițiu, nr. 6\n© 2025 Dental Arena Clinic",
+          "items": [
+            {
+              "title": "Meniu",
+              "text": "Acasă → / | Servicii → /consultatie-profilaxie/ | Despre Noi → /despre-noi/ | Programare Online → /contact/ | Termeni și Condiții (text fără link)"
+            },
+            {
+              "title": "Link-uri Utile",
+              "text": "Banner ANPC SAL (anpc-1-300x76-1.jpg) → https://anpc.ro/ce-este-sal/ | Banner SOL (anpc-2-300x76-1-1.jpg) → https://ec.europa.eu/consumers/odr/main/index.cfm?event=main.home2.show&lng=RO"
+            },
+            {
+              "title": "Newsletter",
+              "text": "Înscrie-te la noutățile noastre | buton: Abonează-te | succes: Te-ai abonat cu succes"
+            },
+            {
+              "title": "Social",
+              "text": "Facebook → https://www.facebook.com/www.dentalarena.ro | Instagram → https://www.instagram.com/clinicadentalarena/"
+            }
+          ]
+        }
+      ]
+    },
+    "about": {
+      "sections": [
+        {
+          "heading": "Despre Noi – Dental Arena Clinic",
+          "body": "O clinică stomatologică în care te întorci cu plăcere de fiecare dată, unde problemele tale dentare vor fi înlăturate cu răbdare, pasiune, dedicare și seriozitate, de o echipă de medici profesioniști, tineri, în care poți avea încredere. Un loc pozitiv, cu o atmosferă plăcută, în care punem pe primul loc confortul și siguranța pacientului.\n\nLocul unde se respectă programările și medicii au acea „mână ușoară” pe care o cauți, pentru că nu vrei să doară. La Dental Arena, tratamentele dentare sunt realizate fără durere, pentru că tehnologia este de partea noastră. Oferim servicii premium și abordăm cele mai moderne soluții de diagnostic și tratament. Folosim concepte noi în medicina dentară pentru planificarea, designul și realizarea lucrărilor dentare."
+        },
+        {
+          "heading": "Experiență completă la stomatolog",
+          "body": "Fără durere\nProblemele dentare se pot rezolva fără durere, datorită tehnologiei din cabinet și specialiștilor noștri.\n\nFără frică\nPacienții noștri nu cunosc acest cuvânt, „frică”. Vin cu zâmbetul pe buze în clinică și pleacă mult mai fericiți.\n\nPrecizie\nUn dinte bine tratat are o durată de viață mai mare, de aceea realizăm toate tratamentele dentare cu cea mai mare precizie."
+        },
+        {
+          "heading": "Programează o consultație",
+          "body": "Zâmbește\ncu noi\n\n(Bloc CTA fără link pe site-ul actual; fundal: b62b3b23-1e7f-43d7-a84a-688331554f15.jpg.)"
+        },
+        {
+          "heading": "SEO (Yoast) – Despre Noi",
+          "body": "Titlu: Despre Noi - Dental Arena Clinic\nDescriere: Dental Arena Clinic oferă servicii stomatologice de top, cu o echipă tânără și profesionistă, asigurând tratamente fără durere și folosind tehnologie de ultimă generație pentru confortul și siguranța pacienților"
+        }
+      ],
+      "images": [
+        "Picture1.jpg",
+        "Picture2-1.jpg",
+        "Untitled-design-2024-05-27T102007.291.png",
+        "b62b3b23-1e7f-43d7-a84a-688331554f15.jpg",
+        "Picture3-1.jpg",
+        "WhatsApp-Image-2024-04-12-at-09.13.07.jpeg",
+        "WhatsApp-Image-2024-04-12-at-09.13.08-2.jpeg",
+        "WhatsApp-Image-2024-04-12-at-09.13.08.jpeg",
+        "917486f4-db3f-4a74-9680-d7d4060d23ae.jpg",
+        "407869274_18037383127613789_3652406136975789781_n.jpg",
+        "c67ef737-7d73-4ff3-853f-28ff1541b79b.jpg"
+      ]
+    },
+    "anniversary15": {
+      "foundedYear": "2009",
+      "sections": [
+        {
+          "heading": "Sărbătorim 15 Ani de Zâmbete Sănătoase!",
+          "body": "Dental Arena Clinic împlinește 15 ani de excelență în stomatologie și dorim să vă mulțumim că ați fost alături de noi în această călătorie. Pentru a marca acest moment special și pentru a vă arăta recunoștința noastră, am pregătit o promoție deosebită pentru lunile iulie și august!"
+        },
+        {
+          "heading": "Pentru Pacienții Noștri Fideli:",
+          "body": "Ne dorim să vă răsplătim pentru încrederea și loialitatea de care ați dat dovadă. Astfel, toți pacienții existenți se pot bucura de:\n- Igienizare dentară gratuită: O curățare profesională pentru a vă menține zâmbetul strălucitor și sănătos.\n- Consultație dentară gratuită: Verificați-vă starea de sănătate dentară și discutați cu specialiștii noștri despre orice preocupări aveți."
+        },
+        {
+          "heading": "Pentru Pacienții Noi:",
+          "body": "Dacă nu ați avut ocazia să ne vizitați încă, acum este momentul perfect să ne cunoașteți! Toți noii pacienți beneficiază de:\n- Reducere de 15% la toate serviciile oferite de clinica noastră. Vă oferim acces la tratamente de calitate la prețuri avantajoase, fie că este vorba de o simplă consultație, albirea dinților sau tratamente avansate."
+        },
+        {
+          "heading": "Cum puteți profita de promoția noastră?",
+          "body": "- Contactați-ne: Sunați-ne sau vizitați-ne pentru a vă programa.\n- Menționați promoția: Spuneți-ne că doriți să beneficiați de oferta noastră aniversară.\n- Bucurați-vă de servicii: Vizitați-ne în lunile iulie și august și profitați de ofertele noastre speciale."
+        },
+        {
+          "heading": "De ce să alegeți Dental Arena Clinic?",
+          "body": "- 15 ani de experiență: Am acumulat o experiență vastă și expertiză în toate ramurile stomatologiei.\n- Profesioniști dedicați: Echipa noastră este formată din medici stomatologi cu înaltă calificare, dedicați îngrijirii dumneavoastră.\n- Tehnologie de vârf: Utilizăm echipamente moderne și tehnici inovatoare pentru a asigura cele mai bune rezultate.\n- Ambianță prietenoasă: Ne străduim să creăm un mediu confortabil și prietenos pentru toți pacienții noștri."
+        },
+        {
+          "heading": "Programare și Detalii:",
+          "body": "📞 Telefon: +40 265 326 316\n📧 Email: office@dentalarena.ro\nstr. Principală, 536J/1, Cristești, Mureș\nstr. Gheorghe Barițiu, nr. 6, Luduș, Mureș\n💻 Site web: dentalarena.ro\n\nVă așteptăm cu drag să sărbătorim împreună această etapă importantă și să vă oferim motive în plus pentru a zâmbi!"
+        }
+      ],
+      "images": [
+        "15-Ani-zambete-stralucite-cu-Dental-Arena.png",
+        "Untitled-design-2024-05-27T094429.697.png",
+        "Untitled-design-2024-05-27T102007.291.png",
+        "WhatsApp-Image-2024-04-12-at-09.13.07.jpeg"
+      ]
+    },
+    "seoLandingPages": [
+      {
+        "slug": "dentist-targu-mures",
+        "title": "Dentist Targu Mures - Dental Arena Clinic",
+        "sections": [
+          {
+            "heading": "Zâmbete sănătoase pentru o viață fericită.",
+            "body": "Clinica Stomatologică\nDental Arena Clinic\n(text animat: Consultație și profilaxie | Stomatologie generală | Inhalosedare | Implantologie | Chirurgie dento-alveolară | Protetică dentară (lucrări dentare) | Pedodonție | Ortodonție | Parodontologie | Estetică dentară)\n\nLa Dental Arena, suntem dedicați să creăm zâmbete strălucitoare! Fie că este vorba despre o consultație de rutină sau despre o transformare totală a zâmbetului, echipa noastră este aici să vă satisfacă toate nevoile dentare cu precizie și grijă.\n\nButon: Consultație și profilaxie → /consultatie-profilaxie/"
+          },
+          {
+            "heading": "Povestea Noastră – Despre Dental Arena Clinic",
+            "body": "O clinică stomatologică în care te întorci cu plăcere de fiecare dată, unde problemele tale dentare vor fi înlăturate cu răbdare, pasiune, dedicare și seriozitate, de o echipă de medici profesioniști, tineri, în care poți avea încredere. Un loc pozitiv, cu o atmosferă plăcută, în care punem pe primul loc confortul și siguranța pacientului.\n\nButon: Citește mai mult → /despre-noi/ (imagine DSC1557-Copy.jpg)"
+          },
+          {
+            "heading": "SEO",
+            "body": "Titlu pagină WP: „Dentist Targu Mures” (fără diacritice, intenționat pentru căutare). Fără meta descriere Yoast proprie (se folosește extrasul automat = textul hero). Conținut identic cu primele două secțiuni ale paginii Acasă; nu are text unic despre Târgu Mureș."
+          }
+        ]
+      },
+      {
+        "slug": "cabinet-stomatologic-targu-mures",
+        "title": "Cabinet stomatologic Târgu Mureș - Dental Arena Clinic",
+        "sections": [
+          {
+            "heading": "Zâmbete sănătoase pentru o viață fericită.",
+            "body": "Clinica Stomatologică\nDental Arena Clinic\n(text animat: Consultație și profilaxie | Stomatologie generală | Inhalosedare | Implantologie | Chirurgie dento-alveolară | Protetică dentară (lucrări dentare) | Pedodonție | Ortodonție | Parodontologie | Estetică dentară)\n\nLa Dental Arena, suntem dedicați să creăm zâmbete strălucitoare! Fie că este vorba despre o consultație de rutină sau despre o transformare totală a zâmbetului, echipa noastră este aici să vă satisfacă toate nevoile dentare cu precizie și grijă.\n\nButon: Consultație și profilaxie → /consultatie-profilaxie/"
+          },
+          {
+            "heading": "Povestea Noastră – Despre Dental Arena Clinic",
+            "body": "O clinică stomatologică în care te întorci cu plăcere de fiecare dată, unde problemele tale dentare vor fi înlăturate cu răbdare, pasiune, dedicare și seriozitate, de o echipă de medici profesioniști, tineri, în care poți avea încredere. Un loc pozitiv, cu o atmosferă plăcută, în care punem pe primul loc confortul și siguranța pacientului.\n\nButon: Citește mai mult → /despre-noi/ (imagine DSC1557-Copy.jpg)"
+          },
+          {
+            "heading": "SEO",
+            "body": "Titlu pagină WP: „Cabinet stomatologic Târgu Mureș”. Fără meta descriere Yoast proprie. Conținut identic cu primele două secțiuni ale paginii Acasă."
+          }
+        ]
+      },
+      {
+        "slug": "servicii",
+        "title": "Servicii Stomatologice | Inhalosedare & Chirurgie Dento-Alveolară",
+        "sections": [
+          {
+            "heading": "Zâmbete sănătoase pentru o viață fericită.",
+            "body": "Clinica Stomatologică\nDental Arena Clinic\n(text animat: Consultație și profilaxie | Stomatologie generală | Inhalosedare | Implantologie | Chirurgie dento-alveolară | Protetică dentară (lucrări dentare) | Pedodonție | Ortodonție | Parodontologie | Estetică dentară)\n\nLa Dental Arena, suntem dedicați să creăm zâmbete strălucitoare! Fie că este vorba despre o consultație de rutină sau despre o transformare totală a zâmbetului, echipa noastră este aici să vă satisfacă toate nevoile dentare cu precizie și grijă. Locație în apropiere de Targu Mures\n\nButon: Consultație și profilaxie → /consultatie-profilaxie/"
+          },
+          {
+            "heading": "Povestea Noastră – Despre Dental Arena Clinic",
+            "body": "O clinică stomatologică în care te întorci cu plăcere de fiecare dată, unde problemele tale dentare vor fi înlăturate cu răbdare, pasiune, dedicare și seriozitate, de o echipă de medici profesioniști, tineri, în care poți avea încredere. Un loc pozitiv, cu o atmosferă plăcută, în care punem pe primul loc confortul și siguranța pacientului.\n\nButon: Citește mai mult → /despre-noi/ (imagine DSC1557-Copy.jpg)"
+          },
+          {
+            "heading": "SEO",
+            "body": "Titlu pagină WP: „Stomatologie Mures”; og:title: „Stomatologie Mures - Dental Arena Clinic”.\nMeta descriere Yoast: Servicii stomatologice Dental Arena: inhalosedare, chirurgie dento-alveolară, implantologie, ortodonție. Cristești-Luduș. Tel: 0265.326.316\nSingura diferență față de Acasă este propoziția „Locație în apropiere de Targu Mures”. Pagina NU conține o listă reală de servicii (doar hero + teaser Despre)."
+          }
+        ]
+      }
+    ],
+    "serviceList": [
+      {
+        "slug": "stomatologie-generala",
+        "title": "Stomatologie generală",
+        "teaser": "Planuri de tratament personalizate în funcție de cerințele și nevoile pacientului."
+      },
+      {
+        "slug": "parodontologie",
+        "title": "Parodontologie",
+        "teaser": "Boala parodontală sau parodontoza este cauzată în principal de placa bacteriană. În timp, dacă este lăsată netratată, duce la pierderea dinților."
+      },
+      {
+        "slug": "ortodontie",
+        "title": "Ortodonție",
+        "teaser": "Problemele de poziție ale dinților afectează masticația și oferă un aspect neplăcut zâmbetului. Pot fi corectate cu ajutorul aparatelor dentare, care sunt de mai multe tipuri – fixe, mobile, vizibile (cu brackeți metalici), invizibile (cu brackeți ceramici)."
+      },
+      {
+        "slug": "pedodontie",
+        "title": "Pedodonție",
+        "teaser": "Stomatologie pentru copii, care se întorc de fiecare dată cu plăcere și fără frică."
+      },
+      {
+        "slug": "protetica-dentara",
+        "title": "Protetică dentară",
+        "teaser": "Folosim concepte noi în medicina dentară. Planificarea, designul și realizarea lucrărilor dentare au la bază un sistem computerizat de cea mai mare precizie."
+      },
+      {
+        "slug": "inhalosedare",
+        "title": "Inhalosedare",
+        "teaser": "Pacientul este relaxat și cooperant în timpul anesteziei prin inhalosedare."
+      },
+      {
+        "slug": "chirurgie-dento-alveolara",
+        "title": "Chirurgie dento-alveolară",
+        "teaser": "Medicii noștri sunt pregătiți pentru cele mai complexe cazuri de chirurgie dentară, atât la adulți, cât și la copii: extracții laborioase, rezecții apicale, chistectomii dentare și odontectomii."
+      },
+      {
+        "slug": "implantologie",
+        "title": "Implantologie",
+        "teaser": "Medici pregătiți pentru cele mai complexe cazuri de implantologie și chirurgie dentară."
+      },
+      {
+        "slug": "estetica-dentara",
+        "title": "Estetică dentară",
+        "teaser": "Aspectul zâmbetului influențează viața de zi cu zi mai mult decât ne-am dori. De aceea, există metode de înfrumusețare după înlăturarea problemelor dentare."
+      },
+      {
+        "slug": "consultatie-profilaxie",
+        "title": "Consultație și profilaxie",
+        "teaser": "Este foarte important să vă examinați periodic dantura, pentru a păstra un zâmbet sănătos pentru mult timp."
+      }
+    ],
+    "notes": "SOURCES: read in full acasa, despre-noi, contact, servicii, 15ani, dentist-targu-mures, cabinet-stomatologic-targu-mures (/home/user/Dental-Arena/research/pages/). Headers, menus and footers are byte-identical on every page. I also fetched the live HTML of those 7 pages, plus the WP REST API page list, sitemaps, robots.txt and the Elementor kit CSS.\n\n1) TERMENI ȘI CONDIȚII: the page DOES NOT EXIST. In the live footer, „Termeni și Condiții” is a plain <h2> with no href on every page. The WP REST API lists exactly 17 published pages (the 17 in the snapshot), with no terms or privacy page, and page-sitemap.xml has the same 17. /termeni-si-conditii/, /termeni-conditii/, /politica-de-confidentialitate/, /privacy-policy/, /politica-cookies/ and /gdpr/ all return 404. There is also no privacy or cookie policy page (only a CookieAdmin consent banner). The new site needs Termeni și Condiții plus a GDPR privacy policy written from scratch.\n\n2) OPENING HOURS: NONE anywhere. Not in the text, the HTML or the JSON-LD (the Yoast LocalBusiness schema has empty telephone and address fields). Ask the clinic before publishing; do not invent hours.\n\n3) PHONE TO LOCATION (from contact page labels): 0265 326 316 = „Pentru Programări Cristești”; 0365 430 125 = „Pentru Programări Luduș”. Formats used on the site: „0265 326 316”, „0265.326.316” (footer CTA „Sună acum !” and SEO descriptions) and „+40 265 326 316” (15ani). The live site has no tel: or mailto: links. The header labels phones „Apel” and email „Contact”. There is a single email for both locations: office@dentalarena.ro.\n\n4) MAPS: the contact page has 2 Elementor Google Maps iframes (z=16) that use address queries, not coordinates. The original Luduș query started with a stray bullet+tab („•\\tstr. Gheorghe Barițiu…”); I removed it in mapUrl. Original: https://maps.google.com/maps?q=%E2%80%A2%09str.%20Gheorghe%20Bari%C8%9Biu%2C%20nr.%206%2C%20Ludu%C8%99%2C%20Mure%C8%99&t=m&z=16&output=embed&iwloc=near. Approximate STREET-level coordinates from OpenStreetMap, not the building, so verify before using as a pin: Cristești, Strada Principală ≈ 46.5092, 24.5058 (postcode 547185); Luduș, Strada Gheorghe Barițiu ≈ 46.4819, 24.0943 (postcode 545202). Postcodes are not on the site.\n\n5) ADDRESS WORDING: the contact page uses „Cristești, Mureș” / „Luduș, Mureș”; the header uses „Cristești, România” / „Luduș, România”; the footer uses „Cristești, str. principală, 536J/1” (lowercase p) and „Luduș, str. Gheorghe Barițiu, nr. 6”. The 15ani page wrote „str. Principala, 536J/1, Cristesti” without diacritics; I fixed it. The image alt texts state that DSC1557-Copy.jpg is the Cristești clinic (a ground-floor storefront with the sign „DENTAL ARENA CLINICA STOMATOLOGICA”) and that the lit two-storey house (Untitled-design-2024-05-27T102007.291.png / 407869274…jpg / WhatsApp…09.13.08.jpeg) is Luduș („Cabinet stomatologic Dental Arena Luduș seara”).\n\n6) TEAM: 5 doctors, appearing ONLY on the home page (wpr-team-member widgets). There are NO bios on any page or in the HTML, and no team page. Yoast also says „Echipă 5 medici”. Name and role text is verbatim except for these fixes. Original role strings, which lacked diacritics: Podar „medic dentist specializat in ortodontie si ortopedie dento-faciala”; Fertea „medic dentist , medic specialist in chirurgie dento-alveolara” (also had a stray space before the comma and a trailing space after the name). The original name was „Dr Podar Victoria-Ana” (no period); I added the period. The name order is inconsistent: Podar and Fertea are surname-first. Suggested display forms: „Dr. Victoria-Ana Podar”, „Dr. Ana-Maria Fertea”. PHOTO WARNING: Dr. Podar's image on the live site (Untitled-design-2024-05-29T130321.118.png, 800x489) is NOT a portrait. It is a stock implant/dental-model banner with the logo, the same series used as service banners. A real photo is needed; use a placeholder until then. The other 4 photos are real portraits: Marcoci 1440x1440 navy scrubs; Mașca 600x557 teal scrubs, arms crossed; Bologa 1440x1800 light-blue scrubs leaning on a dental chair; Fertea 1289x844 landscape, light-blue scrubs, red hair (needs a crop for a portrait card). Specialties are derived from the role text.\n\n7) CONTENT BUG ON THE LIVE HOME PAGE: in „Experiență Completă la Stomatolog” the headings are swapped relative to their texts. The live home shows „Fără Frică” → „Problemele dentare se pot rezolva fără durere…” and „Fără Durere” → „Pacienții noștri nu cunosc acest cuvânt, „frică”…”. The despre-noi page pairs them correctly. The home items above use the CORRECT pairing, in the home's order (Frică, Durere, Precizie). The about page uses lowercase („Fără durere”, „Fără frică”) and its own order (Durere, Frică, Precizie).\n\n8) 15 ANI: the page was published 2024-07-08 and says „Dental Arena Clinic împlinește 15 ani”, so foundedYear 2009 is DERIVED, not stated. The promotion (July–August 2024) has EXPIRED; reuse it only as history or brand story („15 ani de experiență”), not as a live offer. Verbatim except for these small fixes: removed the space before colons („Igienizare dentară gratuită : O…” → „…gratuită: O…”), „Mentionați” → „Menționați”, „Principala/Cristesti” → „Principală/Cristești”. The page also had 2 Facebook emoji images (🏬) before the addresses. The 15ani page is not in the menu; it is only in the sitemap.\n\n9) SERVICES: the 10 menu services are listed in menu order with slugs exactly as linked. TEASER SOURCES: stomatologie-generala, pedodontie and inhalosedare are verbatim from the home services grid. implantologie uses the home grid item „Implantologie & chirurgie”. The other 6 (parodontologie, ortodontie, protetica-dentara, chirurgie-dento-alveolara, estetica-dentara, consultatie-profilaxie) use the first sentence(s) of each service page's intro, verbatim. The home grid also has „Endodonție” („Tratamente de canal realizate cu cea mai mare precizie datorită tehnologiei din cabinet.”) and „Radiologie” („Înainte și după fiecare intervenție, pentru a trata cu exactitate fiecare problemă dentară.”), which have NO dedicated pages. None of the home grid icon boxes are links. The hero list says „Protetică dentară (lucrări dentare)”. The off-canvas side panel uses different names: „Profilaxie și igienă dentară”, „Chirurgie orală și maxilo-facială”. The footer „Servicii” link points to /consultatie-profilaxie/, not /servicii/. For the service-pages agent: the live consultatie-profilaxie page has a WRONG SEO title, „Ortodonție Cristești Luduș | Aparat Dentar Fix & Mobil Dental Arena”.\n\n10) CONTACT PAGE COPY (verbatim): „Contact” / „Dental Arena Clinic”. Card 1: „0265 326 316” / „Pentru Programări Cristești” / „str. Principală, 536J/1” / „Cristești, Mureș” / „office@dentalarena.ro” / „Office Email Address”. Card 2: „0365 430 125” / „Pentru Programări Luduș” / „str. Gheorghe Barițiu, nr. 6” / „Luduș, Mureș” / „office@dentalarena.ro” / „Office Email Address”. Form: „Formular de contact” with fields Nume Prenume / E-mailul Dvs / Mesaj and button Trimite. Then „Get in touch”, „Adrese”: str. Principală, 536J/1, Cristești, Mureș; str. Gheorghe Barițiu, nr. 6, Luduș, Mureș. „Nr. de telefon”: 0265 326 316 / 0365 430 125. „Adresă e-mail”: office@dentalarena.ro. Then Facebook and Instagram icons, followed by the 2 maps. „Office Email Address” and „Get in touch” are untranslated English leftovers; translate them, e.g. „Adresă de e-mail” and „Ia legătura cu noi”. Contact SEO: title „Contact Dental Arena Cristești Luduș | Programări Stomatologice”; Yoast description „Programări Dental Arena în Cristești și Luduș. Inhalosedare, implantologie, chirurgie dento-alveolară. ☎️ 0265.326.316 | 0365.430.125”; og:image Untitled-design-2024-05-27T094834.611.png. The current contact form (Contact Form 7) has no location or service selector and no GDPR checkbox.\n\n11) HOME SEO: <title> „Dental Arena Cristești Luduș | Cabinet Stomatologic & Inhalosedare”. Yoast description: „Cabinet stomatologic Dental Arena Cristești-Luduș. Inhalosedare, implantologie, chirurgie dento-alveolară. Echipă 5 medici. ☎️ 0265.326.316”. og:title „Ești din Târgu Mureș? Avem o clinică foarte aproape de tine!”. WebSite description „Clinică stomatologică la 1 km de Târgu Mureș”. Primary image caption: „Cabinet stomatologic Dental Arena din Cristești oferă servicii complete de inhalosedare, implantologie și chirurgie dento-alveolară. Clinica noastră modernă dispune de echipamente de ultimă generație și o echipă de 5 medici specialiști pentru toate nevoile dvs. stomatologice.” The SEO pages target „Târgu Mureș”: Cristești is next to Târgu Mureș.\n\n12) BRAND / LOGO (in /home/user/Dental-Arena/research/media/):\n- Main logo: 164964094_176511157596179_4287899319184109583_n-e1716794678679.jpg (1845x645, JPG on a white background). It shows a mint tooth+implant mark and the serif wordmark „DENTAL ARENA” (A as a flourish) with a rule and the spaced caps „CLINICA STOMATOLOGICA”.\n- Transparent PNG version: Untitled-design-2024-05-27T094429.697.png (1916x1916 RGBA, logo centred on a transparent square). Best source for an SVG trace or crop.\n- Favicon / site icon: cropped-164964094_…jpg (512x512).\n- Colours: mint green #7EC8A1 (Elementor global colour; logo greens sampled ≈ #79B998 / #A0D1B8) and slate grey wordmark ≈ #5E6A68. Fonts were Elementor defaults (Roboto / Roboto Slab), not brand fonts.\n- The clinic interiors also feature a moss wall with the logo (WhatsApp-Image-2024-04-12-at-09.13.07.jpeg, c67ef737…jpg).\n\n13) MEDIA MAP:\n- Hero slider: Untitled-design-2024-05-27T102007.291.png (Luduș exterior, evening); 438712305…jpg (waiting room, yellow sofa, TV, abstract painting); 438716692…jpg (treatment chair with tropical beach mural).\n- Duplicates and variants: 917486f4…jpg (same waiting room); b62b3b23…jpg and WhatsApp…09.13.08-2.jpeg (same treatment room).\n- Picture1.jpg: reception, assistant with patient. Picture2-1.jpg: waiting area with flowers. Picture3-1.jpg: waiting area and reception desk.\n- 1-1.jpg: doctor showing an X-ray on a tablet to a patient (used on the parodontologie page).\n- Untitled-design-2024-05-13T112021.742.png: smile with dental mirror (home „Experiență” section and about background).\n- Untitled-design-2024-05-27T131528.593.png: 2000x320 mint banner with tooth icons (unused on these pages).\n- anpc-1-300x76-1.jpg / anpc-2-300x76-1-1.jpg: the required ANPC SAL/SOL badges.\n- The about page has a 9-image background slideshow (Picture3-1, Picture1, WhatsApp 09.13.07, 09.13.08-2, 09.13.08, 917486f4, 407869274, b62b3b23, c67ef737). I DOWNLOADED the 5 that were missing into research/media: Picture3-1.jpg, WhatsApp-Image-2024-04-12-at-09.13.08-2.jpeg, WhatsApp-Image-2024-04-12-at-09.13.08.jpeg, 917486f4-db3f-4a74-9680-d7d4060d23ae.jpg, c67ef737-7d73-4ff3-853f-28ff1541b79b.jpg.\n- On the live site, the „Programează o consultație / Zâmbește cu noi” CTA on the about page has no link.\n\n14) OTHER: footer „© 2025 Dental Arena Clinic”. Newsletter: „Înscrie-te la noutățile noastre” / „Abonează-te” / „Te-ai abonat cu succes”, plus an English error string. The only social networks are Facebook and Instagram (no WhatsApp, TikTok or YouTube). No legal entity name, CUI or registry number appears anywhere, so ask the clinic for them for the T&C, privacy and ANPC footer. No prices appear on the clinic-wide pages. The cookie banner text is partly English (CookieAdmin plugin)."
+  },
+  "critic": {
+    "corrections": [
+      {
+        "path": "services[9].sections[3].body (estetica-dentara, intro image)",
+        "issue": "The image alt is not empty on the live site. The snapshot dropped every alt attribute, and the live HTML has an alt text here.",
+        "correctValue": "[Image: Untitled-design-2024-05-29T131203.581.png, alt=„Albire dentară profesională la Dental Arena - procedură estetică dentară pentru zâmbet frumos”]"
+      },
+      {
+        "path": "services[9].notes (estetica-dentara)",
+        "issue": "The notes say „The image alt is empty.” That is wrong.",
+        "correctValue": "Replace with: The intro image has alt „Albire dentară profesională la Dental Arena - procedură estetică dentară pentru zâmbet frumos”."
+      },
+      {
+        "path": "general.home.sections[2].items[2] (\"Slider fundal hero (3 slide-uri)\")",
+        "issue": "The 3-image slider is not the hero background. In the live DOM, the hero is container 9814253 (min-height 81vh). Its CSS background (post-1208.css) is Untitled-design-2024-05-29T115917.139.png with a 0.53 white overlay. The slider is a separate wpr-advanced-slider in the left column of the NEXT section (container 16c7546), beside the „Povestea Noastră” text. The slides have no text. Order: T102007, 438712305, 438716692.",
+        "correctValue": "Hero item: {\"title\":\"Fundal hero (CSS)\",\"text\":\"Untitled-design-2024-05-29T115917.139.png (2000x792; mâinile medicului cu o machetă de proteză și oglindă dentară, radiografie panoramică pe tabletă), suprapunere albă 53%\"}. Move the slider to general.home.sections[3].items as: {\"title\":\"Slider imagini (3 slide-uri, coloana stângă)\",\"text\":\"Untitled-design-2024-05-27T102007.291.png; 438712305_938311964749424_5696109962466858468_n.jpg; 438716692_938311954749425_6793390655779106115_n.jpg\"}"
+      },
+      {
+        "path": "general.seoLandingPages[0..2] (dentist-targu-mures, cabinet-stomatologic-targu-mures, servicii)",
+        "issue": "These pages copy the home layout, including the hero background Untitled-design-2024-05-29T115917.139.png (post-1945/1959/1947.css) and the same 3-image slider in the „Povestea Noastră” section. Neither is recorded.",
+        "correctValue": "Add images: [\"Untitled-design-2024-05-29T115917.139.png\",\"Untitled-design-2024-05-27T102007.291.png\",\"438712305_938311964749424_5696109962466858468_n.jpg\",\"438716692_938311954749425_6793390655779106115_n.jpg\",\"DSC1557-Copy.jpg\"]"
+      },
+      {
+        "path": "general.media.media (missing entries: new images)",
+        "issue": "Two images used on the live site are not in the snapshot or in research/media. Both are CSS backgrounds from Elementor post CSS. I downloaded them into /home/user/Dental-Arena/research/media/.",
+        "correctValue": "Add {\"file\":\"Untitled-design-2024-05-29T115917.139.png\",\"kind\":\"banner\",\"width\":2000,\"height\":792,\"description\":\"Fundal hero pe Acasă, servicii, dentist-targu-mures, cabinet-stomatologic-targu-mures: mâinile medicului (halat alb) țin o machetă de proteză dentară și o oglindă; în dreapta, radiografie panoramică pe tabletă; tonuri alb-albastru, fără logo.\",\"usedOn\":[\"acasa\",\"servicii\",\"dentist-targu-mures\",\"cabinet-stomatologic-targu-mures\"]} and {\"file\":\"Untitled-design-2024-05-28T114720.636.png\",\"kind\":\"banner\",\"width\":2000,\"height\":320,\"description\":\"Banner titlu pagină pe fundal mentă (aceleași clip-art-uri ca T131528: dinte cu oglindă în stânga, dinte cu scut și pietre în dreapta) peste o fotografie a aparatului de inhalosedare și a fotoliului, în nuanțe de mentă.\",\"usedOn\":[\"despre-noi\",\"contact\"]}"
+      },
+      {
+        "path": "general.media.media (missing entries: files already in research/media)",
+        "issue": "Five files in research/media have no media entry. They are the despre-noi background slideshow images, downloaded by the general agent. I checked them by pixel and byte comparison.",
+        "correctValue": "Add: Picture3-1.jpg (1430x953, clinic-interior: reception desk with lime chair and black pendant lights, navy mandala armchairs and the large red-yellow-blue galaxy painting; usedOn [despre-noi]); WhatsApp-Image-2024-04-12-at-09.13.08.jpeg (1536x2048, clinic-exterior: DAYTIME photo of the white two-storey building with the wood-clad column and DENTAL ARENA sign, wrought-iron gate between stone pillars, conifer at right, prefab apartment blocks at left, i.e. a town setting; usedOn [despre-noi]); WhatsApp-Image-2024-04-12-at-09.13.08-2.jpeg (byte-identical to b62b3b23…jpg and pixel-identical to 438716692…jpg; duplicate); 917486f4-db3f-4a74-9680-d7d4060d23ae.jpg (pixel-identical to 438712305…jpg; duplicate); c67ef737-7d73-4ff3-853f-28ff1541b79b.jpg (byte-identical to WhatsApp-Image-2024-04-12-at-09.13.07.jpeg; duplicate)."
+      },
+      {
+        "path": "general.media.media[21] (407869274…jpg) .description + general.media.media[22] (T102007) .description + general.media.media[26] (438712305) .description",
+        "issue": "The media entries guess that the dusk two-storey building is Cristești. The site says the opposite. The live alt text of T102007 (a crop of 407869274) is „Cabinet stomatologic Dental Arena Luduș seara - clinică modernă cu servicii de inhalosedare și stomatologie”. The daytime photo WhatsApp…09.13.08.jpeg shows apartment blocks next to the same building, which fits Luduș town centre. The waiting room with the galaxy painting is therefore inside the Luduș building too.",
+        "correctValue": "Location = Luduș (str. Gheorghe Barițiu nr. 6), as stated by the site's own alt text „Cabinet stomatologic Dental Arena Luduș seara - clinică modernă cu servicii de inhalosedare și stomatologie”."
+      },
+      {
+        "path": "general.media.media[23] (DSC1557-Copy.jpg) .description",
+        "issue": "The entry says „Probably the Luduș location”. The live alt text and the Yoast primary-image caption both say Cristești. The window also reflects single-family houses with tiled roofs, i.e. a village main road.",
+        "correctValue": "Location = Cristești (str. Principală 536J/1). Live alt: „Dental Arena cabinet stomatologic Cristești - clinică stomatologică modernă”; caption: „Cabinet stomatologic Dental Arena din Cristești oferă servicii complete de inhalosedare, implantologie și chirurgie dento-alveolară. …”"
+      },
+      {
+        "path": "general.media.brand.typographyNotes (last sentence)",
+        "issue": "The facade-to-location mapping is reversed compared with the site's alt texts.",
+        "correctValue": "The facade locations, per the site's own alt texts: the silver street-front facade (DSC1557-Copy.jpg) = Cristești; the white two-storey house with the wood-clad column (407869274…jpg / T102007 / WhatsApp…09.13.08.jpeg) = Luduș."
+      },
+      {
+        "path": "general.media.media[18] (Untitled-design-2024-05-27T094834.611.png)",
+        "issue": "The entry says it is not referenced and is „probably a CSS hero or slider background on the old homepage”, with usedOn []. In fact it is the CSS background of the contact page's last body section (the maps container d64cf67, in post-40.css) and the contact og:image. It is not used on the homepage.",
+        "correctValue": "usedOn: [\"contact\"]; description: background of the contact page maps section, plus og:image of /contact/."
+      },
+      {
+        "path": "general.media.media[16] (Untitled-design-2024-05-27T130820.634.png) .description",
+        "issue": "It says the room is „the same room as the washed-out homepage hero (T094834)”. T094834 is a contact-page background, not the homepage hero.",
+        "correctValue": "…the same room as the washed-out contact-page background (T094834)."
+      },
+      {
+        "path": "general.media.media[19] (Untitled-design-2024-05-27T131528.593.png) .usedOn",
+        "issue": "usedOn is [], but the image is the page-title banner background on all 10 service pages (post-45/50/52/54/56/70/1696/1704/1712/1720.css).",
+        "correctValue": "[\"stomatologie-generala\",\"consultatie-profilaxie\",\"inhalosedare\",\"implantologie\",\"chirurgie-dento-alveolara\",\"protetica-dentara\",\"pedodontie\",\"ortodontie\",\"parodontologie\",\"estetica-dentara\"]"
+      },
+      {
+        "path": "general.media.media[17] (Untitled-design-2024-05-13T112021.742.png) .usedOn",
+        "issue": "usedOn lists only acasa. The image is also the background of the „Zâmbește cu noi” promo box on 7 pages, and the og:image of implantologie.",
+        "correctValue": "[\"acasa\",\"despre-noi\",\"consultatie-profilaxie\",\"protetica-dentara\",\"pedodontie\",\"ortodontie\",\"parodontologie\",\"estetica-dentara\"] (+ og:image on implantologie)"
+      },
+      {
+        "path": "general.media.media[28] (b62b3b23…jpg) .usedOn / .description",
+        "issue": "usedOn is [], and the description says it is not referenced. It is the background of the „Programează o consultație” promo box on 7 pages and slide 8 of the despre-noi background slideshow.",
+        "correctValue": "usedOn: [\"despre-noi\",\"consultatie-profilaxie\",\"protetica-dentara\",\"pedodontie\",\"ortodontie\",\"parodontologie\",\"estetica-dentara\"]"
+      },
+      {
+        "path": "general.media.media[21] (407869274…jpg) .usedOn",
+        "issue": "usedOn is [] and the entry says „Not itself referenced”. The image is slide 7 of the despre-noi background slideshow and the Yoast og:image of the home page.",
+        "correctValue": "[\"despre-noi\",\"acasa\"]"
+      },
+      {
+        "path": "general.media.media[22] (T102007) .usedOn",
+        "issue": "Missing the pages where it is slide 1 of the image slider.",
+        "correctValue": "[\"acasa\",\"servicii\",\"dentist-targu-mures\",\"cabinet-stomatologic-targu-mures\",\"despre-noi\",\"15ani\"]"
+      },
+      {
+        "path": "general.media.media[26] (438712305…jpg) .usedOn and general.media.media[27] (438716692…jpg) .usedOn",
+        "issue": "usedOn is [] for both, and the descriptions say they are not referenced. They are slides 2 and 3 of the image slider. 438716692 is also the chirurgie og:image.",
+        "correctValue": "[\"acasa\",\"servicii\",\"dentist-targu-mures\",\"cabinet-stomatologic-targu-mures\"] for both"
+      },
+      {
+        "path": "general.media.media[29] (WhatsApp-Image-2024-04-12-at-09.13.07.jpeg) .usedOn",
+        "issue": "Missing despre-noi, where it is slide 3 of the background slideshow. Also note that c67ef737…jpg is a byte-identical copy.",
+        "correctValue": "[\"15ani\",\"despre-noi\"]"
+      },
+      {
+        "path": "general.about.sections[2] (\"Programează o consultație\")",
+        "issue": "This merges two separate promo boxes into one. Live DOM: box 1 has H3 „Programează o consultație” on background b62b3b23…jpg; box 2 has H3 „Zâmbește<br>cu noi” on background Untitled-design-2024-05-13T112021.742.png. On despre-noi neither box has a link (wpr-promo-box-link count = 0, unlike the service pages).",
+        "correctValue": "Two items: „Programează o consultație” (fundal b62b3b23-1e7f-43d7-a84a-688331554f15.jpg, fără link) and „Zâmbește\\ncu noi” (fundal Untitled-design-2024-05-13T112021.742.png, fără link)."
+      },
+      {
+        "path": "general.about.images",
+        "issue": "Missing the page-title banner background (post-23.css).",
+        "correctValue": "add \"Untitled-design-2024-05-28T114720.636.png\""
+      },
+      {
+        "path": "general.about (slug) and general.anniversary15 (slug/title)",
+        "issue": "There are no slug or title fields for these pages. The WP REST API confirms the slugs and titles.",
+        "correctValue": "about.slug = \"despre-noi\"; anniversary15.slug = \"15ani\"; anniversary15.title = \"15 Ani împreună cu Dental Arena\"; anniversary15.seoTitle = \"15 Ani împreună cu Dental Arena - Dental Arena Clinic\"; anniversary15 og:image = 15-Ani-zambete-stralucite-cu-Dental-Arena.png"
+      },
+      {
+        "path": "general.notes item 11 (HOME SEO og:title)",
+        "issue": "„Ești din Târgu Mureș? Avem o clinică foarte aproape de tine!” comes from a second, non-Yoast SEO plugin block. The Yoast og tags, which are not recorded, are different.",
+        "correctValue": "Yoast og:title „Redescoperă bucuria unui zâmbet perfect cu Dental Arena!”; og:description „Zâmbetul tău merită ce e mai bun – vino la Dental Arena pentru servicii premium!”; og:image 407869274_18037383127613789_3652406136975789781_n.jpg"
+      },
+      {
+        "path": "general.about.sections[3] (SEO Despre Noi) and general.notes item 10 (Contact SEO)",
+        "issue": "The Yoast og strings, which are usable copy, are missing.",
+        "correctValue": "Despre Noi: og:title „Dental Arena Clinic oferă servicii stomatologice de top”; og:description teasers „Descoperă echipa noastră de medici profesioniști la Dental Arena!”, „La Dental Arena, tratamentele dentare sunt realizate fără durere!”, „Tehnologie modernă și servicii premium pentru zâmbetul tău!”; og:image Picture1.jpg. Contact: og:title „Contactează Dental Arena Clinic pentru programări și informații.”; teasers „Programează-te acum la Dental Arena în Cristești sau Luduș!”, „Contactează-ne pentru un zâmbet perfect!”, „Sună-ne pentru o consultație fără durere la Dental Arena!”"
+      },
+      {
+        "path": "services[8].notes (parodontologie)",
+        "issue": "Unlike the other service notes, the Yoast og:title and og:description teasers are not recorded.",
+        "correctValue": "og:title „Dental Arena oferă tratamente eficiente pentru boala parodontală”; og:description teasers „Previne pierderea dinților cu tratamente eficiente pentru parodontoză la Dental Arena!”, „Îngrijește-ți sănătatea gingiilor cu ajutorul specialiștilor noștri!”, „Programează-te pentru o igienizare profesională și menține-ți zâmbetul sănătos!”"
+      },
+      {
+        "path": "general.notes item 13 (MEDIA MAP)",
+        "issue": "Two errors. „Hero slider” is wrong: the slider sits in the „Povestea Noastră” section, and the hero background is T115917. T112021 is described as „about background”, but on despre-noi it is the background of the „Zâmbește cu noi” promo box.",
+        "correctValue": "Hero background: Untitled-design-2024-05-29T115917.139.png. Image slider (section „Povestea Noastră”, coloana stângă): T102007 / 438712305 / 438716692. T112021: fundalul casetei „Zâmbește cu noi” (despre-noi + 6 pagini de servicii) și secțiunea „Experiență” de pe Acasă."
+      },
+      {
+        "path": "(verification summary, no field change)",
+        "issue": "I diffed the live HTML of all 17 pages against the snapshot. The visible text is identical on every page, with no AJAX, popups, reviews, galleries or posts (/wp-json/wp/v2/posts = []; 17 pages confirmed). The only content the snapshot lost: (a) alt attributes: home DSC1557 alt, team alts = doctor names, T102007 alt (Luduș), consultatie-profilaxie alt (already captured), estetica-dentara alt (missed, see above), 15ani 🏬 emoji alts; (b) CSS background images from the Elementor post-*.css files (T115917, T114720, T094834, T131528, covered above). All 10 service price lists, intros, team names and roles, phones, addresses and slugs match the source."
+      }
+    ]
+  }
+}
