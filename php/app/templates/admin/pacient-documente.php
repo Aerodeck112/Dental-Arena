@@ -72,12 +72,13 @@ if (is_post() && $writable) {
             if (array_intersect(array_keys(CONSENT_TYPES), $types) === [] && !$history) {
                 throw new DomainException('Alegeți cel puțin un acord sau chestionarul.');
             }
-            // Endodontics, surgery, implants: the text names the doctor and what is done.
+            // Endodontics, surgery, implants: the text names the doctor and, when known, the teeth
+            // (empty: „stabilită de medic la consultație”).
             $details = [];
             if (array_intersect(CONSENT_WITH_DETAILS, $types) !== []) {
                 $doctorName = db_value('SELECT public_name FROM doctors WHERE id = ?', [(int) post('medic')]);
-                if (!$doctorName || trim(post('interventie')) === '') {
-                    throw new DomainException('Pentru endodonție, chirurgie sau implanturi alegeți medicul și scrieți intervenția (de exemplu „extracția dintelui 38” sau „dinții 36, 46”).');
+                if (!$doctorName) {
+                    throw new DomainException('Pentru endodonție, chirurgie sau implanturi alegeți medicul.');
                 }
                 $details = ['medic' => (string) $doctorName, 'interventie' => post('interventie')];
             }
@@ -201,7 +202,7 @@ if ($session !== null) {
     $doctorOpts = ['' => 'Alegeți medicul…'] + array_map('strval', array_column(db_all('SELECT id, public_name FROM doctors ORDER BY sort_order, id'), 'public_name', 'id'));
     $details = '<fieldset class="mt-2 grid gap-4 rounded-panou border border-linie bg-fundal p-4 sm:grid-cols-2"><legend class="px-1 text-mic font-medium text-discret">Pentru endodonție, chirurgie și implanturi (apar în text)</legend>'
         . select_field('medic', 'Medicul', $doctorOpts, ['value' => post('medic') ?: (string) ($user['doctor_id'] ?? $p['primary_doctor_id'] ?? '')])
-        . text_field('interventie', 'Intervenția / dinții', ['value' => post('interventie'), 'maxlength' => 250, 'placeholder' => 'de ex. extracția dintelui 38; implanturi 36, 46'])
+        . text_field('interventie', 'Intervenția / dinții', ['value' => post('interventie'), 'maxlength' => 250, 'optional' => true, 'placeholder' => 'de ex. extracția dintelui 38; implanturi 36, 46', 'hint' => 'Gol dacă nu știți încă: în acord scrie „dinții stabiliți de medic la consultație”.'])
         . '</fieldset>';
     $tablet = '<form method="post" novalidate class="mt-4 flex flex-col gap-4">' . csrf_field() . '<input type="hidden" name="op" value="cod-tableta">'
         . (isset($errors['tableta']) ? field_error('tableta-eroare', $errors['tableta']) : '')

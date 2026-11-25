@@ -604,9 +604,12 @@ function consent_text_for(string $type, array $p, ?int $locationId = null, array
         '{{email}}' => content('site.email'),
         '{{telefon}}' => trim((string) ($p['phone'] ?? '')) !== '' ? format_phone((string) $p['phone']) : '____________________',
         '{{adresa}}' => implode(', ', array_filter([trim((string) ($p['street'] ?? '')), trim((string) ($p['city'] ?? '')), trim((string) ($p['county'] ?? ''))])) ?: '________________________________________',
-        // Chosen with the tablet code; on paper, a line to write on.
+        // Chosen with the tablet code; on paper, a line to write on. On the tablet the teeth may not
+        // be known yet (the doctor decides at the consultation): the text says so, not a blank line.
         '{{medic}}' => trim((string) ($details['medic'] ?? '')) ?: 'Dr. ______________________________',
-        '{{interventie}}' => trim((string) ($details['interventie'] ?? '')) ?: '________________________________________',
+        '{{interventie}}' => trim((string) ($details['interventie'] ?? '')) ?: (isset($details['medic'])
+            ? ($lang === 'en' ? ($type === 'chirurgie' ? 'the one established by the dentist at the consultation' : 'the teeth established by the dentist at the consultation') : ($type === 'chirurgie' ? 'cea stabilită de medic la consultație' : 'dinții stabiliți de medic la consultație'))
+            : '________________________________________'),
     ]) . ($lang === 'en'
         ? "\n\nThis consent is given to {$firma}" . ($company['cui'] !== '' ? " (tax code {$company['cui']})" : '') . ", for the clinic {$clinica}."
         : "\n\nAcordul este dat către {$firma}" . ($company['cui'] !== '' ? " (CUI {$company['cui']})" : '') . ", pentru clinica {$clinica}.");

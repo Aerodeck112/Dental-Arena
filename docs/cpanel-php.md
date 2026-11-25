@@ -873,3 +873,10 @@ din copia bazei de date nu mai pot fi citite.
   mai veche. Suma se completează cu restul procedurii alese și se poate micșora (plată parțială).
 - Schimbați → Încasați din rândul procedurii: câmpul Suma (implicit restul) primește și o parte,
   de exemplu 100 lei din 300; o sumă peste rest e refuzată.
+
+## Tableta: endodonție, chirurgie, implant fără dinte (noiembrie 2026)
+
+- La codul pentru tabletă, pentru endodonție, chirurgie sau implanturi se cere doar medicul;
+  „Intervenția / dinții” e opțional. Gol: în textul semnat scrie „dinții stabiliți de medic la
+  consultație” (chirurgie: „cea stabilită de medic la consultație”; în engleză la fel), nu o linie
+  goală. Pe hârtie rămâne linia de completat.
