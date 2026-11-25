@@ -887,3 +887,6 @@ din copia bazei de date nu mai pot fi citite.
   care nu s-a terminat (programat, confirmat, sosit, în tratament; anulatele și trecutele nu), cu
   ziua („Azi”, „Mâine” sau ziua săptămânii și data), ora, medicul, clinica, motivul, starea și câte
   mai urmează; un clic deschide programarea. Altfel: „Nicio programare viitoare”.
+- Totalurile sub liste: în fișă (Proceduri și plăți) un rând Total sub proceduri (de plată, achitat,
+  rămas) și sub plăți (fără cele anulate); pe pagina Proceduri un rând Total sub listă. La Încasare,
+  „Total de plată al pacientului” și butonul „Încasați tot restul” (suma totală, automat).

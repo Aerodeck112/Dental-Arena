@@ -404,7 +404,12 @@ foreach ($rows as $r) {
 $table = $list !== ''
     ? '<div class="relative overflow-x-auto rounded-panou border border-linie bg-suprafata"><table class="w-full min-w-[62rem] border-collapse text-corp"><thead class="bg-fundal"><tr>'
         . '<th scope="col" class="' . $th . ' w-24">Data</th><th scope="col" class="' . $th . ' w-20">Dinte</th><th scope="col" class="' . $th . ' min-w-[16rem]">Procedura</th><th scope="col" class="' . $th . ' w-44">Medicul</th>'
-        . '<th scope="col" class="' . $th . ' w-28 text-right">De plată</th><th scope="col" class="' . $th . ' w-28 text-right">Achitat</th><th scope="col" class="' . $th . ' w-28 text-right">Rămas</th><th scope="col" class="' . $th . ' w-52 min-w-[13rem]">Starea</th></tr></thead><tbody>' . $list . '</tbody></table></div>'
+        . '<th scope="col" class="' . $th . ' w-28 text-right">De plată</th><th scope="col" class="' . $th . ' w-28 text-right">Achitat</th><th scope="col" class="' . $th . ' w-28 text-right">Rămas</th><th scope="col" class="' . $th . ' w-52 min-w-[13rem]">Starea</th></tr></thead><tbody>' . $list . '</tbody>'
+        // The totals under the list, the same as the rows above.
+        . '<tfoot><tr class="border-t-2 border-cerneala font-semibold"><td colspan="4" class="px-3 py-2 text-right">Total (' . count_ro(count($rows), 'o procedură', 'proceduri') . ')</td>'
+        . '<td class="cifre whitespace-nowrap px-3 py-2 text-right">' . e(lei(array_sum(array_map('procedure_due', $rows)))) . '</td>'
+        . '<td class="cifre whitespace-nowrap px-3 py-2 text-right">' . e(lei(array_sum(array_map(static fn ($r) => (int) $r['paid'], $rows)))) . '</td>'
+        . '<td class="cifre whitespace-nowrap px-3 py-2 text-right">' . e(lei(array_sum(array_map(static fn ($r) => max(0, procedure_due($r) - (int) $r['paid']), $rows)))) . '</td><td></td></tr></tfoot></table></div>'
     : '<p class="rounded-panou border border-dashed border-linie p-6 text-corp text-discret">Nicio procedură încă. Medicul o adaugă după intervenție, cu „Adaugă procedură”.</p>';
 
 // ── The payments ──
@@ -420,7 +425,8 @@ foreach ($payments as $pay) {
         . '<td class="px-3 py-2">' . (!$cancelled && is_admin($user) && $writable ? '<form method="post" data-confirma="Anulați plata de ' . e(lei((int) $pay['amount'])) . '?">' . csrf_field() . '<input type="hidden" name="op" value="anuleaza-plata"><input type="hidden" name="id" value="' . (int) $pay['id'] . '"><button type="submit" class="' . e(btn('text', 's')) . '">Anulați</button></form>' : ($cancelled ? 'anulată' : '')) . '</td></tr>';
 }
 $payTable = $payRows !== ''
-    ? '<div class="relative overflow-x-auto rounded-panou border border-linie bg-suprafata"><table class="w-full min-w-[40rem] border-collapse text-corp"><thead class="bg-fundal"><tr><th scope="col" class="' . $th . ' w-24">Data</th><th scope="col" class="' . $th . ' w-32 text-right">Suma</th><th scope="col" class="' . $th . ' w-32">Cum</th><th scope="col" class="' . $th . ' w-28">Nr. chitanță</th><th scope="col" class="' . $th . '">Cine / observații</th><th scope="col" class="' . $th . ' w-24"></th></tr></thead><tbody>' . $payRows . '</tbody></table></div>'
+    ? '<div class="relative overflow-x-auto rounded-panou border border-linie bg-suprafata"><table class="w-full min-w-[40rem] border-collapse text-corp"><thead class="bg-fundal"><tr><th scope="col" class="' . $th . ' w-24">Data</th><th scope="col" class="' . $th . ' w-32 text-right">Suma</th><th scope="col" class="' . $th . ' w-32">Cum</th><th scope="col" class="' . $th . ' w-28">Nr. chitanță</th><th scope="col" class="' . $th . '">Cine / observații</th><th scope="col" class="' . $th . ' w-24"></th></tr></thead><tbody>' . $payRows . '</tbody>'
+        . '<tfoot><tr class="border-t-2 border-cerneala font-semibold"><td class="px-3 py-2">Total</td><td class="cifre whitespace-nowrap px-3 py-2 text-right">' . e(lei(array_sum(array_map(static fn ($x) => $x['cancelled_at'] === null ? (int) $x['amount'] : 0, $payments)))) . '</td><td colspan="4" class="px-3 py-2 text-mic font-normal text-discret">fără plățile anulate</td></tr></tfoot></table></div>'
     : '<p class="text-corp text-discret">Nicio plată încă.</p>';
 // An administrator's payment goes by default to the ledger of the oldest procedure not yet paid.
 $payLedgerDefault = 'comun';
@@ -443,6 +449,9 @@ $targetDefault = post('op') === 'plata' ? post('procedura') : ($unpaid !== [] ? 
 $amountDefault = post('op') === 'plata' ? post('amount') : ($targetDefault !== '' ? lei_input(procedure_due($unpaid[0]) - (int) $unpaid[0]['paid']) : ($sum['rest'] > 0 ? lei_input($sum['rest']) : ''));
 $payForm = $canPay ? '<form method="post" novalidate data-plata-procedura data-rest-automat="' . e($sum['rest'] > 0 ? lei_input($sum['rest']) : '') . '"' . $targetRests . ' class="mt-4 flex flex-col gap-4 rounded-panou border border-linie bg-suprafata p-5">' . csrf_field() . '<input type="hidden" name="op" value="plata">'
     . '<h3 class="text-h3 font-semibold">Încasare</h3>' . (post('op') === 'plata' && $errors !== [] ? error_summary($errors) : '')
+    // The patient's whole rest, with a button that puts it in „Suma” (on the oldest first).
+    . ($sum['rest'] > 0 ? '<p class="flex flex-wrap items-center gap-3 rounded-control bg-fundal px-3 py-2 text-corp">Total de plată al pacientului: <strong class="cifre">' . e(lei($sum['rest'])) . '</strong>'
+        . (count($unpaid) > 1 ? '<button type="button" data-plata-tot class="' . e(btn('secondary', 's')) . '">Încasați tot restul</button>' : '') . '</p>' : '')
     . ($unpaid !== [] ? select_field('procedura', 'Pentru procedura', $targetOptions, ['value' => $targetDefault, 'error' => $err('procedura'), 'hint' => 'Plata se trece pe procedura aleasă (se poate și o parte din ea); ce e peste restul ei merge pe celelalte, de la cea mai veche.']) : '')
     . '<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">'
     . text_field('amount', 'Suma (lei)', ['value' => $amountDefault, 'inputmode' => 'decimal', 'error' => $err('amount'), 'hint' => 'O parte e în regulă: de exemplu 100 lei din tratamentul de canal.'])

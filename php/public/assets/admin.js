@@ -173,6 +173,16 @@
       auto = (pick.value ? form.getAttribute("data-rest-" + pick.value) : form.getAttribute("data-rest-automat")) || "";
       amount.value = auto;
     });
+    // „Încasați tot restul”: the whole rest, spread from the oldest.
+    var all = form.querySelector("[data-plata-tot]");
+    if (all) {
+      all.addEventListener("click", function () {
+        pick.value = "";
+        auto = form.getAttribute("data-rest-automat") || "";
+        amount.value = auto;
+        amount.focus();
+      });
+    }
   });
   // Print pages: the „Tipăriți” button.
   Array.prototype.forEach.call(document.querySelectorAll("[data-tipareste]"), function (b) {
