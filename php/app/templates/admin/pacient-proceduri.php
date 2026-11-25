@@ -151,6 +151,17 @@ if (is_post() && $writable) {
                 audit('procedura-stare', $r['name'] . ': ' . ($what === 'efectuata' ? 'efectuată' : 'neefectuată'), null, $pid);
                 flash($what === 'efectuata' ? 'Procedura e marcată efectuată.' : 'Procedura e marcată neefectuată (nu se mai plătește până o efectuați).');
             } elseif ($what === 'achita' && $canPay && (int) $r['done'] === 1 && $rest > 0 && ($hist === null || $today >= $hist)) {
+                // The whole rest, or a part of it (100 lei now of a root canal treatment).
+                try {
+                    $part = post('suma') !== '' ? parse_lei(post('suma')) : $rest;
+                } catch (InvalidArgumentException $e) {
+                    $part = null;
+                }
+                if ($part === null || $part <= 0 || $part > $rest) {
+                    flash('Scrieți o sumă între 0 și ' . lei($rest) . ' (cât mai are de plată procedura).', 'eroare');
+                    redirect($back . '#proc-' . (int) $r['id']);
+                }
+                $rest = $part;
                 $loc = $r['location_id'] !== null && in_array((int) $r['location_id'], $allowed, true) ? (int) $r['location_id'] : ($allowed[0] ?? null);
                 db_tx(static function () use ($r, $rest, $method, $loc, $pid, $user, $today): void {
                     $payId = db_insert('procedure_payments', [
@@ -198,18 +209,34 @@ if (is_post() && $writable) {
         if ($loc === null || !in_array($loc, $allowed, true)) {
             $errors['pay_location'] = 'Alegeți clinica.';
         }
+        // „Pentru procedura”: the payment goes on it (up to its rest); what is over goes on the oldest.
+        $target = null;
+        $targetRest = 0;
+        if (admin_int(post('procedura')) !== null) {
+            $target = db_one('SELECT * FROM procedures WHERE id = ? AND patient_id = ?', [admin_int(post('procedura')), $pid]);
+            if ($target !== null) {
+                $targetRest = procedure_due($target) - (int) db_value('SELECT COALESCE(SUM(i.amount), 0) FROM procedure_payment_items i JOIN procedure_payments pp ON pp.id = i.payment_id WHERE i.procedure_id = ? AND pp.cancelled_at IS NULL', [(int) $target['id']]);
+            }
+            if ($target === null || !$inScope($target) || (int) $target['done'] !== 1 || $targetRest <= 0) {
+                $errors['procedura'] = 'Procedura aleasă nu mai are nimic de plată. Alegeți alta.';
+            }
+        }
         if ($errors === []) {
-            $ledger = proc_new_ledger($user, post('pay_ledger') ?: 'comun');
-            db_tx(static function () use ($pid, $loc, $amount, $method, $user, $scope, $ledger): void {
-                db_insert('procedure_payments', [
+            // On a procedure: in its ledger (as „Încasați” in its row).
+            $ledger = $target !== null ? ($target['ledger_user_id'] !== null ? (int) $target['ledger_user_id'] : null) : proc_new_ledger($user, post('pay_ledger') ?: 'comun');
+            db_tx(static function () use ($pid, $loc, $amount, $method, $user, $scope, $ledger, $target, $targetRest): void {
+                $payId = db_insert('procedure_payments', [
                     'patient_id' => $pid, 'location_id' => $loc, 'amount' => $amount, 'paid_on' => post('paid_on'), 'method' => $method,
-                    'reference' => mb_substr(trim(post('reference')), 0, 60) ?: null, 'notes' => mb_substr(trim(post('pay_notes')), 0, 255) ?: null,
+                    'reference' => mb_substr(trim(post('reference')), 0, 60) ?: null, 'notes' => mb_substr(trim(post('pay_notes')), 0, 255) ?: ($target !== null ? mb_substr('Pentru: ' . $target['name'], 0, 255) : null),
                     'received_by' => (int) $user['id'], 'ledger_user_id' => $ledger, 'created_at' => now_sql(),
                 ]);
+                if ($target !== null) {
+                    db_run('INSERT INTO procedure_payment_items (payment_id, procedure_id, amount) VALUES (?, ?, ?)', [$payId, (int) $target['id'], min($amount, $targetRest)]);
+                }
                 procedures_allocate($pid, $scope);
             });
-            audit('plata-proceduri', lei($amount) . ', ' . PROC_PAY_METHODS[$method], null, $pid);
-            flash('Plata de ' . lei($amount) . ' a fost înregistrată.');
+            audit('plata-proceduri', lei($amount) . ', ' . PROC_PAY_METHODS[$method] . ($target !== null ? ' · ' . $target['name'] : ''), null, $pid);
+            flash('Plata de ' . lei($amount) . ' a fost înregistrată' . ($target !== null ? ' pentru „' . $target['name'] . '”' . ($amount > $targetRest ? '; ce a fost peste (' . lei($amount - $targetRest) . ') s-a trecut pe celelalte proceduri neachitate, de la cea mai veche' : '') : '') . '.');
             redirect($back . '#plati');
         }
     } elseif ($op === 'anuleaza-plata' && is_admin($user)) {
@@ -350,7 +377,8 @@ foreach ($rows as $r) {
     $stateActions = '';
     if ($writable && $inScope($r)) {
         if ($canPay && (int) $r['done'] === 1 && $rest > 0) {
-            $stateActions .= $stateForm('achita', 'Încasați ' . lei($rest), '<label class="sr-only" for="plata-' . (int) $r['id'] . '">Cum a plătit</label><select id="plata-' . (int) $r['id'] . '" name="pay_method" class="' . e(input_classes('h-control')) . '">'
+            $stateActions .= $stateForm('achita', 'Încasați', '<label class="flex flex-col gap-1 text-mic font-medium" for="suma-' . (int) $r['id'] . '">Suma (lei), din ' . e(lei($rest)) . '<input id="suma-' . (int) $r['id'] . '" name="suma" value="' . e(lei_input($rest)) . '" inputmode="decimal" class="' . e(input_classes('h-control cifre')) . '"></label>'
+                . '<label class="sr-only" for="plata-' . (int) $r['id'] . '">Cum a plătit</label><select id="plata-' . (int) $r['id'] . '" name="pay_method" class="' . e(input_classes('h-control')) . '">'
                 . implode('', array_map(static fn ($k, $l) => '<option value="' . e($k) . '">' . e($l) . '</option>', array_keys(array_diff_key(PROC_PAY_METHODS, ['qdental' => ''])), array_diff_key(PROC_PAY_METHODS, ['qdental' => '']))) . '</select>', 'primary');
         }
         if (can('procedures', $user) && (int) $r['done'] !== 1) {
@@ -402,10 +430,22 @@ foreach (array_reverse($rows) as $r) {
         break;
     }
 }
-$payForm = $canPay ? '<form method="post" novalidate class="mt-4 flex flex-col gap-4 rounded-panou border border-linie bg-suprafata p-5">' . csrf_field() . '<input type="hidden" name="op" value="plata">'
+// „Pentru procedura”: the unpaid procedures, the newest first (the one of today is chosen); or the oldest first, on their own.
+$unpaid = array_values(array_filter($rows, static fn ($r) => $inScope($r) && (int) $r['done'] === 1 && procedure_due($r) > (int) $r['paid']));
+$targetOptions = ['' => 'Automat: pe cele mai vechi neachitate'];
+$targetRests = '';
+foreach ($unpaid as $r) {
+    $left = procedure_due($r) - (int) $r['paid'];
+    $targetOptions[(string) (int) $r['id']] = date('d.m.Y', strtotime($r['performed_on'])) . ' · ' . $r['name'] . ($r['tooth'] ? ' · ' . $r['tooth'] : '') . ' — rest ' . lei($left);
+    $targetRests .= ' data-rest-' . (int) $r['id'] . '="' . e(lei_input($left)) . '"';
+}
+$targetDefault = post('op') === 'plata' ? post('procedura') : ($unpaid !== [] ? (string) (int) $unpaid[0]['id'] : '');
+$amountDefault = post('op') === 'plata' ? post('amount') : ($targetDefault !== '' ? lei_input(procedure_due($unpaid[0]) - (int) $unpaid[0]['paid']) : ($sum['rest'] > 0 ? lei_input($sum['rest']) : ''));
+$payForm = $canPay ? '<form method="post" novalidate data-plata-procedura data-rest-automat="' . e($sum['rest'] > 0 ? lei_input($sum['rest']) : '') . '"' . $targetRests . ' class="mt-4 flex flex-col gap-4 rounded-panou border border-linie bg-suprafata p-5">' . csrf_field() . '<input type="hidden" name="op" value="plata">'
     . '<h3 class="text-h3 font-semibold">Încasare</h3>' . (post('op') === 'plata' && $errors !== [] ? error_summary($errors) : '')
+    . ($unpaid !== [] ? select_field('procedura', 'Pentru procedura', $targetOptions, ['value' => $targetDefault, 'error' => $err('procedura'), 'hint' => 'Plata se trece pe procedura aleasă (se poate și o parte din ea); ce e peste restul ei merge pe celelalte, de la cea mai veche.']) : '')
     . '<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">'
-    . text_field('amount', 'Suma (lei)', ['value' => post('op') === 'plata' ? post('amount') : ($sum['rest'] > 0 ? lei_input($sum['rest']) : ''), 'inputmode' => 'decimal', 'error' => $err('amount'), 'hint' => 'Se trece pe procedurile neachitate, de la cea mai veche.'])
+    . text_field('amount', 'Suma (lei)', ['value' => $amountDefault, 'inputmode' => 'decimal', 'error' => $err('amount'), 'hint' => 'O parte e în regulă: de exemplu 100 lei din tratamentul de canal.'])
     . text_field('paid_on', 'Data', ['type' => 'date', 'value' => post('op') === 'plata' ? post('paid_on') : $today, 'max' => $today, 'error' => $err('paid_on')])
     . text_field('reference', 'Nr. chitanță', ['value' => post('reference'), 'optional' => true, 'maxlength' => 60])
     . select_field('pay_location', 'Clinica', $locOptions, ['value' => post('pay_location') ?: $v['location_id'], 'error' => $err('pay_location')])

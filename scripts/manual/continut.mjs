@@ -510,10 +510,10 @@ ${rol === "medic" ? `<h3>Încasare</h3>
 <p>Când pacientul plătește la dumneavoastră: în fila ${b("Proceduri și plăți")}, jos, la ${b("Încasare")}, scrieți suma, alegeți cum a plătit (numerar, card, transfer) și apăsați ${b("Înregistrați plata")}; sau, în dreptul procedurii, ${b("Schimbați")} → ${b("Încasați …")}. În ${b("Casa")} și pe pagina Azi vedeți ce ați încasat dumneavoastră, iar în ${b("Rapoarte")} → ${b("Raport încasări")} plățile pentru procedurile dumneavoastră.</p>` : ""}
 ${rol !== "medic" ? `<h3>Încasare (recepția; medicii pot încasa și ei)</h3>
 ${pasi([
-  `Jos, la ${b("Încasare")}: suma (e completat ce mai are de plată), data, numărul chitanței, clinica și cum a plătit (numerar, card, transfer, altă plată).`,
-  `${b("Înregistrați plata")}: plata se trece pe procedurile neachitate, de la cea mai veche. Ce rămâne în plus e avans și se folosește singur la următoarea procedură.`,
+  `Jos, la ${b("Încasare")}: ${b("Pentru procedura")} (e aleasă cea mai nouă neachitată, de obicei cea de azi; sau „Automat: pe cele mai vechi neachitate”), suma (e completat restul procedurii; puteți scrie și o parte, de exemplu 100 lei din tratamentul de canal), data, numărul chitanței, clinica și cum a plătit (numerar, card, transfer, altă plată).`,
+  `${b("Înregistrați plata")}: plata se trece pe procedura aleasă. Ce e peste restul ei se trece pe celelalte neachitate, de la cea mai veche; ce rămâne în plus e avans și se folosește singur la următoarea procedură.`,
 ])}
-${sfat(`Mai repede, în dreptul procedurii: în coloana Starea, ${b("Schimbați")} → alegeți cum a plătit → ${b("Încasați …")}: restul acelei proceduri se încasează pe loc și se trece pe ea. Tot acolo: ${b("Marcați efectuată")} (o procedură începută, care acum se plătește) sau ${b("Marcați neefectuată")} (doar cât nu are plăți).`)}
+${sfat(`Mai repede, în dreptul procedurii: în coloana Starea, ${b("Schimbați")} → suma (e completat restul; scrieți mai puțin pentru o plată parțială) → cum a plătit → ${b("Încasați")}: suma se trece pe acea procedură. Tot acolo: ${b("Marcați efectuată")} (o procedură începută, care acum se plătește) sau ${b("Marcați neefectuată")} (doar cât nu are plăți).`)}
 ${sfat("O plată greșită o anulează administratorul (rămâne în listă, tăiată).")}
 <h3>Casa: raportul zilei</h3>
 <p>${b("Casa")} din meniu arată ce s-a încasat într-o zi la o clinică: ${b("Numerar: bani în casă")} (cât trebuie să fie în casă), card, transfer, altă plată și totalul, apoi fiecare plată (ora, pacientul, cum a plătit, cine a încasat, suma). Plățile anulate apar separat și nu intră în total. Alegeți ziua, clinica și „Încasate de” (toată echipa sau doar dumneavoastră); ${b("Tipăriți")} îl scoate pe hârtie la închiderea zilei.</p>` : ""}

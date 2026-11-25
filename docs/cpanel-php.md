@@ -864,3 +864,12 @@ din copia bazei de date nu mai pot fi citite.
   clinicii (cu prețurile contractului, 0 lei inclus) sunt ascunse pe site și se aleg la Adaugă
   procedură, la ambele clinici. Rulează o singură dată; o listă MEDOC existentă e păstrată.
 - După „Adăugați procedura”, formularul rămâne deschis pentru următoarea.
+
+## Încasarea pe procedura aleasă și plata parțială (noiembrie 2026)
+
+- Fișa pacientului → Proceduri și plăți → Încasare: „Pentru procedura” (implicit cea mai nouă
+  neachitată, de obicei cea de azi; sau „Automat: pe cele mai vechi neachitate”, ca înainte). Plata
+  se trece pe ea, până la restul ei, în registrul ei; ce e peste se împarte ca înainte, de la cea
+  mai veche. Suma se completează cu restul procedurii alese și se poate micșora (plată parțială).
+- Schimbați → Încasați din rândul procedurii: câmpul Suma (implicit restul) primește și o parte,
+  de exemplu 100 lei din 300; o sumă peste rest e refuzată.

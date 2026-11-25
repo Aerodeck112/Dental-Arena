@@ -162,6 +162,18 @@
     };
     perioada.addEventListener("change", showPeriod);
   }
+  // „Încasare”: choosing the procedure puts its rest in „Suma” (while the amount was not typed).
+  Array.prototype.forEach.call(document.querySelectorAll("form[data-plata-procedura]"), function (form) {
+    var pick = form.querySelector("select[name=procedura]");
+    var amount = form.querySelector("input[name=amount]");
+    if (!pick || !amount) return;
+    var auto = amount.value;
+    pick.addEventListener("change", function () {
+      if (amount.value !== auto) return;
+      auto = (pick.value ? form.getAttribute("data-rest-" + pick.value) : form.getAttribute("data-rest-automat")) || "";
+      amount.value = auto;
+    });
+  });
   // Print pages: the „Tipăriți” button.
   Array.prototype.forEach.call(document.querySelectorAll("[data-tipareste]"), function (b) {
     b.addEventListener("click", function () {
